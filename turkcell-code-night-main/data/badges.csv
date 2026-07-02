@@ -1,0 +1,4 @@
+badge_id,badge_name,condition,level
+B-01,Bronz İzleyici,total_points >= 300,1
+B-02,Gümüş İzleyici,total_points >= 850,2
+B-03,Altın İzleyici,total_points >= 1500,3

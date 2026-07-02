@@ -1,0 +1,6 @@
+decision_id,user_id,as_of_date,selected_reward_points,reason,timestamp
+D-800,U1,2026-03-12,220,selected_challenge=C-05; priority=min,2026-03-12T20:45:00Z
+D-801,U2,2026-03-12,220,selected_challenge=C-05; priority=min,2026-03-12T20:41:00Z
+D-802,U3,2026-03-12,120,selected_challenge=C-03; priority=min,2026-03-12T20:37:00Z
+D-803,U4,2026-03-12,220,selected_challenge=C-05; priority=min,2026-03-12T20:33:00Z
+D-804,U5,2026-03-12,120,selected_challenge=C-03; priority=min,2026-03-12T20:29:00Z

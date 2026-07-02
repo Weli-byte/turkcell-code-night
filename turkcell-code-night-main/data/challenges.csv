@@ -1,0 +1,8 @@
+challenge_id,challenge_name,challenge_type,condition,reward_points,priority,is_active
+C-01,Günlük İzleme,DAILY,watch_minutes_today >= 60,80,5,True
+C-02,Bölüm Bitirici,DAILY,episodes_completed_today >= 2,140,3,True
+C-03,Tür Avcısı,DAILY,unique_genres_today >= 2,120,4,True
+C-04,Watch Party,DAILY,watch_party_minutes_today >= 45,160,2,True
+C-05,Streak Serisi,STREAK,watch_streak_days >= 3,220,1,True
+C-06,Haftalık Binge,WEEKLY,watch_minutes_7d >= 600,380,6,True
+C-07,Değerlendir ve Kazan,WEEKLY,ratings_7d >= 4,180,7,True

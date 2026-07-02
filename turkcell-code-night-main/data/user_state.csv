@@ -1,0 +1,6 @@
+user_id,name,city,segment,watch_minutes_today,episodes_completed_today,unique_genres_today,watch_party_minutes_today,ratings_today,watch_minutes_7d,episodes_completed_7d,ratings_7d,watch_streak_days,total_points
+U1,Ayşe,Istanbul,STUDENT,211,0,2,0,0,569,9,4,5,220
+U2,Ali,Ankara,STUDENT,173,3,1,30,1,602,10,3,5,220
+U3,Deniz,Izmir,STUDENT,214,0,2,30,1,436,7,4,2,120
+U4,Mert,Bursa,YOUNG_PRO,194,0,1,90,0,673,3,3,5,220
+U5,Ece,Antalya,YOUNG_PRO,204,1,2,0,0,674,2,3,1,120

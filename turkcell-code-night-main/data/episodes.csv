@@ -1,0 +1,9 @@
+episode_id,show_id,season,episode_no,duration_min
+E01,S1,1,1,42
+E02,S1,1,2,44
+E03,S2,1,1,28
+E04,S2,1,2,30
+E05,S3,1,1,46
+E06,S3,1,2,47
+E07,S4,1,1,40
+E08,S4,1,2,41
