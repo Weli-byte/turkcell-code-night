@@ -23,3 +23,5 @@ dist/
 # Temporary outputs
 output_temp/
 
+# Local extracted archive copy
+turkcell-code-night-main/
