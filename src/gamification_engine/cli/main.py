@@ -3,12 +3,27 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import date
 from pathlib import Path
 
 from gamification_engine import __version__
+from gamification_engine.ai.explanation_engine import explain_user_query
+from gamification_engine.badges.badge_repository import (
+    load_badge_assignments_json,
+)
+from gamification_engine.domain.enums import BadgeType, RewardReason
 from gamification_engine.domain.errors import GamificationEngineError
+from gamification_engine.domain.models import (
+    DailyUserState,
+    LeaderboardEntry,
+    RewardEvent,
+)
+from gamification_engine.ingestion.csv_loader import (
+    load_challenge_definitions_csv,
+)
+from gamification_engine.ledger.ledger_repository import load_points_ledger_json
 from gamification_engine.orchestration.pipeline import run_pipeline
 from gamification_engine.orchestration.run_context import RunContext
 
@@ -16,8 +31,9 @@ from gamification_engine.orchestration.run_context import RunContext
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser.
 
-    Exposes the top-level --version flag and the 'run' subcommand for
-    orchestrating the batch gamification pipeline.
+    Exposes subcommands:
+        - run: Orchestrate batch gamification pipeline.
+        - explain: Query deterministic AI explanations of user status.
     """
 
     parser = argparse.ArgumentParser(
@@ -32,6 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
+    # 1. 'run' subcommand
     run_parser = subparsers.add_parser(
         "run",
         help="Run the batch gamification pipeline.",
@@ -69,7 +86,150 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional path to existing notifications JSON file.",
     )
 
+    # 2. 'explain' subcommand
+    explain_parser = subparsers.add_parser(
+        "explain",
+        help="Ask questions about a user's gamification status.",
+    )
+    explain_parser.add_argument(
+        "--user-id",
+        required=True,
+        help="ID of the user to explain.",
+    )
+    explain_parser.add_argument(
+        "--question",
+        required=True,
+        help="The question to ask (in Turkish).",
+    )
+    explain_parser.add_argument(
+        "--output-dir",
+        required=True,
+        help="Directory containing the JSON run outputs.",
+    )
+    explain_parser.add_argument(
+        "--challenges",
+        required=True,
+        help="Path to the challenges definition CSV file.",
+    )
+    explain_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format: 'text' (default) or 'json'.",
+    )
+
     return parser
+
+
+def _load_states_json(path: Path) -> list[DailyUserState]:
+    if not path.exists():
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return [
+            DailyUserState(
+                user_id=item["user_id"],
+                state_date=date.fromisoformat(item["state_date"]),
+                watch_minutes_today=item["watch_minutes_today"],
+                watch_minutes_7d=item["watch_minutes_7d"],
+                episodes_completed_today=item["episodes_completed_today"],
+                episodes_completed_7d=item["episodes_completed_7d"],
+                unique_genres_today=item["unique_genres_today"],
+                watch_party_minutes_today=item["watch_party_minutes_today"],
+                ratings_today=item["ratings_today"],
+                ratings_7d=item["ratings_7d"],
+                watch_streak_days=item["watch_streak_days"],
+            )
+            for item in data
+        ]
+    except Exception as exc:
+        raise GamificationEngineError(f"Could not load states JSON: {exc}") from exc
+
+
+def _load_leaderboard_json(path: Path) -> list[LeaderboardEntry]:
+    if not path.exists():
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return [
+            LeaderboardEntry(
+                rank=item["rank"],
+                user_id=item["user_id"],
+                total_points=item["total_points"],
+                badges=tuple(BadgeType(b) for b in item.get("badges", ())),
+            )
+            for item in data
+        ]
+    except Exception as exc:
+        raise GamificationEngineError(
+            f"Could not load leaderboard JSON: {exc}"
+        ) from exc
+
+
+def _load_rewards_json(path: Path) -> list[RewardEvent]:
+    if not path.exists():
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return [
+            RewardEvent(
+                reward_id=item["reward_id"],
+                user_id=item["user_id"],
+                challenge_id=item["challenge_id"],
+                reward_points=item["reward_points"],
+                reward_date=date.fromisoformat(item["reward_date"]),
+                reason=RewardReason(item["reason"]),
+                suppressed_challenge_ids=tuple(
+                    item.get("suppressed_challenge_ids", ())
+                ),
+            )
+            for item in data
+        ]
+    except Exception as exc:
+        raise GamificationEngineError(f"Could not load rewards JSON: {exc}") from exc
+
+
+def _handle_explain(args: argparse.Namespace) -> int:
+    out_dir = Path(args.output_dir)
+
+    try:
+        # Load necessary data sources
+        states = _load_states_json(out_dir / "states.json")
+        ledger = load_points_ledger_json(out_dir / "ledger.json")
+        badges = load_badge_assignments_json(out_dir / "badges.json")
+        leaderboard = _load_leaderboard_json(out_dir / "leaderboard.json")
+        rewards = _load_rewards_json(out_dir / "rewards.json")
+        challenges = load_challenge_definitions_csv(args.challenges)
+
+        # Get specific user's state
+        user_state = next(
+            (s for s in states if s.user_id == args.user_id), None
+        )
+
+        response = explain_user_query(
+            question=args.question,
+            user_id=args.user_id,
+            state=user_state,
+            ledger_entries=ledger,
+            badges=badges,
+            leaderboard=leaderboard,
+            challenges=challenges,
+            rewards=rewards,
+        )
+
+        if args.format == "json":
+            print(json.dumps(response.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(response.answer)
+
+        return 0
+
+    except Exception as exc:
+        print(f"Explain Error: {exc}", file=sys.stderr)
+        return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -135,6 +295,9 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as exc:
             print(f"Unexpected Error: {exc}", file=sys.stderr)
             return 1
+
+    if args.command == "explain":
+        return _handle_explain(args)
 
     parser.print_help()
     return 0
