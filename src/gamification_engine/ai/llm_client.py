@@ -1,16 +1,22 @@
-"""Optional LLM client integration using standard library HTTP requests."""
+"""HTTP transport and prompt contract for optional LLM providers.
+
+This module only knows how to talk to provider APIs. Provider selection,
+enablement, and fallback behaviour live in
+:mod:`gamification_engine.ai.llm_adapter`.
+"""
 
 from __future__ import annotations
 
 import json
-import os
-import urllib.error
 import urllib.request
 from typing import Any
 
 # ---------------------------------------------------------------------------
-# Prompt Templates
+# Prompt Contract
 # ---------------------------------------------------------------------------
+# The system prompt is the guardrail: the LLM may only rephrase the
+# deterministic answer. It must never invent, alter, or decide anything.
+# See docs/ai_layer.md for the full contract.
 
 SYSTEM_PROMPT = (
     "Sen dijital video platformu oyunlaştırma asistanısın. Görevin, kural "
@@ -18,7 +24,8 @@ SYSTEM_PROMPT = (
     "dostane, akıcı ve anlaşılır bir dilde açıklamaktır.\n\n"
     "Uyman gereken kesin kurallar:\n"
     "1. Kural motorunun kararını, sayısal verileri, tarihleri ve puanları "
-    "asla değiştirme. Yeni kurallar veya veriler uydurma (halüsinasyon yapma).\n"
+    "asla değiştirme. Yeni kurallar veya veriler uydurma (halüsinasyon "
+    "yapma).\n"
     "2. Cevabı daha akıcı, kibar ve doğal bir Türkçe ile yeniden ifade et.\n"
     "3. Kural motorunun cevabı bilinmeyen bir soru/hata mesajı ise, "
     "o mesajı bozmadan aynen koru veya dostane bir şekilde benzer biçimde "
@@ -35,8 +42,31 @@ USER_PROMPT_TEMPLATE = (
 )
 
 
+def build_user_prompt(
+    question: str,
+    deterministic_answer: str,
+    evidence: dict[str, Any],
+) -> str:
+    """Render the user prompt for a rephrasing request.
+
+    Args:
+        question: Original question asked by the user.
+        deterministic_answer: Rule-based text answer to be rephrased.
+        evidence: Evidence dictionary containing raw data facts.
+
+    Returns:
+        The formatted user prompt.
+    """
+
+    return USER_PROMPT_TEMPLATE.format(
+        question=question,
+        deterministic_answer=deterministic_answer,
+        evidence=json.dumps(evidence, ensure_ascii=False),
+    )
+
+
 # ---------------------------------------------------------------------------
-# API Call Wrappers
+# HTTP helpers
 # ---------------------------------------------------------------------------
 
 
@@ -71,8 +101,18 @@ def _post_https_json(
         return payload
 
 
-def _call_gemini_api(api_key: str, prompt: str, timeout: float = 5.0) -> str:
-    """Call Google Gemini API using urllib."""
+# ---------------------------------------------------------------------------
+# Provider calls
+# ---------------------------------------------------------------------------
+
+
+def call_gemini_api(api_key: str, prompt: str, timeout: float = 5.0) -> str:
+    """Call Google Gemini API and return the rephrased text.
+
+    Raises:
+        ValueError: If the response payload does not contain a candidate.
+        OSError: On connection errors or timeouts.
+    """
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -85,7 +125,6 @@ def _call_gemini_api(api_key: str, prompt: str, timeout: float = 5.0) -> str:
     }
 
     res_data = _post_https_json(url, headers, body, timeout)
-    # Extract text from Gemini structure
     candidates = res_data.get("candidates", [])
     if not candidates:
         raise ValueError("Gemini API returned no candidates.")
@@ -96,10 +135,18 @@ def _call_gemini_api(api_key: str, prompt: str, timeout: float = 5.0) -> str:
     return str(text).strip()
 
 
-def _call_openai_api(
-    api_key: str, system_prompt: str, user_prompt: str, timeout: float = 5.0
+def call_openai_api(
+    api_key: str,
+    system_prompt: str,
+    user_prompt: str,
+    timeout: float = 5.0,
 ) -> str:
-    """Call OpenAI API using urllib."""
+    """Call OpenAI API and return the rephrased text.
+
+    Raises:
+        ValueError: If the response payload does not contain a choice.
+        OSError: On connection errors or timeouts.
+    """
 
     url = "https://api.openai.com/v1/chat/completions"
     headers = {
@@ -122,57 +169,3 @@ def _call_openai_api(
     message = choices[0].get("message", {})
     content = message.get("content", "")
     return str(content).strip()
-
-
-# ---------------------------------------------------------------------------
-# Public Entry Point
-# ---------------------------------------------------------------------------
-
-
-def generate_llm_explanation(
-    question: str,
-    deterministic_answer: str,
-    evidence: dict[str, Any],
-    timeout: float = 5.0,
-) -> str | None:
-    """Rephrase deterministic explanation using an optional LLM.
-
-    If GEMINI_API_KEY or OPENAI_API_KEY environment variables are present, this
-    function queries the respective API. If no keys are set, or if the API call
-    fails for any reason (network timeout, invalid key, etc.), it returns
-    ``None``, signaling that the pipeline should fall back to the rule-based
-    answer.
-
-    Args:
-        question: Original question asked by the user.
-        deterministic_answer: Rule-based text answer.
-        evidence: Evidence dictionary containing raw data facts.
-        timeout: API call timeout in seconds.
-
-    Returns:
-        The LLM-rephrased explanation, or ``None`` if disabled/failed.
-    """
-
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-
-    if not gemini_key and not openai_key:
-        return None
-
-    user_prompt = USER_PROMPT_TEMPLATE.format(
-        question=question,
-        deterministic_answer=deterministic_answer,
-        evidence=json.dumps(evidence, ensure_ascii=False),
-    )
-
-    try:
-        if gemini_key:
-            return _call_gemini_api(gemini_key, user_prompt, timeout)
-        if openai_key:
-            return _call_openai_api(openai_key, SYSTEM_PROMPT, user_prompt, timeout)
-    except (urllib.error.URLError, ValueError, Exception):
-        # Graceful fallback: return None on any connection error, timeout,
-        # API failure, or bad response format.
-        return None
-
-    return None

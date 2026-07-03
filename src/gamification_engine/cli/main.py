@@ -10,6 +10,7 @@ from pathlib import Path
 
 from gamification_engine import __version__
 from gamification_engine.ai.explanation_engine import explain_user_query
+from gamification_engine.ai.llm_adapter import create_llm_adapter_from_env
 from gamification_engine.badges.badge_repository import (
     load_badge_assignments_json,
 )
@@ -218,22 +219,10 @@ def _handle_explain(args: argparse.Namespace) -> int:
             rewards=rewards,
         )
 
-        from gamification_engine.ai.llm_client import generate_llm_explanation
-        from gamification_engine.domain.models import ExplanationResponse
-
-        llm_answer = generate_llm_explanation(
-            question=args.question,
-            deterministic_answer=response.answer,
-            evidence=response.evidence,
-        )
-
-        if llm_answer is not None:
-            response = ExplanationResponse(
-                user_id=response.user_id,
-                question=response.question,
-                answer=llm_answer,
-                evidence=response.evidence,
-            )
+        # Optional LLM rephrasing; falls back to the deterministic
+        # answer when the LLM layer is disabled or fails.
+        adapter = create_llm_adapter_from_env()
+        response = adapter.enhance(response)
 
         if args.format == "json":
             print(json.dumps(response.to_dict(), ensure_ascii=False, indent=2))

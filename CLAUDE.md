@@ -32,7 +32,7 @@ CI: `.github/workflows/ci.yml` runs ruff check + format check + mypy + pytest on
 - `export/json_exporter.py` — all JSON outputs + RunSummary (indent=2, ensure_ascii=False, sorted deterministically).
 - `orchestration/` — pipeline.py (no business logic) + run_context.py.
 - `cli/main.py` — argparse subcommands `run` and `explain`.
-- `ai/` — explanation_engine (keyword intent → template answers + evidence), templates, llm_client (optional; GEMINI_API_KEY / OPENAI_API_KEY env vars; returns None on any failure → deterministic fallback).
+- `ai/` — explanation_engine (keyword intent → template answers + evidence), templates, llm_adapter (LLMAdapter ABC, NoOp/Gemini/OpenAI adapters + factory; any failure → deterministic fallback), llm_client (pure HTTPS transport + prompt contract). Env vars read ONLY in config/llm_config.py: GEMINI_API_KEY (precedence), OPENAI_API_KEY, GAMIFICATION_LLM_ENABLED=0 kill switch. See docs/ai_layer.md.
 
 Tests mirror src under `tests/unit/` + `tests/integration/`; fixtures in `tests/fixtures/`.
 
@@ -57,5 +57,5 @@ Tests mirror src under `tests/unit/` + `tests/integration/`; fixtures in `tests/
   `--basetemp=<writable dir>` and `-p no:cacheprovider` if that happens.
 - Repo sprint numbering diverges from the original plan after Sprint 12
   (repo S13=CLI explain, S14=LLM layer). Gap-closure sprints start at 16
-  (S16=quality gate+CI done; S17=LLM adapter refactor; S18=determinism/golden
-  tests; S19=sample data+docs).
+  (S16=quality gate+CI done; S17=LLM adapter refactor done;
+  S18=determinism/golden tests; S19=sample data+docs).
