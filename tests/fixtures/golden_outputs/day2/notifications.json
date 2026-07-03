@@ -1,0 +1,65 @@
+[
+  {
+    "notification_id": "notification-0cec5e8349d0ad63",
+    "user_id": "U1",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge C-03 completed. You earned 380 points.",
+    "created_at": "2026-03-08T00:00:00+00:00",
+    "source_ref": "reward-d4d56ed502af792b"
+  },
+  {
+    "notification_id": "notification-7e284f04400c2948",
+    "user_id": "U2",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge C-01 completed. You earned 80 points.",
+    "created_at": "2026-03-08T00:00:00+00:00",
+    "source_ref": "reward-603a07542e59c027"
+  },
+  {
+    "notification_id": "notification-674e702b3f31f62b",
+    "user_id": "U1",
+    "notification_type": "BADGE_EARNED",
+    "channel": "IN_APP",
+    "message": "Bronze badge earned.",
+    "created_at": "2026-03-09T00:00:00+00:00",
+    "source_ref": "badge-9defc0cb04bcc0c8"
+  },
+  {
+    "notification_id": "notification-f7be11c89aa1479f",
+    "user_id": "U1",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge C-03 completed. You earned 380 points.",
+    "created_at": "2026-03-09T00:00:00+00:00",
+    "source_ref": "reward-38a49bcf502a8a15"
+  },
+  {
+    "notification_id": "notification-f00cc5627435b860",
+    "user_id": "U2",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge C-02 completed. You earned 140 points.",
+    "created_at": "2026-03-09T00:00:00+00:00",
+    "source_ref": "reward-6554e271476dfb93"
+  },
+  {
+    "notification_id": "notification-3fc152e244272380",
+    "user_id": "U3",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge C-01 completed. You earned 80 points.",
+    "created_at": "2026-03-09T00:00:00+00:00",
+    "source_ref": "reward-92b0f35cd23465c8"
+  },
+  {
+    "notification_id": "notification-77fe69a9c3dd6a71",
+    "user_id": "U4",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge C-01 completed. You earned 80 points.",
+    "created_at": "2026-03-09T00:00:00+00:00",
+    "source_ref": "reward-e8e68e7d8f8edf49"
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "user_id": "U1",
+    "state_date": "2026-03-08",
+    "watch_minutes_today": 100,
+    "watch_minutes_7d": 700,
+    "episodes_completed_today": 1,
+    "episodes_completed_7d": 7,
+    "unique_genres_today": 1,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 0,
+    "ratings_7d": 1,
+    "watch_streak_days": 7
+  },
+  {
+    "user_id": "U2",
+    "state_date": "2026-03-08",
+    "watch_minutes_today": 70,
+    "watch_minutes_7d": 70,
+    "episodes_completed_today": 1,
+    "episodes_completed_7d": 1,
+    "unique_genres_today": 1,
+    "watch_party_minutes_today": 20,
+    "ratings_today": 1,
+    "ratings_7d": 1,
+    "watch_streak_days": 1
+  },
+  {
+    "user_id": "U3",
+    "state_date": "2026-03-08",
+    "watch_minutes_today": 30,
+    "watch_minutes_7d": 30,
+    "episodes_completed_today": 0,
+    "episodes_completed_7d": 0,
+    "unique_genres_today": 1,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 0,
+    "ratings_7d": 0,
+    "watch_streak_days": 1
+  },
+  {
+    "user_id": "U4",
+    "state_date": "2026-03-08",
+    "watch_minutes_today": 0,
+    "watch_minutes_7d": 0,
+    "episodes_completed_today": 0,
+    "episodes_completed_7d": 0,
+    "unique_genres_today": 0,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 0,
+    "ratings_7d": 0,
+    "watch_streak_days": 0
+  }
+]

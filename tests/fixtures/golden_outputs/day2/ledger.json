@@ -1,0 +1,50 @@
+[
+  {
+    "ledger_id": "ledger-0aa5e89bb7b1eca0",
+    "user_id": "U1",
+    "points_delta": 380,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-d4d56ed502af792b",
+    "created_at": "2026-03-08T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-371b6fd304ca90a8",
+    "user_id": "U2",
+    "points_delta": 80,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-603a07542e59c027",
+    "created_at": "2026-03-08T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-a9baade655c49fb4",
+    "user_id": "U1",
+    "points_delta": 380,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-38a49bcf502a8a15",
+    "created_at": "2026-03-09T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-001f97a7795e4199",
+    "user_id": "U2",
+    "points_delta": 140,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-6554e271476dfb93",
+    "created_at": "2026-03-09T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-9ee9b49c93a2af8c",
+    "user_id": "U3",
+    "points_delta": 80,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-92b0f35cd23465c8",
+    "created_at": "2026-03-09T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-44bcb18d0e0a3629",
+    "user_id": "U4",
+    "points_delta": 80,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-e8e68e7d8f8edf49",
+    "created_at": "2026-03-09T00:00:00+00:00"
+  }
+]

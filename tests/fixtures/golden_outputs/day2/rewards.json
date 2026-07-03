@@ -1,0 +1,40 @@
+[
+  {
+    "reward_id": "reward-38a49bcf502a8a15",
+    "user_id": "U1",
+    "challenge_id": "C-03",
+    "reward_points": 380,
+    "reward_date": "2026-03-09",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": [
+      "C-01"
+    ]
+  },
+  {
+    "reward_id": "reward-6554e271476dfb93",
+    "user_id": "U2",
+    "challenge_id": "C-02",
+    "reward_points": 140,
+    "reward_date": "2026-03-09",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  },
+  {
+    "reward_id": "reward-92b0f35cd23465c8",
+    "user_id": "U3",
+    "challenge_id": "C-01",
+    "reward_points": 80,
+    "reward_date": "2026-03-09",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  },
+  {
+    "reward_id": "reward-e8e68e7d8f8edf49",
+    "user_id": "U4",
+    "challenge_id": "C-01",
+    "reward_points": 80,
+    "reward_date": "2026-03-09",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  }
+]
