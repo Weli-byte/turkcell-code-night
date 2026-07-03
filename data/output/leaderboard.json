@@ -1,0 +1,35 @@
+[
+  {
+    "rank": 1,
+    "user_id": "u001",
+    "total_points": 1560,
+    "badges": [
+      "BRONZE",
+      "SILVER"
+    ]
+  },
+  {
+    "rank": 2,
+    "user_id": "u003",
+    "total_points": 300,
+    "badges": []
+  },
+  {
+    "rank": 3,
+    "user_id": "u002",
+    "total_points": 280,
+    "badges": []
+  },
+  {
+    "rank": 4,
+    "user_id": "u004",
+    "total_points": 80,
+    "badges": []
+  },
+  {
+    "rank": 5,
+    "user_id": "u005",
+    "total_points": 80,
+    "badges": []
+  }
+]

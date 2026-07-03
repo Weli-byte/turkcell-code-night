@@ -48,8 +48,9 @@ Tests mirror src under `tests/unit/` + `tests/integration/`; fixtures in `tests/
 ## Ignore
 
 - `turkcell-code-night-main/` at repo root = old prototype, gitignored, do not read or modify.
-- Never read `__pycache__/`, `.mypy_cache/`, `.ruff_cache/`, `output/` artifacts.
-- Docs in `docs/` (sprint_*.md = per-sprint records; architecture/data_contracts/deterministic_rules = design).
+- Never read `__pycache__/`, `.mypy_cache/`, `.ruff_cache/`.
+- `data/input/` = committed sample CSVs (6 users, 6 challenges); `data/output/` = committed sample outputs of a 3-day run (2026-06-29..07-01). Regenerate by re-running the CLI for those dates in order.
+- Docs in `docs/` (sprint_*.md = per-sprint records; rule_engine/ai_layer/operations/testing_and_determinism/agent_guide/backlog = living design docs).
 
 ## Known quirks
 
@@ -57,5 +58,5 @@ Tests mirror src under `tests/unit/` + `tests/integration/`; fixtures in `tests/
   `--basetemp=<writable dir>` and `-p no:cacheprovider` if that happens.
 - Repo sprint numbering diverges from the original plan after Sprint 12
   (repo S13=CLI explain, S14=LLM layer). Gap-closure sprints start at 16
-  (S16=quality gate+CI done; S17=LLM adapter refactor done;
-  S18=determinism/golden tests done; S19=sample data+docs).
+  (S16=quality gate+CI, S17=LLM adapter refactor, S18=determinism/golden
+  tests, S19=sample data+docs — all done; gap-closure plan complete).

@@ -1,0 +1,51 @@
+[
+  {
+    "reward_id": "reward-b0d1597293a7ba9b",
+    "user_id": "u001",
+    "challenge_id": "CH-004",
+    "reward_points": 800,
+    "reward_date": "2026-07-01",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": [
+      "CH-003",
+      "CH-002",
+      "CH-001"
+    ]
+  },
+  {
+    "reward_id": "reward-94b604b246b37f09",
+    "user_id": "u002",
+    "challenge_id": "CH-001",
+    "reward_points": 80,
+    "reward_date": "2026-07-01",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  },
+  {
+    "reward_id": "reward-942dea1097b24b4a",
+    "user_id": "u003",
+    "challenge_id": "CH-002",
+    "reward_points": 150,
+    "reward_date": "2026-07-01",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  },
+  {
+    "reward_id": "reward-11af68f1d511f638",
+    "user_id": "u004",
+    "challenge_id": "CH-001",
+    "reward_points": 80,
+    "reward_date": "2026-07-01",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  },
+  {
+    "reward_id": "reward-24c8aa27aae3d11b",
+    "user_id": "u005",
+    "challenge_id": "CH-001",
+    "reward_points": 80,
+    "reward_date": "2026-07-01",
+    "reason": "CHALLENGE_COMPLETED",
+    "suppressed_challenge_ids": []
+  }
+]

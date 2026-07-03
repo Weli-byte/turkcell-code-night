@@ -1,0 +1,101 @@
+[
+  {
+    "notification_id": "notification-d652020e8357031a",
+    "user_id": "u001",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-003 completed. You earned 380 points.",
+    "created_at": "2026-06-29T00:00:00+00:00",
+    "source_ref": "reward-d2598cdaf0915173"
+  },
+  {
+    "notification_id": "notification-accdfa5d444be9b7",
+    "user_id": "u003",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-002 completed. You earned 150 points.",
+    "created_at": "2026-06-29T00:00:00+00:00",
+    "source_ref": "reward-694a3a676e51a4b7"
+  },
+  {
+    "notification_id": "notification-cb7525bf6b99ce4e",
+    "user_id": "u001",
+    "notification_type": "BADGE_EARNED",
+    "channel": "IN_APP",
+    "message": "Bronze badge earned.",
+    "created_at": "2026-06-30T00:00:00+00:00",
+    "source_ref": "badge-bbe026ad9ca7bb57"
+  },
+  {
+    "notification_id": "notification-c042f3ebdba6504b",
+    "user_id": "u001",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-003 completed. You earned 380 points.",
+    "created_at": "2026-06-30T00:00:00+00:00",
+    "source_ref": "reward-d02e1660039724a5"
+  },
+  {
+    "notification_id": "notification-ada752649e73d653",
+    "user_id": "u002",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-005 completed. You earned 200 points.",
+    "created_at": "2026-06-30T00:00:00+00:00",
+    "source_ref": "reward-29b23d1969397051"
+  },
+  {
+    "notification_id": "notification-3fa46bc6a3e5b900",
+    "user_id": "u001",
+    "notification_type": "BADGE_EARNED",
+    "channel": "IN_APP",
+    "message": "Silver badge earned.",
+    "created_at": "2026-07-01T00:00:00+00:00",
+    "source_ref": "badge-8a295638792d999b"
+  },
+  {
+    "notification_id": "notification-22011d4cfcce0022",
+    "user_id": "u001",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-004 completed. You earned 800 points.",
+    "created_at": "2026-07-01T00:00:00+00:00",
+    "source_ref": "reward-b0d1597293a7ba9b"
+  },
+  {
+    "notification_id": "notification-dc3c1fc302b26105",
+    "user_id": "u002",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-001 completed. You earned 80 points.",
+    "created_at": "2026-07-01T00:00:00+00:00",
+    "source_ref": "reward-94b604b246b37f09"
+  },
+  {
+    "notification_id": "notification-8388a6179196738c",
+    "user_id": "u003",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-002 completed. You earned 150 points.",
+    "created_at": "2026-07-01T00:00:00+00:00",
+    "source_ref": "reward-942dea1097b24b4a"
+  },
+  {
+    "notification_id": "notification-a44473a1f4e59ed8",
+    "user_id": "u004",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-001 completed. You earned 80 points.",
+    "created_at": "2026-07-01T00:00:00+00:00",
+    "source_ref": "reward-11af68f1d511f638"
+  },
+  {
+    "notification_id": "notification-ae6a1ae4ce36a522",
+    "user_id": "u005",
+    "notification_type": "CHALLENGE_REWARD",
+    "channel": "IN_APP",
+    "message": "Challenge CH-001 completed. You earned 80 points.",
+    "created_at": "2026-07-01T00:00:00+00:00",
+    "source_ref": "reward-24c8aa27aae3d11b"
+  }
+]

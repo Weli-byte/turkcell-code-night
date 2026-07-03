@@ -1,0 +1,74 @@
+[
+  {
+    "ledger_id": "ledger-94c1a9f779662233",
+    "user_id": "u001",
+    "points_delta": 380,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-d2598cdaf0915173",
+    "created_at": "2026-06-29T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-f07d19b835996a12",
+    "user_id": "u003",
+    "points_delta": 150,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-694a3a676e51a4b7",
+    "created_at": "2026-06-29T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-eeef3a6e3c0b2fb0",
+    "user_id": "u001",
+    "points_delta": 380,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-d02e1660039724a5",
+    "created_at": "2026-06-30T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-75e9b3b27aca93e7",
+    "user_id": "u002",
+    "points_delta": 200,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-29b23d1969397051",
+    "created_at": "2026-06-30T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-fe897381404f3ce8",
+    "user_id": "u001",
+    "points_delta": 800,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-b0d1597293a7ba9b",
+    "created_at": "2026-07-01T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-0a87bb0a0a18ca0b",
+    "user_id": "u002",
+    "points_delta": 80,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-94b604b246b37f09",
+    "created_at": "2026-07-01T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-19cd38c72a43fdd8",
+    "user_id": "u003",
+    "points_delta": 150,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-942dea1097b24b4a",
+    "created_at": "2026-07-01T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-645e1d7b4a69f291",
+    "user_id": "u004",
+    "points_delta": 80,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-11af68f1d511f638",
+    "created_at": "2026-07-01T00:00:00+00:00"
+  },
+  {
+    "ledger_id": "ledger-90a3e4f5c2cf65ae",
+    "user_id": "u005",
+    "points_delta": 80,
+    "source": "CHALLENGE_COMPLETED",
+    "source_ref": "reward-24c8aa27aae3d11b",
+    "created_at": "2026-07-01T00:00:00+00:00"
+  }
+]

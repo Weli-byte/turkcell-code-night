@@ -1,0 +1,7 @@
+challenge_id,challenge_name,challenge_type,condition,reward_points,priority,is_active
+CH-001,Gunun Izleyicisi,DAILY,watch_minutes_today >= 60,80,5,true
+CH-002,Bolum Bitirici,DAILY,episodes_completed_today >= 3,150,4,true
+CH-003,Haftalik Maraton,WEEKLY,watch_minutes_7d >= 600,380,2,true
+CH-004,Maraton Gunu,DAILY,watch_minutes_today >= 300,800,1,true
+CH-005,Parti Kurdu,DAILY,watch_party_minutes_today >= 90,200,3,true
+CH-006,Elestirmen,DAILY,ratings_today >= 5,120,6,false

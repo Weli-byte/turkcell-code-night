@@ -1,18 +1,17 @@
-# Sprint 2 Data Contracts
+# Data Contracts
 
 ## Purpose
 
-Sprint 2 introduces typed domain models for the new production package under
-`src/gamification_engine/domain/`.
+Typed domain models live under `src/gamification_engine/domain/`.
 
 These models define stable data contracts and validation rules. They do not
-execute business workflows. Rule evaluation, state calculation, ledger updates,
-badge assignment, leaderboard generation, notifications, and explanations will
-be implemented in later sprints.
+execute business workflows: rule evaluation, state calculation, ledger
+updates, badge assignment, leaderboard generation, notifications and
+explanations are implemented in their own modules.
 
 ## Modeling Decision
 
-The project uses standard-library `dataclass` models for Sprint 2.
+The project uses standard-library `dataclass` models.
 
 Rationale:
 
@@ -303,33 +302,24 @@ Serialization guarantees:
 - Tuples are converted to lists.
 - Evidence values are converted recursively.
 
-## Current Compatibility Notes
+## CSV Column Mapping
 
-The current prototype data uses:
+The activity CSV header is:
 
 ```text
 event_id,user_id,date,shows_watched,unique_genres,watch_minutes,
 episodes_completed,watch_party_minutes,ratings
 ```
 
-Sprint 2 maps this into:
+Ingestion (`src/gamification_engine/ingestion/`) maps `date` to
+`activity_date`, `ratings` to `ratings_given`, and splits `shows_watched`
+on `|`. The challenge CSV header is:
 
 ```text
-activity_date
-ratings_given
-shows_watched
+challenge_id,challenge_name,challenge_type,condition,reward_points,
+priority,is_active
 ```
 
-The exact CSV parsing and field-name normalization will be implemented in
-Sprint 3.
-
-## Definition of Done
-
-Sprint 2 is complete when:
-
-- Domain enum module exists.
-- Domain model module exists.
-- Basic invariant validation exists.
-- JSON-compatible serialization exists.
-- Unit tests cover valid models and invalid values.
-- Data contracts are documented.
+Sample input files live under `data/input/`; expected JSON output shapes
+can be inspected under `data/output/` and
+`tests/fixtures/golden_outputs/`.

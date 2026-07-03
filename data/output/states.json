@@ -1,0 +1,80 @@
+[
+  {
+    "user_id": "u001",
+    "state_date": "2026-07-01",
+    "watch_minutes_today": 320,
+    "watch_minutes_7d": 920,
+    "episodes_completed_today": 4,
+    "episodes_completed_7d": 10,
+    "unique_genres_today": 2,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 0,
+    "ratings_7d": 3,
+    "watch_streak_days": 9
+  },
+  {
+    "user_id": "u002",
+    "state_date": "2026-07-01",
+    "watch_minutes_today": 65,
+    "watch_minutes_7d": 175,
+    "episodes_completed_today": 1,
+    "episodes_completed_7d": 2,
+    "unique_genres_today": 2,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 0,
+    "ratings_7d": 1,
+    "watch_streak_days": 3
+  },
+  {
+    "user_id": "u003",
+    "state_date": "2026-07-01",
+    "watch_minutes_today": 45,
+    "watch_minutes_7d": 115,
+    "episodes_completed_today": 3,
+    "episodes_completed_7d": 8,
+    "unique_genres_today": 2,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 1,
+    "ratings_7d": 3,
+    "watch_streak_days": 1
+  },
+  {
+    "user_id": "u004",
+    "state_date": "2026-07-01",
+    "watch_minutes_today": 61,
+    "watch_minutes_7d": 61,
+    "episodes_completed_today": 1,
+    "episodes_completed_7d": 1,
+    "unique_genres_today": 1,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 0,
+    "ratings_7d": 0,
+    "watch_streak_days": 1
+  },
+  {
+    "user_id": "u005",
+    "state_date": "2026-07-01",
+    "watch_minutes_today": 75,
+    "watch_minutes_7d": 110,
+    "episodes_completed_today": 1,
+    "episodes_completed_7d": 1,
+    "unique_genres_today": 1,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 3,
+    "ratings_7d": 3,
+    "watch_streak_days": 2
+  },
+  {
+    "user_id": "u006",
+    "state_date": "2026-07-01",
+    "watch_minutes_today": 25,
+    "watch_minutes_7d": 55,
+    "episodes_completed_today": 0,
+    "episodes_completed_7d": 0,
+    "unique_genres_today": 1,
+    "watch_party_minutes_today": 0,
+    "ratings_today": 1,
+    "ratings_7d": 1,
+    "watch_streak_days": 0
+  }
+]
