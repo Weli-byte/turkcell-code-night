@@ -128,6 +128,7 @@ def test_cli_run_pipeline_error(mock_run_pipeline, capsys) -> None:  # type: ign
 @patch("gamification_engine.cli.main._load_rewards_json")
 @patch("gamification_engine.cli.main.load_challenge_definitions_csv")
 @patch("gamification_engine.cli.main.explain_user_query")
+@patch.dict("os.environ", {"GEMINI_API_KEY": "", "OPENAI_API_KEY": ""})
 def test_cli_explain_text_format(
     mock_explain,
     mock_load_challenges,
@@ -181,6 +182,7 @@ def test_cli_explain_text_format(
 @patch("gamification_engine.cli.main._load_rewards_json")
 @patch("gamification_engine.cli.main.load_challenge_definitions_csv")
 @patch("gamification_engine.cli.main.explain_user_query")
+@patch.dict("os.environ", {"GEMINI_API_KEY": "", "OPENAI_API_KEY": ""})
 def test_cli_explain_json_format(
     mock_explain,
     mock_load_challenges,
@@ -233,6 +235,7 @@ def test_cli_explain_json_format(
 
 
 @patch("gamification_engine.cli.main._load_states_json")
+@patch.dict("os.environ", {"GEMINI_API_KEY": "", "OPENAI_API_KEY": ""})
 def test_cli_explain_load_error(mock_load_states, capsys) -> None:  # type: ignore[no-untyped-def]
     """The CLI explain command should fail cleanly and print the error if a load fails."""
 

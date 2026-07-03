@@ -220,6 +220,23 @@ def _handle_explain(args: argparse.Namespace) -> int:
             rewards=rewards,
         )
 
+        from gamification_engine.ai.llm_client import generate_llm_explanation
+        from gamification_engine.domain.models import ExplanationResponse
+
+        llm_answer = generate_llm_explanation(
+            question=args.question,
+            deterministic_answer=response.answer,
+            evidence=response.evidence,
+        )
+
+        if llm_answer is not None:
+            response = ExplanationResponse(
+                user_id=response.user_id,
+                question=response.question,
+                answer=llm_answer,
+                evidence=response.evidence,
+            )
+
         if args.format == "json":
             print(json.dumps(response.to_dict(), ensure_ascii=False, indent=2))
         else:
