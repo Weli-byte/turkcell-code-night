@@ -107,4 +107,3 @@ def test_build_daily_user_states_aggregates_duplicate_run_date_rows() -> None:
     assert state.watch_party_minutes_today == 30
     assert state.ratings_today == 3
     assert state.watch_streak_days == 1
-

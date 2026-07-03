@@ -116,4 +116,3 @@ def test_get_user_ids_returns_sorted_unique_users() -> None:
     ]
 
     assert get_user_ids(aggregate_daily_metrics(activities)) == ["U1", "U2"]
-

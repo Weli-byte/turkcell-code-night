@@ -102,4 +102,3 @@ def test_build_leaderboard_returns_empty_list_for_empty_totals() -> None:
     """No point totals means no leaderboard entries."""
 
     assert build_leaderboard({}) == []
-

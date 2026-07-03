@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections import defaultdict
 from collections.abc import Iterable
-from datetime import datetime, time, timezone
+from datetime import UTC, datetime, time
 
 from gamification_engine.domain.models import PointsLedgerEntry, RewardEvent
 
@@ -86,7 +86,7 @@ def _ledger_entry_from_reward(reward_event: RewardEvent) -> PointsLedgerEntry:
         created_at=datetime.combine(
             reward_event.reward_date,
             time.min,
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         ),
     )
 
@@ -100,4 +100,3 @@ def _build_ledger_id(reward_event: RewardEvent) -> str:
     )
     digest = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()[:16]
     return f"ledger-{digest}"
-

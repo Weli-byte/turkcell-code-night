@@ -18,4 +18,3 @@ BADGE_THRESHOLDS: tuple[BadgeThreshold, ...] = (
     BadgeThreshold(BadgeType.SILVER, 1500),
     BadgeThreshold(BadgeType.GOLD, 3000),
 )
-

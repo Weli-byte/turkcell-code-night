@@ -31,4 +31,3 @@ def test_repository_returns_challenges_in_deterministic_order() -> None:
     assert [challenge.challenge_id for challenge in repository.list_active()] == [
         "C-02"
     ]
-

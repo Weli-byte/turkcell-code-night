@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import date
 from collections.abc import Iterable
+from datetime import date
 from enum import StrEnum
 from typing import Any
 
@@ -79,9 +79,7 @@ def classify_intent(question: str) -> ExplanationIntent:
         if any(k in q for k in ["kazandım", "aldım", "verildi", "hak ettim"]):
             return ExplanationIntent.REWARD_WON
 
-    if any(
-        k in q for k in ["kazanamadım", "alamadım", "verilmedi", "alamadım"]
-    ):
+    if any(k in q for k in ["kazanamadım", "alamadım", "verilmedi", "alamadım"]):
         return ExplanationIntent.REWARD_NOT_WON
     if any(k in q for k in ["kazandım", "aldım", "verildi", "kazandım"]):
         return ExplanationIntent.REWARD_WON
@@ -158,14 +156,10 @@ def explain_user_query(
             rank = user_entry.rank
             total_points = user_entry.total_points
             if rank == 1:
-                answer = LEADERBOARD_POSITION_RANK_1.format(
-                    total_points=total_points
-                )
+                answer = LEADERBOARD_POSITION_RANK_1.format(total_points=total_points)
                 evidence = {"rank": 1, "total_points": total_points}
             else:
-                above_entry = next(
-                    (e for e in leaderboard if e.rank == rank - 1), None
-                )
+                above_entry = next((e for e in leaderboard if e.rank == rank - 1), None)
                 if above_entry:
                     points_to_next = above_entry.total_points - total_points
                     next_user_id = above_entry.user_id
@@ -209,9 +203,7 @@ def explain_user_query(
             target_badge_type = next_threshold.badge_type
 
         if target_badge_type in user_badges:
-            answer = BADGE_EARNED_TEMPLATE.format(
-                badge_type=target_badge_type.value
-            )
+            answer = BADGE_EARNED_TEMPLATE.format(badge_type=target_badge_type.value)
             evidence = {
                 "target_badge": target_badge_type.value,
                 "status": "ALREADY_EARNED",
@@ -269,20 +261,14 @@ def explain_user_query(
             assert challenge_id is not None
             cid = challenge_id
             reward = next(
-                (
-                    r
-                    for r in rewards
-                    if r.user_id == user_id and r.challenge_id == cid
-                ),
+                (r for r in rewards if r.user_id == user_id and r.challenge_id == cid),
                 None,
             )
             if reward is None:
 
                 def matches_challenge(entry: PointsLedgerEntry) -> bool:
                     reward_date = entry.created_at.date()
-                    expected_id = _build_reward_id(
-                        user_id, reward_date, cid
-                    )
+                    expected_id = _build_reward_id(user_id, reward_date, cid)
                     return entry.source_ref == expected_id
 
                 matching_entry = next(
@@ -348,11 +334,7 @@ def explain_user_query(
                 cid = challenge_id
                 user_rewards = [r for r in rewards if r.user_id == user_id]
                 suppressing_reward = next(
-                    (
-                        r
-                        for r in user_rewards
-                        if cid in r.suppressed_challenge_ids
-                    ),
+                    (r for r in user_rewards if cid in r.suppressed_challenge_ids),
                     None,
                 )
 
@@ -370,9 +352,7 @@ def explain_user_query(
 
                     def matches_challenge(entry: PointsLedgerEntry) -> bool:
                         reward_date = entry.created_at.date()
-                        expected_id = _build_reward_id(
-                            user_id, reward_date, cid
-                        )
+                        expected_id = _build_reward_id(user_id, reward_date, cid)
                         return entry.source_ref == expected_id
 
                     has_won = any(
@@ -381,9 +361,7 @@ def explain_user_query(
                         if e.user_id == user_id and matches_challenge(e)
                     )
                     if has_won:
-                        answer = (
-                            f"Challenge {challenge_id} ödülünü zaten kazandınız."
-                        )
+                        answer = f"Challenge {challenge_id} ödülünü zaten kazandınız."
                         evidence = {
                             "challenge_id": challenge_id,
                             "status": "WON",
@@ -406,16 +384,12 @@ def explain_user_query(
                                 )
                                 left_val = rule_context[parsed_cond.field_name]
                                 right_val = parsed_cond.literal_value
-                                state_values = (
-                                    f"{parsed_cond.field_name} = {left_val}"
-                                )
+                                state_values = f"{parsed_cond.field_name} = {left_val}"
 
-                                answer = (
-                                    REWARD_NOT_WON_CONDITION_TEMPLATE.format(
-                                        challenge_id=challenge_id,
-                                        condition=challenge.condition,
-                                        state_values=state_values,
-                                    )
+                                answer = REWARD_NOT_WON_CONDITION_TEMPLATE.format(
+                                    challenge_id=challenge_id,
+                                    condition=challenge.condition,
+                                    state_values=state_values,
                                 )
                                 evidence = {
                                     "challenge_id": challenge_id,

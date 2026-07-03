@@ -55,9 +55,7 @@ def run_pipeline(context: RunContext) -> RunSummary:
 
     try:
         # 1. Load CSV Inputs
-        logger.info(
-            "Loading user activities from %s", context.activities_csv_path
-        )
+        logger.info("Loading user activities from %s", context.activities_csv_path)
         activities = load_user_activities_csv(context.activities_csv_path)
 
         logger.info("Loading challenges from %s", context.challenges_csv_path)
@@ -68,17 +66,11 @@ def run_pipeline(context: RunContext) -> RunSummary:
         assert context.existing_badges_path is not None
         assert context.existing_notifications_path is not None
 
-        logger.info(
-            "Loading ledger history from %s", context.existing_ledger_path
-        )
+        logger.info("Loading ledger history from %s", context.existing_ledger_path)
         existing_ledger = load_points_ledger_json(context.existing_ledger_path)
 
-        logger.info(
-            "Loading badge history from %s", context.existing_badges_path
-        )
-        existing_badges = load_badge_assignments_json(
-            context.existing_badges_path
-        )
+        logger.info("Loading badge history from %s", context.existing_badges_path)
+        existing_badges = load_badge_assignments_json(context.existing_badges_path)
 
         logger.info(
             "Loading notification history from %s",
@@ -152,9 +144,7 @@ def run_pipeline(context: RunContext) -> RunSummary:
             output_dir=context.output_dir,
         )
 
-        logger.info(
-            "Pipeline completed successfully for date: %s", context.run_date
-        )
+        logger.info("Pipeline completed successfully for date: %s", context.run_date)
         return summary
 
     except GamificationEngineError as exc:

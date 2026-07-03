@@ -108,11 +108,14 @@ def _to_json_string(payload: Any) -> str:
         - Trailing newline for POSIX-friendly files
     """
 
-    return json.dumps(
-        payload,
-        ensure_ascii=False,
-        indent=_JSON_INDENT,
-    ) + "\n"
+    return (
+        json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=_JSON_INDENT,
+        )
+        + "\n"
+    )
 
 
 def _write_json(path: Path, payload: Any) -> None:

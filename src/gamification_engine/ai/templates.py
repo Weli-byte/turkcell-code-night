@@ -18,9 +18,7 @@ LEADERBOARD_POSITION_TEMPLATE = (
     "{points_to_next} puan fark var."
 )
 
-BADGE_EARNED_TEMPLATE = (
-    "Tebrikler! {badge_type} rozetine zaten ulaştınız."
-)
+BADGE_EARNED_TEMPLATE = "Tebrikler! {badge_type} rozetine zaten ulaştınız."
 
 BADGE_REQUIREMENT_TEMPLATE = (
     "{target_badge} rozetine ulaşmak için {required_points} puana "
@@ -39,9 +37,7 @@ REWARD_NOT_WON_SUPPRESSED_TEMPLATE = (
     "bu ödül verilemedi (suppressed)."
 )
 
-REWARD_NOT_WON_INACTIVE_TEMPLATE = (
-    "Challenge {challenge_id} şu anda aktif değil."
-)
+REWARD_NOT_WON_INACTIVE_TEMPLATE = "Challenge {challenge_id} şu anda aktif değil."
 
 REWARD_NOT_WON_CONDITION_TEMPLATE = (
     "Challenge {challenge_id} koşulu ({condition}) sağlanamadı. "

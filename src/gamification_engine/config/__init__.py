@@ -6,4 +6,3 @@ from gamification_engine.config.badge_config import (
 )
 
 __all__ = ["BADGE_THRESHOLDS", "BadgeThreshold"]
-

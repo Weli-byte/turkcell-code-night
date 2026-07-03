@@ -15,4 +15,3 @@ __all__ = [
     "sort_notifications",
     "write_notifications_json",
 ]
-

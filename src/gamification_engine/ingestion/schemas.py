@@ -47,4 +47,3 @@ CHALLENGE_DEFINITION_SCHEMA = CsvSchema(
     ),
     optional_headers=frozenset(),
 )
-

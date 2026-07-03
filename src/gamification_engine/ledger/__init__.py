@@ -15,4 +15,3 @@ __all__ = [
     "load_points_ledger_json",
     "write_points_ledger_json",
 ]
-

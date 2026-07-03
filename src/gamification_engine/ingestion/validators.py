@@ -64,9 +64,7 @@ def parse_challenge_definition_row(
         return ChallengeDefinition(
             challenge_id=_required_text(row, "challenge_id"),
             name=_required_text(row, "challenge_name"),
-            challenge_type=_parse_challenge_type(
-                _required_text(row, "challenge_type")
-            ),
+            challenge_type=_parse_challenge_type(_required_text(row, "challenge_type")),
             condition=_required_text(row, "condition"),
             reward_points=_parse_positive_int(row, "reward_points"),
             priority=_parse_positive_int(row, "priority"),
@@ -154,4 +152,3 @@ def _parse_challenge_type(value: str) -> ChallengeType:
 
 def _parse_pipe_list(value: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split("|") if item.strip())
-

@@ -51,11 +51,7 @@ def test_openai_api_call_success(mock_urlopen) -> None:
     # Set up mock response stream
     mock_response = MagicMock()
     mock_response.read.return_value = json.dumps(
-        {
-            "choices": [
-                {"message": {"role": "assistant", "content": "OpenAI answer."}}
-            ]
-        }
+        {"choices": [{"message": {"role": "assistant", "content": "OpenAI answer."}}]}
     ).encode("utf-8")
     mock_urlopen.return_value.__enter__.return_value = mock_response
 

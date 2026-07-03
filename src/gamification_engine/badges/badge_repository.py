@@ -34,7 +34,9 @@ def load_badge_assignments_json(path: str | Path) -> list[BadgeAssignment]:
     if not isinstance(raw_data, list):
         raise IngestionError("Badge JSON must contain a list of assignments.")
 
-    badges = [_parse_badge_assignment(item, index + 1) for index, item in enumerate(raw_data)]
+    badges = [
+        _parse_badge_assignment(item, index + 1) for index, item in enumerate(raw_data)
+    ]
     return sort_badge_assignments(badges)
 
 
@@ -65,9 +67,7 @@ def _parse_badge_assignment(raw_entry: Any, row_number: int) -> BadgeAssignment:
             badge_id=_optional_text(raw_entry, "badge_id"),
         )
     except (ValueError, TypeError) as exc:
-        raise IngestionError(
-            f"Invalid badge assignment {row_number}: {exc}"
-        ) from exc
+        raise IngestionError(f"Invalid badge assignment {row_number}: {exc}") from exc
 
 
 def _required_text(raw_entry: dict[str, Any], field_name: str) -> str:

@@ -32,6 +32,21 @@ testpaths = ["tests"]
 addopts = [
   "--strict-markers",
   "--strict-config",
+  "--cov=gamification_engine",
+  "--cov-report=term-missing",
+  "--cov-fail-under=85",
+]
+
+[tool.coverage.run]
+source = ["gamification_engine"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+  "raise SystemExit",
 ]
 
 [tool.ruff]

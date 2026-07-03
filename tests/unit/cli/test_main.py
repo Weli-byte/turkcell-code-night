@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from gamification_engine.cli.main import main
 from gamification_engine.domain.errors import IngestionError
@@ -139,7 +139,8 @@ def test_cli_explain_text_format(
     mock_load_states,
     capsys,
 ) -> None:  # type: ignore[no-untyped-def]
-    """The CLI explain command should print only the answer in text format by default."""
+    """The CLI explain command should print only the answer in text format
+    by default."""
 
     mock_load_states.return_value = []
     mock_load_ledger.return_value = []
@@ -237,7 +238,8 @@ def test_cli_explain_json_format(
 @patch("gamification_engine.cli.main._load_states_json")
 @patch.dict("os.environ", {"GEMINI_API_KEY": "", "OPENAI_API_KEY": ""})
 def test_cli_explain_load_error(mock_load_states, capsys) -> None:  # type: ignore[no-untyped-def]
-    """The CLI explain command should fail cleanly and print the error if a load fails."""
+    """The CLI explain command should fail cleanly and print the error
+    if a load fails."""
 
     mock_load_states.side_effect = RuntimeError("Read error")
 

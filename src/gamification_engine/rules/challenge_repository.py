@@ -40,4 +40,3 @@ class ChallengeRepository:
         if duplicates:
             joined = ", ".join(sorted(duplicates))
             raise RuleEvaluationError(f"Duplicate challenge IDs found: {joined}.")
-

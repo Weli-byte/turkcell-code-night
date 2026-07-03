@@ -15,4 +15,3 @@ __all__ = [
     "load_badge_assignments_json",
     "write_badge_assignments_json",
 ]
-

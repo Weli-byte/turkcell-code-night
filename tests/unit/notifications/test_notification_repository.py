@@ -1,7 +1,7 @@
 """Tests for notification JSON repository."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -21,7 +21,7 @@ def _notification() -> Notification:
         notification_type=NotificationType.CHALLENGE_REWARD,
         channel=NotificationChannel.IN_APP,
         message="Challenge C-01 completed. You earned 80 points.",
-        created_at=datetime(2026, 3, 14, tzinfo=timezone.utc),
+        created_at=datetime(2026, 3, 14, tzinfo=UTC),
         source_ref="reward-1",
     )
 
@@ -67,4 +67,3 @@ def test_load_notifications_json_rejects_invalid_record(tmp_path) -> None:
 
     with pytest.raises(IngestionError, match="Invalid notification"):
         load_notifications_json(path)
-

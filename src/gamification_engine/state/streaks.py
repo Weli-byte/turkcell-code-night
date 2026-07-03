@@ -6,7 +6,6 @@ from datetime import date, timedelta
 
 from gamification_engine.state.metrics import DailyActivityMetrics
 
-
 DEFAULT_STREAK_MIN_WATCH_MINUTES = 30
 
 
@@ -37,4 +36,3 @@ def calculate_watch_streak_days(
         current_date -= timedelta(days=1)
 
     return streak_days
-

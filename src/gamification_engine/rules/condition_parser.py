@@ -69,4 +69,3 @@ def parse_condition(condition: str, allowed_fields: set[str]) -> ParsedCondition
         operator=ComparisonOperator(match.group("operator")),
         literal_value=int(match.group("literal")),
     )
-

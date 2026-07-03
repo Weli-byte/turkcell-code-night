@@ -9,4 +9,3 @@ __all__ = [
     "load_challenge_definitions_csv",
     "load_user_activities_csv",
 ]
-

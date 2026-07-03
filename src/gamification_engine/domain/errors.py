@@ -28,4 +28,3 @@ class RuleEvaluationError(GamificationEngineError):
 
 class IntegrityValidationError(GamificationEngineError):
     """Raised when generated outputs fail cross-file consistency checks."""
-

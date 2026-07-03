@@ -8,7 +8,6 @@ from gamification_engine.rules.condition_parser import (
     parse_condition,
 )
 
-
 ALLOWED_FIELDS = {"watch_minutes_today", "ratings_7d"}
 
 
@@ -44,4 +43,3 @@ def test_parse_condition_rejects_eval_payload() -> None:
 
     with pytest.raises(RuleEvaluationError, match="Condition must match"):
         parse_condition("__import__('os').system('echo unsafe')", ALLOWED_FIELDS)
-

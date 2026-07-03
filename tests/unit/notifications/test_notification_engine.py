@@ -1,6 +1,6 @@
 """Tests for deterministic notification generation."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from gamification_engine.domain.enums import (
     BadgeType,
@@ -65,7 +65,7 @@ def test_create_notifications_preserves_existing_and_skips_duplicates() -> None:
         notification_type=NotificationType.CHALLENGE_REWARD,
         channel=NotificationChannel.IN_APP,
         message="Already sent.",
-        created_at=datetime(2026, 3, 14, tzinfo=timezone.utc),
+        created_at=datetime(2026, 3, 14, tzinfo=UTC),
         source_ref="reward-1",
     )
 
@@ -112,4 +112,3 @@ def test_create_notifications_supports_channel_override() -> None:
     )
 
     assert notification.channel is NotificationChannel.BIP
-

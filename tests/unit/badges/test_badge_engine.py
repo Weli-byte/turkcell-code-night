@@ -41,7 +41,9 @@ def test_assign_badges_awards_missing_badges_in_tier_order() -> None:
         BadgeType.GOLD,
     ]
     assert new_badges == all_badges
-    assert all(badge.badge_id and badge.badge_id.startswith("badge-") for badge in new_badges)
+    assert all(
+        badge.badge_id and badge.badge_id.startswith("badge-") for badge in new_badges
+    )
 
 
 def test_assign_badges_does_not_duplicate_existing_badge() -> None:
@@ -109,4 +111,3 @@ def test_get_earned_badge_types_rejects_invalid_threshold_config() -> None:
                 BadgeThreshold(BadgeType.BRONZE, 500),
             ),
         )
-

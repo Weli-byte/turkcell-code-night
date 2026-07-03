@@ -11,7 +11,7 @@ Sprint 10 acceptance criteria:
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -47,7 +47,7 @@ from gamification_engine.export.json_exporter import (
 # ---------------------------------------------------------------------------
 
 _RUN_DATE = date(2026, 6, 15)
-_CREATED_AT = datetime(2026, 6, 15, 0, 0, 0, tzinfo=timezone.utc)
+_CREATED_AT = datetime(2026, 6, 15, 0, 0, 0, tzinfo=UTC)
 
 
 def _make_state(user_id: str = "u001") -> DailyUserState:
@@ -219,7 +219,8 @@ class TestExportRewards:
         assert data[0]["reason"] == "CHALLENGE_COMPLETED"
 
     def test_rewards_sorted_deterministically(self, tmp_path: Path) -> None:
-        """Rewards should be sorted by (reward_date, user_id, challenge_id, reward_id)."""
+        """Rewards should be sorted by
+        (reward_date, user_id, challenge_id, reward_id)."""
 
         rewards = [
             _make_reward(reward_id="reward-zzz", user_id="u002", challenge_id="c001"),
@@ -256,7 +257,8 @@ class TestExportLedger:
         assert data[0]["created_at"] == "2026-06-15T00:00:00+00:00"
 
     def test_ledger_sorted_deterministically(self, tmp_path: Path) -> None:
-        """Ledger entries should be sorted by (created_at, user_id, source, source_ref, ledger_id)."""
+        """Ledger entries should be sorted by
+        (created_at, user_id, source, source_ref, ledger_id)."""
 
         entries = [
             _make_ledger_entry(ledger_id="ledger-zzz", user_id="u001"),
@@ -359,7 +361,8 @@ class TestExportNotifications:
         assert data[0]["created_at"] == "2026-06-15T00:00:00+00:00"
 
     def test_notifications_sorted_deterministically(self, tmp_path: Path) -> None:
-        """Notifications should be sorted by (created_at, user_id, type, source_ref, id)."""
+        """Notifications should be sorted by
+        (created_at, user_id, type, source_ref, id)."""
 
         notifications = [
             _make_notification(notification_id="notification-zzz", user_id="u002"),
@@ -557,7 +560,9 @@ class TestDeterminism:
         export_states(states, dir_a)
         export_states(states, dir_b)
 
-        assert (dir_a / "states.json").read_bytes() == (dir_b / "states.json").read_bytes()
+        assert (dir_a / "states.json").read_bytes() == (
+            dir_b / "states.json"
+        ).read_bytes()
 
     def test_rewards_deterministic(self, tmp_path: Path) -> None:
         """Same rewards input produces byte-identical output."""
@@ -572,7 +577,9 @@ class TestDeterminism:
         export_rewards(rewards, dir_a)
         export_rewards(rewards, dir_b)
 
-        assert (dir_a / "rewards.json").read_bytes() == (dir_b / "rewards.json").read_bytes()
+        assert (dir_a / "rewards.json").read_bytes() == (
+            dir_b / "rewards.json"
+        ).read_bytes()
 
     def test_full_export_deterministic(self, tmp_path: Path) -> None:
         """Full export_all produces byte-identical output across runs."""
@@ -602,9 +609,9 @@ class TestDeterminism:
             "notifications.json",
             "run_summary.json",
         ):
-            assert (dir_a / filename).read_bytes() == (
-                dir_b / filename
-            ).read_bytes(), f"{filename} differs between runs"
+            assert (dir_a / filename).read_bytes() == (dir_b / filename).read_bytes(), (
+                f"{filename} differs between runs"
+            )
 
 
 # ---------------------------------------------------------------------------

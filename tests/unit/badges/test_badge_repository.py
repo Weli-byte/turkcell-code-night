@@ -59,4 +59,3 @@ def test_load_badge_assignments_json_rejects_invalid_assignment(tmp_path) -> Non
 
     with pytest.raises(IngestionError, match="Invalid badge assignment"):
         load_badge_assignments_json(path)
-

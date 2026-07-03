@@ -1,6 +1,6 @@
 """Tests for Sprint 2 domain models."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -145,7 +145,7 @@ def test_reward_and_ledger_models_serialize_enums_and_dates() -> None:
         points_delta=80,
         source=RewardReason.CHALLENGE_COMPLETED,
         source_ref=reward.reward_id,
-        created_at=datetime(2026, 3, 14, tzinfo=timezone.utc),
+        created_at=datetime(2026, 3, 14, tzinfo=UTC),
     )
 
     assert reward.to_dict()["reason"] == "CHALLENGE_COMPLETED"
@@ -174,7 +174,7 @@ def test_output_models_serialize_consistently() -> None:
         notification_type=NotificationType.BADGE_EARNED,
         channel=NotificationChannel.IN_APP,
         message="Bronze badge earned.",
-        created_at=datetime(2026, 3, 14, tzinfo=timezone.utc),
+        created_at=datetime(2026, 3, 14, tzinfo=UTC),
         source_ref="B-U1-BRONZE",
     )
     decision = ChallengeDecision(
@@ -206,4 +206,3 @@ def test_empty_identifiers_are_rejected() -> None:
 
     with pytest.raises(DomainError, match="user_id"):
         LeaderboardEntry(rank=1, user_id=" ", total_points=0)
-

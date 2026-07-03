@@ -52,9 +52,7 @@ def _build_user_badge_map(
 
     return {
         user_id: tuple(
-            badge_type
-            for badge_type in _badge_order()
-            if badge_type in badge_types
+            badge_type for badge_type in _badge_order() if badge_type in badge_types
         )
         for user_id, badge_types in sorted(badges_by_user.items())
     }
@@ -62,4 +60,3 @@ def _build_user_badge_map(
 
 def _badge_order() -> tuple[BadgeType, ...]:
     return tuple(threshold.badge_type for threshold in BADGE_THRESHOLDS)
-

@@ -495,4 +495,3 @@ class ExplanationResponse:
             "answer": self.answer,
             "evidence": _serialize(self.evidence),
         }
-

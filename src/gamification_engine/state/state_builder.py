@@ -56,9 +56,7 @@ def build_daily_user_states(
                     metric_name="watch_minutes",
                 ),
                 episodes_completed_today=(
-                    today_metrics.episodes_completed
-                    if today_metrics is not None
-                    else 0
+                    today_metrics.episodes_completed if today_metrics is not None else 0
                 ),
                 episodes_completed_7d=sum_metric_in_window(
                     daily_metrics,
@@ -95,4 +93,3 @@ def build_daily_user_states(
         )
 
     return states
-

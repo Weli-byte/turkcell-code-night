@@ -16,4 +16,3 @@ __all__ = [
     "parse_condition",
     "select_reward",
 ]
-

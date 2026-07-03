@@ -100,4 +100,3 @@ def sum_metric_in_window(
         if start_date <= activity_date <= end_date:
             total += int(getattr(metrics, metric_name))
     return total
-

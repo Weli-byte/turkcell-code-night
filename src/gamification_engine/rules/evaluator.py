@@ -74,4 +74,3 @@ def evaluate_challenges_for_state(
             raise
 
     return sorted(triggered, key=lambda item: (item.priority, item.challenge_id))
-

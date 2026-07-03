@@ -1,6 +1,6 @@
 """Tests for append-only points ledger behavior."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from gamification_engine.domain.enums import RewardReason
 from gamification_engine.domain.models import PointsLedgerEntry, RewardEvent
@@ -39,7 +39,7 @@ def _entry(
         points_delta=points,
         source=RewardReason.CHALLENGE_COMPLETED,
         source_ref=source_ref,
-        created_at=datetime(2026, 3, 13, tzinfo=timezone.utc),
+        created_at=datetime(2026, 3, 13, tzinfo=UTC),
     )
 
 
@@ -105,4 +105,3 @@ def test_calculate_total_points_returns_user_totals_sorted_by_user_id() -> None:
     )
 
     assert totals == {"U1": 100, "U2": 50}
-

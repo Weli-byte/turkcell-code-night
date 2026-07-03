@@ -53,4 +53,3 @@ def test_load_csv_rejects_missing_file() -> None:
 
     with pytest.raises(IngestionError, match="does not exist"):
         load_user_activities_csv(FIXTURES_DIR / "missing.csv")
-

@@ -108,4 +108,3 @@ def test_parse_challenge_definition_row_rejects_unknown_type() -> None:
             },
             row_number=2,
         )
-

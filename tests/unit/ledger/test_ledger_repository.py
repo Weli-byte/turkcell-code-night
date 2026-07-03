@@ -61,4 +61,3 @@ def test_load_points_ledger_json_rejects_invalid_entry(tmp_path) -> None:
 
     with pytest.raises(IngestionError, match="Invalid ledger entry"):
         load_points_ledger_json(path)
-

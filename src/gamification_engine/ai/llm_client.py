@@ -40,6 +40,37 @@ USER_PROMPT_TEMPLATE = (
 # ---------------------------------------------------------------------------
 
 
+def _post_https_json(
+    url: str,
+    headers: dict[str, str],
+    body: dict[str, Any],
+    timeout: float,
+) -> dict[str, Any]:
+    """POST a JSON payload to an HTTPS endpoint and parse the JSON response.
+
+    Only the ``https`` scheme is accepted; any other scheme raises
+    ``ValueError`` before a request is made.
+    """
+
+    if not url.startswith("https://"):
+        raise ValueError(f"Only https:// URLs are allowed, got: {url}")
+
+    # Scheme is validated as https above; file:// or custom schemes
+    # are rejected before the request object is even built.
+    req = urllib.request.Request(  # noqa: S310
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        headers=headers,
+        method="POST",
+    )
+
+    # Scheme is validated as https above, so this cannot open
+    # file:// or other unexpected schemes.
+    with urllib.request.urlopen(req, timeout=timeout) as response:  # noqa: S310
+        payload: dict[str, Any] = json.loads(response.read().decode("utf-8"))
+        return payload
+
+
 def _call_gemini_api(api_key: str, prompt: str, timeout: float = 5.0) -> str:
     """Call Google Gemini API using urllib."""
 
@@ -53,24 +84,16 @@ def _call_gemini_api(api_key: str, prompt: str, timeout: float = 5.0) -> str:
         "generationConfig": {"temperature": 0.2},
     }
 
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(body).encode("utf-8"),
-        headers=headers,
-        method="POST",
-    )
-
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        res_data = json.loads(response.read().decode("utf-8"))
-        # Extract text from Gemini structure
-        candidates = res_data.get("candidates", [])
-        if not candidates:
-            raise ValueError("Gemini API returned no candidates.")
-        parts = candidates[0].get("content", {}).get("parts", [])
-        if not parts:
-            raise ValueError("Gemini API candidate has no parts.")
-        text = parts[0].get("text", "")
-        return str(text).strip()
+    res_data = _post_https_json(url, headers, body, timeout)
+    # Extract text from Gemini structure
+    candidates = res_data.get("candidates", [])
+    if not candidates:
+        raise ValueError("Gemini API returned no candidates.")
+    parts = candidates[0].get("content", {}).get("parts", [])
+    if not parts:
+        raise ValueError("Gemini API candidate has no parts.")
+    text = parts[0].get("text", "")
+    return str(text).strip()
 
 
 def _call_openai_api(
@@ -92,21 +115,13 @@ def _call_openai_api(
         "temperature": 0.2,
     }
 
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(body).encode("utf-8"),
-        headers=headers,
-        method="POST",
-    )
-
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        res_data = json.loads(response.read().decode("utf-8"))
-        choices = res_data.get("choices", [])
-        if not choices:
-            raise ValueError("OpenAI API returned no choices.")
-        message = choices[0].get("message", {})
-        content = message.get("content", "")
-        return str(content).strip()
+    res_data = _post_https_json(url, headers, body, timeout)
+    choices = res_data.get("choices", [])
+    if not choices:
+        raise ValueError("OpenAI API returned no choices.")
+    message = choices[0].get("message", {})
+    content = message.get("content", "")
+    return str(content).strip()
 
 
 # ---------------------------------------------------------------------------
@@ -154,9 +169,7 @@ def generate_llm_explanation(
         if gemini_key:
             return _call_gemini_api(gemini_key, user_prompt, timeout)
         if openai_key:
-            return _call_openai_api(
-                openai_key, SYSTEM_PROMPT, user_prompt, timeout
-            )
+            return _call_openai_api(openai_key, SYSTEM_PROMPT, user_prompt, timeout)
     except (urllib.error.URLError, ValueError, Exception):
         # Graceful fallback: return None on any connection error, timeout,
         # API failure, or bad response format.

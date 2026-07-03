@@ -37,8 +37,7 @@ def load_notifications_json(path: str | Path) -> list[Notification]:
         raise IngestionError("Notification JSON must contain a list of records.")
 
     notifications = [
-        _parse_notification(item, index + 1)
-        for index, item in enumerate(raw_data)
+        _parse_notification(item, index + 1) for index, item in enumerate(raw_data)
     ]
     return sort_notifications(notifications)
 
@@ -52,8 +51,7 @@ def write_notifications_json(
     notification_path = Path(path)
     notification_path.parent.mkdir(parents=True, exist_ok=True)
     payload = [
-        notification.to_dict()
-        for notification in sort_notifications(notifications)
+        notification.to_dict() for notification in sort_notifications(notifications)
     ]
     notification_path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2),
@@ -74,9 +72,7 @@ def _parse_notification(raw_entry: Any, row_number: int) -> Notification:
             ),
             channel=NotificationChannel(_required_text(raw_entry, "channel")),
             message=_required_text(raw_entry, "message"),
-            created_at=datetime.fromisoformat(
-                _required_text(raw_entry, "created_at")
-            ),
+            created_at=datetime.fromisoformat(_required_text(raw_entry, "created_at")),
             source_ref=_required_text(raw_entry, "source_ref"),
         )
     except (ValueError, TypeError) as exc:

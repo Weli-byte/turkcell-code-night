@@ -205,9 +205,7 @@ def _handle_explain(args: argparse.Namespace) -> int:
         challenges = load_challenge_definitions_csv(args.challenges)
 
         # Get specific user's state
-        user_state = next(
-            (s for s in states if s.user_id == args.user_id), None
-        )
+        user_state = next((s for s in states if s.user_id == args.user_id), None)
 
         response = explain_user_query(
             question=args.question,

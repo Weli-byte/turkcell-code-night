@@ -28,9 +28,7 @@ def select_reward(
         key=lambda challenge: (challenge.priority, challenge.challenge_id),
     )
     selected = sorted_challenges[0]
-    suppressed = tuple(
-        challenge.challenge_id for challenge in sorted_challenges[1:]
-    )
+    suppressed = tuple(challenge.challenge_id for challenge in sorted_challenges[1:])
 
     return RewardEvent(
         reward_id=_build_reward_id(user_id, reward_date, selected.challenge_id),
@@ -47,4 +45,3 @@ def _build_reward_id(user_id: str, reward_date: date, challenge_id: str) -> str:
     raw_key = f"{user_id}|{reward_date.isoformat()}|{challenge_id}"
     digest = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()[:16]
     return f"reward-{digest}"
-

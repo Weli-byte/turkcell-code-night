@@ -48,4 +48,3 @@ class ChallengeStatus(StrEnum):
     SELECTED = "SELECTED"
     SUPPRESSED = "SUPPRESSED"
     NOT_TRIGGERED = "NOT_TRIGGERED"
-

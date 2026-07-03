@@ -67,4 +67,3 @@ def test_select_reward_ties_by_challenge_id_and_uses_deterministic_id() -> None:
     assert reward_1.challenge_id == "C-01"
     assert reward_1.reward_id == reward_2.reward_id
     assert reward_1.reward_id.startswith("reward-")
-

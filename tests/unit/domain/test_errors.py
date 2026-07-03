@@ -23,4 +23,3 @@ def test_expected_errors_share_base_type() -> None:
 
     for error_type in error_types:
         assert issubclass(error_type, GamificationEngineError)
-

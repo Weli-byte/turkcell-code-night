@@ -8,10 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gamification_engine.domain.errors import IngestionError, GamificationEngineError
+from gamification_engine.domain.errors import GamificationEngineError, IngestionError
 from gamification_engine.orchestration.pipeline import run_pipeline
 from gamification_engine.orchestration.run_context import RunContext
-
 
 # ---------------------------------------------------------------------------
 # RunContext Tests
@@ -92,7 +91,8 @@ def test_run_pipeline_success(
     mock_load_challenges,
     mock_load_activities,
 ) -> None:
-    """The pipeline should orchestrate all components in order and return a RunSummary."""
+    """The pipeline should orchestrate all components in order and return
+    a RunSummary."""
 
     # Set up mocks
     mock_load_activities.return_value = ["activity1", "activity2"]
@@ -132,14 +132,24 @@ def test_run_pipeline_success(
     mock_load_ledger.assert_called_once_with(Path("out_dir/ledger.json"))
     mock_load_badges.assert_called_once_with(Path("out_dir/badges.json"))
     mock_load_notifications.assert_called_once_with(Path("out_dir/notifications.json"))
-    mock_build_states.assert_called_once_with(["activity1", "activity2"], date(2026, 6, 15))
+    mock_build_states.assert_called_once_with(
+        ["activity1", "activity2"], date(2026, 6, 15)
+    )
     mock_evaluate_challenges.assert_called_once_with(mock_state, ["challenge1"])
-    mock_select_reward.assert_called_once_with("user1", date(2026, 6, 15), ["challenge1"])
+    mock_select_reward.assert_called_once_with(
+        "user1", date(2026, 6, 15), ["challenge1"]
+    )
     mock_append_reward_events.assert_called_once_with(["ledger1"], [mock_reward])
     mock_calculate_total_points.assert_called_once_with(["ledger1", "ledger2"])
-    mock_assign_badges.assert_called_once_with({"user1": 150}, ["badge1"], date(2026, 6, 15))
-    mock_build_leaderboard.assert_called_once_with({"user1": 150}, ["badge1", "new_badge"])
-    mock_create_notifications.assert_called_once_with([mock_reward], ["new_badge"], ["notif1"])
+    mock_assign_badges.assert_called_once_with(
+        {"user1": 150}, ["badge1"], date(2026, 6, 15)
+    )
+    mock_build_leaderboard.assert_called_once_with(
+        {"user1": 150}, ["badge1", "new_badge"]
+    )
+    mock_create_notifications.assert_called_once_with(
+        [mock_reward], ["new_badge"], ["notif1"]
+    )
 
     mock_export_all.assert_called_once_with(
         states=[mock_state],
@@ -163,7 +173,9 @@ def test_run_pipeline_success(
 
 
 @patch("gamification_engine.orchestration.pipeline.load_user_activities_csv")
-def test_run_pipeline_propagates_gamification_engine_errors(mock_load_activities) -> None:
+def test_run_pipeline_propagates_gamification_engine_errors(
+    mock_load_activities,
+) -> None:
     """The pipeline should propagate GamificationEngineError directly."""
 
     mock_load_activities.side_effect = IngestionError("Corrupted CSV")

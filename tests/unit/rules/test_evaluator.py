@@ -102,4 +102,3 @@ def test_evaluate_challenge_raises_for_invalid_condition() -> None:
 
     with pytest.raises(RuleEvaluationError):
         evaluate_challenge(_state(), _challenge("C-01", "watch_minutes_today + 1"))
-

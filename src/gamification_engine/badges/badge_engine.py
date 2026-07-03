@@ -52,10 +52,7 @@ def assign_badges(
 
     _validate_thresholds(thresholds)
     existing = sort_badge_assignments(existing_badges)
-    awarded_keys = {
-        (badge.user_id, badge.badge_type)
-        for badge in existing
-    }
+    awarded_keys = {(badge.user_id, badge.badge_type) for badge in existing}
 
     new_badges: list[BadgeAssignment] = []
     for user_id, total_points in sorted(user_total_points.items()):
@@ -125,4 +122,3 @@ def _validate_thresholds(thresholds: tuple[BadgeThreshold, ...]) -> None:
 
         seen_badges.add(threshold.badge_type)
         previous_points = threshold.required_points
-

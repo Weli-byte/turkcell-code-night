@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from gamification_engine.ai.explanation_engine import (
     ExplanationIntent,
@@ -12,8 +12,6 @@ from gamification_engine.ai.explanation_engine import (
 from gamification_engine.domain.enums import (
     BadgeType,
     ChallengeType,
-    NotificationChannel,
-    NotificationType,
     RewardReason,
 )
 from gamification_engine.domain.models import (
@@ -68,10 +66,7 @@ def test_classify_intent() -> None:
         classify_intent("Liderlik tablosunda kaçıncı sıradayım?")
         == ExplanationIntent.LEADERBOARD_POSITION
     )
-    assert (
-        classify_intent("Derecem nedir?")
-        == ExplanationIntent.LEADERBOARD_POSITION
-    )
+    assert classify_intent("Derecem nedir?") == ExplanationIntent.LEADERBOARD_POSITION
 
     assert (
         classify_intent("Gold rozetine nasıl ulaşırım?")
@@ -83,8 +78,7 @@ def test_classify_intent() -> None:
     )
 
     assert (
-        classify_intent("Neden c-01 ödülünü kazandım?")
-        == ExplanationIntent.REWARD_WON
+        classify_intent("Neden c-01 ödülünü kazandım?") == ExplanationIntent.REWARD_WON
     )
     assert classify_intent("Ödülü aldım mı?") == ExplanationIntent.REWARD_WON
 
@@ -92,10 +86,7 @@ def test_classify_intent() -> None:
         classify_intent("Neden C-02 ödülünü alamadım?")
         == ExplanationIntent.REWARD_NOT_WON
     )
-    assert (
-        classify_intent("C-01 neden verilmedi?")
-        == ExplanationIntent.REWARD_NOT_WON
-    )
+    assert classify_intent("C-01 neden verilmedi?") == ExplanationIntent.REWARD_NOT_WON
 
     assert classify_intent("Bugün hava nasıl?") == ExplanationIntent.UNKNOWN
 
@@ -110,7 +101,7 @@ def test_explain_points_status() -> None:
             points_delta=100,
             source=RewardReason.CHALLENGE_COMPLETED,
             source_ref="r1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         PointsLedgerEntry(
             ledger_id="l2",
@@ -118,7 +109,7 @@ def test_explain_points_status() -> None:
             points_delta=150,
             source=RewardReason.CHALLENGE_COMPLETED,
             source_ref="r2",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
     ]
 
@@ -201,10 +192,11 @@ def test_explain_badge_requirements() -> None:
         PointsLedgerEntry(
             ledger_id="l1",
             user_id="u001",
-            points_delta=600,  # Total 600 points, meets Bronze (500) but not Silver (1500)
+            # Total 600 points, meets Bronze (500) but not Silver (1500)
+            points_delta=600,
             source=RewardReason.CHALLENGE_COMPLETED,
             source_ref="r1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
     ]
 
@@ -285,7 +277,7 @@ def test_explain_reward_won() -> None:
             source=RewardReason.CHALLENGE_COMPLETED,
             # matches deterministic reward ID for u001, date 2026-06-15, C-01
             source_ref="reward-25a286d9123c4981",
-            created_at=datetime(2026, 6, 15, 0, 0, 0, tzinfo=timezone.utc),
+            created_at=datetime(2026, 6, 15, 0, 0, 0, tzinfo=UTC),
         )
     ]
     resp_hist = explain_user_query(
@@ -345,7 +337,9 @@ def test_explain_reward_not_won() -> None:
         challenges=challenges,
         rewards=rewards,
     )
-    assert "selected_challenge_id=C-03" in resp_supp.answer or "C-03" in resp_supp.answer
+    assert (
+        "selected_challenge_id=C-03" in resp_supp.answer or "C-03" in resp_supp.answer
+    )
     assert "öncelikli" in resp_supp.answer
     assert resp_supp.evidence["status"] == "SUPPRESSED"
 

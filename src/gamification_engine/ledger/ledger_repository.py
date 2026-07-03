@@ -34,7 +34,9 @@ def load_points_ledger_json(path: str | Path) -> list[PointsLedgerEntry]:
     if not isinstance(raw_data, list):
         raise IngestionError("Ledger JSON must contain a list of entries.")
 
-    entries = [_parse_ledger_entry(item, index + 1) for index, item in enumerate(raw_data)]
+    entries = [
+        _parse_ledger_entry(item, index + 1) for index, item in enumerate(raw_data)
+    ]
     return sort_ledger_entries(entries)
 
 
@@ -64,9 +66,7 @@ def _parse_ledger_entry(raw_entry: Any, row_number: int) -> PointsLedgerEntry:
             points_delta=_required_positive_int(raw_entry, "points_delta"),
             source=RewardReason(_required_text(raw_entry, "source")),
             source_ref=_required_text(raw_entry, "source_ref"),
-            created_at=datetime.fromisoformat(
-                _required_text(raw_entry, "created_at")
-            ),
+            created_at=datetime.fromisoformat(_required_text(raw_entry, "created_at")),
         )
     except (ValueError, TypeError) as exc:
         raise IngestionError(f"Invalid ledger entry {row_number}: {exc}") from exc
@@ -86,4 +86,3 @@ def _required_positive_int(raw_entry: dict[str, Any], field_name: str) -> int:
     if value <= 0:
         raise ValueError(f"{field_name} must be positive.")
     return value
-

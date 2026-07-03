@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterable
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 
 from gamification_engine.domain.enums import (
     BadgeType,
@@ -53,9 +53,7 @@ def create_notifications(
         if key in existing_keys or key in batch_keys:
             continue
         batch_keys.add(key)
-        new_notifications.append(
-            _create_reward_notification(reward_event, channel)
-        )
+        new_notifications.append(_create_reward_notification(reward_event, channel))
 
     for badge in sorted(
         new_badges,
@@ -147,7 +145,7 @@ def _build_notification_id(
 
 
 def _start_of_day_utc(value: date) -> datetime:
-    return datetime.combine(value, time.min, tzinfo=timezone.utc)
+    return datetime.combine(value, time.min, tzinfo=UTC)
 
 
 def _badge_source_ref(badge: BadgeAssignment) -> str:
@@ -158,4 +156,3 @@ def _badge_source_ref(badge: BadgeAssignment) -> str:
 
 def _badge_order(badge_type: BadgeType) -> int:
     return [BadgeType.BRONZE, BadgeType.SILVER, BadgeType.GOLD].index(badge_type)
-

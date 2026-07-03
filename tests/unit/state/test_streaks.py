@@ -107,4 +107,3 @@ def test_calculate_watch_streak_is_zero_when_run_date_is_missing() -> None:
         )
         == 0
     )
-
