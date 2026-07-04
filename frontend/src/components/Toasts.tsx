@@ -28,11 +28,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const nextId = useRef(1);
 
   const push = useCallback((kind: Toast["kind"], message: string) => {
-    const id = nextId.current++;
-    setToasts((current) => [...current, { id, kind, message }]);
-    window.setTimeout(() => {
-      setToasts((current) => current.filter((toast) => toast.id !== id));
-    }, 5000);
+    setToasts((current) => {
+      // The same reward can arrive twice (event response + SSE); dedupe
+      // identical messages that are still on screen.
+      if (current.some((toast) => toast.message === message)) {
+        return current;
+      }
+      const id = nextId.current++;
+      window.setTimeout(() => {
+        setToasts((live) => live.filter((toast) => toast.id !== id));
+      }, 5000);
+      return [...current, { id, kind, message }];
+    });
   }, []);
 
   const value = useMemo(() => ({ toasts, push }), [toasts, push]);

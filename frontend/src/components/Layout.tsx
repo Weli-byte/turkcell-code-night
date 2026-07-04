@@ -1,11 +1,13 @@
 // Protected shell: navbar with live points + routed content.
 
 import { useQuery } from "@tanstack/react-query";
-import { Link, Navigate, Outlet } from "react-router-dom";
+import { Navigate, NavLink, Outlet } from "react-router-dom";
 
 import { api } from "../api/client";
 import type { PointsResponse } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { useNotificationStream } from "../hooks/useNotificationStream";
+import { NotificationBell } from "./NotificationBell";
 
 export function ProtectedLayout() {
   const { user, loading, logout } = useAuth();
@@ -16,6 +18,7 @@ export function ProtectedLayout() {
     enabled: user !== null,
     refetchInterval: 30_000,
   });
+  useNotificationStream(user !== null);
 
   if (loading) {
     return <div className="page-center">Yükleniyor…</div>;
@@ -26,16 +29,22 @@ export function ProtectedLayout() {
   return (
     <div className="shell">
       <header className="navbar">
-        <Link to="/" className="brand">
-          <span className="brand-dot">●</span> DGE <span className="brand-sub">/platform</span>
-        </Link>
+        <NavLink to="/" className="brand">
+          <span className="brand-dot">●</span> DGE{" "}
+          <span className="brand-sub">/platform</span>
+        </NavLink>
         <nav className="nav-links">
-          <Link to="/">Katalog</Link>
+          <NavLink to="/" end>
+            Katalog
+          </NavLink>
+          <NavLink to="/dashboard">Panelim</NavLink>
+          <NavLink to="/leaderboard">Liderlik</NavLink>
         </nav>
         <div className="nav-right">
           <span className="points-chip" title="Toplam puanın">
             ⭐ {points.data?.total_points ?? 0}
           </span>
+          <NotificationBell />
           <span className="username">{user.username}</span>
           <button className="btn-ghost" onClick={logout}>
             Çıkış

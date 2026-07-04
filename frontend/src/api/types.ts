@@ -81,6 +81,15 @@ export interface ChallengeProgress {
   won_today: boolean;
 }
 
+export interface NotificationItem {
+  notification_id: string;
+  notification_type: string;
+  channel: string;
+  message: string;
+  source_ref: string;
+  created_at: string;
+}
+
 export interface LeaderboardEntry {
   rank: number;
   user_id: string;

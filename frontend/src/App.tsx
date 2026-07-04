@@ -5,6 +5,8 @@ import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedLayout } from "./components/Layout";
 import { ToastProvider } from "./components/Toasts";
 import { CatalogPage } from "./pages/CatalogPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { WatchPage } from "./pages/WatchPage";
@@ -25,6 +27,8 @@ export function App() {
               <Route element={<ProtectedLayout />}>
                 <Route path="/" element={<CatalogPage />} />
                 <Route path="/watch/:videoId" element={<WatchPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
               </Route>
             </Routes>
           </BrowserRouter>
