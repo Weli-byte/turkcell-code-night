@@ -53,3 +53,9 @@ class BackendSettings(BaseSettings):
     scheduler_enabled: bool = True
     batch_hour: int = 23
     batch_minute: int = 55
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    def cors_origin_list(self) -> list[str]:
+        """Parsed CORS origins (comma-separated env value)."""
+
+        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]

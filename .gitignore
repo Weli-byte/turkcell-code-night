@@ -28,5 +28,9 @@ output_temp/
 # Local SQLite databases (backend service)
 *.db
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
 # Local extracted archive copy
 turkcell-code-night-main/

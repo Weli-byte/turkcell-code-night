@@ -132,7 +132,7 @@ SQLite (gamification.db)
 | 22 | **tamamlandı** (docs/sprint_22.md) |
 | 23 | **tamamlandı** (docs/sprint_23.md) |
 | 24 | **tamamlandı** (docs/sprint_24.md) |
-| 25 | bekliyor |
+| 25 | **tamamlandı** (docs/sprint_25.md) |
 | 26 | bekliyor |
 | 27 | bekliyor |
 | 28 | bekliyor |

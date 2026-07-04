@@ -49,6 +49,30 @@ def test_seed_can_be_disabled(test_settings: BackendSettings) -> None:
     assert rows == []
 
 
+def test_cors_preflight_allows_frontend_origin(
+    test_settings: BackendSettings,
+) -> None:
+    app = create_app(test_settings)
+
+    with TestClient(app) as client:
+        response = client.options(
+            "/health",
+            headers={
+                "Origin": "http://localhost:5173",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_cors_settings_parse_list() -> None:
+    settings = BackendSettings(cors_origins=" http://a.dev , http://b.dev ,")
+
+    assert settings.cors_origin_list() == ["http://a.dev", "http://b.dev"]
+
+
 def test_unknown_route_returns_404(test_settings: BackendSettings) -> None:
     app = create_app(test_settings)
 
