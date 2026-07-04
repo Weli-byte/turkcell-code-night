@@ -51,7 +51,9 @@ def test_heartbeat_is_stored_with_server_date(
     )
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "counted": True}
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["counted"] is True
     with client.app.state.session_factory() as session:  # type: ignore[attr-defined]
         event = session.execute(select(WatchEventRecord)).scalar_one()
         assert event.event_type == "heartbeat"

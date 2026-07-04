@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -100,9 +100,76 @@ class WatchPartyRequest(BaseModel):
     party_seconds: int = Field(gt=0, le=300)
 
 
+class RewardInfo(BaseModel):
+    """A reward granted by the live evaluation triggered by this event."""
+
+    challenge_id: str
+    challenge_name: str
+    points: int
+
+
 class EventResponse(BaseModel):
     """Ingestion result; ``counted=False`` means the event was ignored
-    (duplicate or daily-cap exceeded), which is not an error."""
+    (duplicate or daily-cap exceeded), which is not an error. ``reward``
+    and ``new_badges`` report anything granted by live evaluation."""
 
     status: str
     counted: bool
+    reward: RewardInfo | None = None
+    new_badges: list[str] = Field(default_factory=list)
+
+
+class LedgerEntryResponse(BaseModel):
+    """One append-only point transaction."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    ledger_id: str
+    points_delta: int
+    source: str
+    source_ref: str
+    created_at: datetime
+
+
+class PointsResponse(BaseModel):
+    """The user's point total with full transaction history."""
+
+    total_points: int
+    entries: list[LedgerEntryResponse]
+
+
+class BadgeResponse(BaseModel):
+    """An owned badge."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    badge_type: str
+    awarded_at: date
+
+
+class ChallengeProgressResponse(BaseModel):
+    """An active challenge with the user's live progress toward it."""
+
+    challenge_id: str
+    name: str
+    condition: str
+    reward_points: int
+    priority: int
+    progress_current: int
+    progress_target: int
+    progress_percent: int
+    satisfied: bool
+    won_today: bool
+
+
+class NotificationResponse(BaseModel):
+    """A stored notification."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    notification_id: str
+    notification_type: str
+    channel: str
+    message: str
+    source_ref: str
+    created_at: datetime

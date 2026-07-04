@@ -136,6 +136,29 @@ class PointsLedgerRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
+class RewardEventRecord(Base):
+    """The selected daily reward for a user.
+
+    ``UNIQUE(user_id, reward_date)`` enforces the engine's "one reward per
+    user per day" rule at the database level, including under live
+    (per-event) evaluation.
+    """
+
+    __tablename__ = "reward_events"
+    __table_args__ = (
+        UniqueConstraint("user_id", "reward_date", name="uq_reward_user_date"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reward_id: Mapped[str] = mapped_column(String(64), unique=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    challenge_id: Mapped[str] = mapped_column(ForeignKey("challenges.challenge_id"))
+    reward_points: Mapped[int] = mapped_column(Integer)
+    reward_date: Mapped[date] = mapped_column(Date, index=True)
+    suppressed_challenge_ids: Mapped[str] = mapped_column(String(500), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
 class BadgeRecord(Base):
     """An awarded badge; at most one per user and badge tier."""
 

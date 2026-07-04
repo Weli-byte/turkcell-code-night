@@ -22,6 +22,7 @@ from gamification_backend.api.catalog import router as catalog_router
 from gamification_backend.api.events import router as events_router
 from gamification_backend.api.health import router as health_router
 from gamification_backend.api.me import router as me_router
+from gamification_backend.api.sse import router as sse_router
 from gamification_backend.config import BackendSettings
 from gamification_backend.db.base import (
     create_db_engine,
@@ -32,6 +33,7 @@ from gamification_backend.repositories.catalog import seed_catalog_from_json
 from gamification_backend.repositories.challenges import seed_challenges_from_csv
 from gamification_backend.repositories.users import UserRepository
 from gamification_backend.security import hash_password
+from gamification_backend.services.notifier import NotificationBroker
 
 
 def _bootstrap_admin(
@@ -82,12 +84,14 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     app.state.settings = app_settings
     app.state.engine = engine
     app.state.session_factory = session_factory
+    app.state.broker = NotificationBroker()
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(me_router)
     app.include_router(admin_router)
     app.include_router(catalog_router)
     app.include_router(events_router)
+    app.include_router(sse_router)
     return app
 
 
