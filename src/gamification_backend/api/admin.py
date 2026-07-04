@@ -1,23 +1,43 @@
-"""Admin-only endpoints (grows into the admin panel API in Sprint 27)."""
+"""Admin panel API: challenges, users, runs, batch trigger, simulator."""
 
 from __future__ import annotations
 
 from datetime import date
 
-from fastapi import APIRouter
-from sqlalchemy import select
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import func, select
 
 from gamification_backend.api.deps import AdminDep, SessionDep
 from gamification_backend.api.schemas import (
+    AdminUserResponse,
     BatchRunRequest,
     BatchRunSummaryResponse,
+    ChallengeAdminResponse,
+    ChallengeCreateRequest,
+    ChallengeUpdateRequest,
     RunResponse,
+    SimulatorStatusResponse,
 )
-from gamification_backend.db.models import RunRecord
+from gamification_backend.db.models import (
+    ChallengeRecord,
+    PointsLedgerRecord,
+    RunRecord,
+    UserRecord,
+)
 from gamification_backend.repositories.events import today_utc
+from gamification_backend.services.condition_validation import validate_condition
 from gamification_backend.services.daily_batch import run_daily_batch
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _validate_condition_or_422(condition: str) -> None:
+    error = validate_condition(condition)
+    if error is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Geçersiz koşul: {error}",
+        )
 
 
 @router.get("/ping")
@@ -25,6 +45,120 @@ def ping(admin: AdminDep) -> dict[str, str]:
     """Verify admin access works."""
 
     return {"status": "ok", "admin": admin.username}
+
+
+@router.get("/challenges")
+def list_challenges(
+    admin: AdminDep, session: SessionDep
+) -> list[ChallengeAdminResponse]:
+    """All challenges including inactive, ordered by priority then id."""
+
+    stmt = select(ChallengeRecord).order_by(
+        ChallengeRecord.priority, ChallengeRecord.challenge_id
+    )
+    return [
+        ChallengeAdminResponse.model_validate(record)
+        for record in session.execute(stmt).scalars()
+    ]
+
+
+@router.post("/challenges", status_code=status.HTTP_201_CREATED)
+def create_challenge(
+    body: ChallengeCreateRequest, admin: AdminDep, session: SessionDep
+) -> ChallengeAdminResponse:
+    """Create a challenge; the condition must pass the engine's safe parser."""
+
+    _validate_condition_or_422(body.condition)
+    if session.get(ChallengeRecord, body.challenge_id) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Bu challenge_id zaten var.",
+        )
+    record = ChallengeRecord(
+        challenge_id=body.challenge_id,
+        name=body.name,
+        challenge_type=body.challenge_type,
+        condition=body.condition,
+        reward_points=body.reward_points,
+        priority=body.priority,
+        is_active=body.is_active,
+    )
+    session.add(record)
+    session.commit()
+    return ChallengeAdminResponse.model_validate(record)
+
+
+@router.put("/challenges/{challenge_id}")
+def update_challenge(
+    challenge_id: str,
+    body: ChallengeUpdateRequest,
+    admin: AdminDep,
+    session: SessionDep,
+) -> ChallengeAdminResponse:
+    """Partially update a challenge; affects future evaluations only —
+    already-granted rewards live in the append-only ledger and never change."""
+
+    record = session.get(ChallengeRecord, challenge_id)
+    if record is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Challenge bulunamadı.",
+        )
+    if body.condition is not None:
+        _validate_condition_or_422(body.condition)
+        record.condition = body.condition
+    if body.name is not None:
+        record.name = body.name
+    if body.challenge_type is not None:
+        record.challenge_type = body.challenge_type
+    if body.reward_points is not None:
+        record.reward_points = body.reward_points
+    if body.priority is not None:
+        record.priority = body.priority
+    if body.is_active is not None:
+        record.is_active = body.is_active
+    session.commit()
+    return ChallengeAdminResponse.model_validate(record)
+
+
+@router.get("/users")
+def list_users(admin: AdminDep, session: SessionDep) -> list[AdminUserResponse]:
+    """All accounts with their point totals, ordered by username."""
+
+    total = func.coalesce(func.sum(PointsLedgerRecord.points_delta), 0)
+    stmt = (
+        select(UserRecord, total.label("total_points"))
+        .join(
+            PointsLedgerRecord,
+            PointsLedgerRecord.user_id == UserRecord.id,
+            isouter=True,
+        )
+        .group_by(UserRecord.id)
+        .order_by(UserRecord.username)
+    )
+    return [
+        AdminUserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            is_admin=user.is_admin,
+            is_bot=user.is_bot,
+            created_at=user.created_at,
+            total_points=int(total_points),
+        )
+        for user, total_points in session.execute(stmt).all()
+    ]
+
+
+@router.get("/simulator")
+def simulator_status(admin: AdminDep) -> SimulatorStatusResponse:
+    """Traffic simulator status — control lands in Sprint 28."""
+
+    return SimulatorStatusResponse(
+        running=False,
+        bot_count=0,
+        detail="Simülatör Sprint 28'de geliyor.",
+    )
 
 
 @router.get("/runs")

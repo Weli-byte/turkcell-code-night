@@ -203,6 +203,64 @@ class BatchRunSummaryResponse(BaseModel):
     leaderboard_size: int
 
 
+class ChallengeAdminResponse(BaseModel):
+    """Full challenge row for the admin panel (includes inactive)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    challenge_id: str
+    name: str
+    challenge_type: str
+    condition: str
+    reward_points: int
+    priority: int
+    is_active: bool
+
+
+class ChallengeCreateRequest(BaseModel):
+    """New challenge definition; condition is validated with the engine's
+    safe parser before anything is written."""
+
+    challenge_id: str = Field(min_length=1, max_length=64)
+    name: str = Field(min_length=1, max_length=120)
+    challenge_type: str = Field(pattern=r"^(DAILY|WEEKLY|STREAK)$")
+    condition: str = Field(min_length=1, max_length=255)
+    reward_points: int = Field(gt=0)
+    priority: int = Field(gt=0)
+    is_active: bool = True
+
+
+class ChallengeUpdateRequest(BaseModel):
+    """Partial challenge update; omitted fields stay unchanged."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    challenge_type: str | None = Field(default=None, pattern=r"^(DAILY|WEEKLY|STREAK)$")
+    condition: str | None = Field(default=None, min_length=1, max_length=255)
+    reward_points: int | None = Field(default=None, gt=0)
+    priority: int | None = Field(default=None, gt=0)
+    is_active: bool | None = None
+
+
+class AdminUserResponse(BaseModel):
+    """One account row for the admin panel."""
+
+    id: str
+    username: str
+    email: str | None
+    is_admin: bool
+    is_bot: bool
+    created_at: datetime
+    total_points: int
+
+
+class SimulatorStatusResponse(BaseModel):
+    """Traffic simulator state (implementation lands in Sprint 28)."""
+
+    running: bool
+    bot_count: int
+    detail: str
+
+
 class NotificationResponse(BaseModel):
     """A stored notification."""
 

@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedLayout } from "./components/Layout";
 import { ToastProvider } from "./components/Toasts";
+import { AdminPage } from "./pages/AdminPage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
@@ -29,6 +30,7 @@ export function App() {
                 <Route path="/watch/:videoId" element={<WatchPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/admin" element={<AdminPage />} />
               </Route>
             </Routes>
           </BrowserRouter>

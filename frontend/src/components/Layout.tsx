@@ -39,6 +39,7 @@ export function ProtectedLayout() {
           </NavLink>
           <NavLink to="/dashboard">Panelim</NavLink>
           <NavLink to="/leaderboard">Liderlik</NavLink>
+          {user?.is_admin === true && <NavLink to="/admin">Admin</NavLink>}
         </nav>
         <div className="nav-right">
           <span className="points-chip" title="Toplam puanın">
