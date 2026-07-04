@@ -34,6 +34,8 @@ CI: `.github/workflows/ci.yml` runs ruff check + format check + mypy + pytest on
 - `cli/main.py` — argparse subcommands `run` and `explain`.
 - `ai/` — explanation_engine (keyword intent → template answers + evidence), templates, llm_adapter (LLMAdapter ABC, NoOp/Gemini/OpenAI adapters + factory; any failure → deterministic fallback), llm_client (pure HTTPS transport + prompt contract). Env vars read ONLY in config/llm_config.py: GEMINI_API_KEY (precedence), OPENAI_API_KEY, GAMIFICATION_LLM_ENABLED=0 kill switch. See docs/ai_layer.md.
 
+Root extras: `index.html` (single-file GSAP/Lenis landing page) + `server.py` (stdlib dev server: serves index.html and bridges UI↔engine via GET /api/summary|leaderboard|badges|explain; reads data/output, never mutates). Run with `python server.py` → http://localhost:8000. Both outside ruff/mypy scope (src+tests only).
+
 Tests mirror src under `tests/unit/` + `tests/integration/`; fixtures in `tests/fixtures/`. Golden regression scenario: `tests/fixtures/golden_inputs/` (2-day run) vs `golden_outputs/day1|day2/` — byte-compared in `tests/integration/test_golden_outputs.py`; regen process in docs/testing_and_determinism.md (update goldens only for intentional rule changes, same commit).
 
 ## Hard rules

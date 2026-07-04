@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gamification Engine — Deterministic Engagement for Video Platforms</title>
+<meta name="description" content="Deterministik, açıklanabilir, modüler Python oyunlaştırma motoru. İzleme davranışını puana, rozete ve sıralamaya dönüştürün.">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- GSAP + Lenis -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+
+<style>
+/* ============================================================
+   ROOT & RESET
+============================================================ */
+:root{
+  --bg:          #050508;
+  --bg-card:     rgba(255,255,255,0.04);
+  --text-1:      #F0F0F8;
+  --text-2:      #8888AA;
+  --text-muted:  #444466;
+  --accent-1:    #00FF87;
+  --accent-2:    #00D4FF;
+  --accent-grad: linear-gradient(90deg, #00FF87, #00D4FF);
+  --purple:      #6C00FF;
+  --border:      rgba(255,255,255,0.08);
+  --border-acc:  rgba(0,255,135,0.2);
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; cursor:none; }
+
+html{ scroll-behavior:auto; }
+
+body{
+  background:var(--bg);
+  color:var(--text-2);
+  font-family:'Inter',sans-serif;
+  font-size:17px;
+  line-height:1.75;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+::selection{ background:rgba(0,255,135,0.25); color:var(--text-1); }
+
+img{ display:block; }
+button{ font-family:inherit; }
+
+/* ============================================================
+   [1] SCROLL PROGRESS BAR
+============================================================ */
+#scroll-progress{
+  position:fixed; top:0; left:0;
+  width:100%; height:2px;
+  background:var(--accent-grad);
+  transform-origin:left;
+  transform:scaleX(0);
+  z-index:9999;
+  will-change:transform;
+}
+
+/* ============================================================
+   [2] NOISE GRAIN OVERLAY
+============================================================ */
+#grain{
+  position:fixed; inset:-50px;
+  pointer-events:none;
+  z-index:9998;
+  opacity:0.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat:repeat;
+  animation:grain-shift 2s steps(4) infinite;
+  will-change:transform;
+}
+@keyframes grain-shift{
+  0%{ transform:translate(0,0); }
+  25%{ transform:translate(-18px,10px); }
+  50%{ transform:translate(12px,-16px); }
+  75%{ transform:translate(-8px,-8px); }
+  100%{ transform:translate(0,0); }
+}
+
+/* ============================================================
+   [3] CUSTOM CURSOR
+============================================================ */
+#cursor-dot{
+  position:fixed; top:0; left:0;
+  width:8px; height:8px;
+  border-radius:50%;
+  background:var(--accent-1);
+  pointer-events:none;
+  z-index:9997;
+  will-change:transform;
+}
+#cursor-halo{
+  position:fixed; top:0; left:0;
+  width:48px; height:48px;
+  border:1px solid rgba(0,255,135,0.4);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:9996;
+  display:flex; align-items:center; justify-content:center;
+  will-change:transform;
+}
+#cursor-halo .halo-label{
+  font-family:'Syne',sans-serif;
+  font-size:12px; font-weight:700;
+  color:var(--accent-1);
+  letter-spacing:0.08em;
+  opacity:0;
+  transform:scale(0.6);
+  transition:opacity .3s ease, transform .3s ease;
+}
+#cursor-halo.is-img .halo-label{ opacity:1; transform:scale(1); }
+
+/* ============================================================
+   [4] NAVBAR
+============================================================ */
+nav{
+  position:fixed; top:0; left:0; right:0;
+  z-index:100;
+  padding:20px 60px;
+  display:flex; justify-content:space-between; align-items:center;
+  background:transparent;
+  border-bottom:1px solid transparent;
+  transition:background .5s ease, border-color .5s ease, backdrop-filter .5s ease;
+}
+nav.scrolled{
+  background:rgba(5,5,8,0.85);
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none;
+}
+.logo .logo-dot{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--accent-1);
+  box-shadow:0 0 12px rgba(0,255,135,0.8);
+}
+.logo .logo-name{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:16px;
+  color:var(--text-1);
+  letter-spacing:0.14em;
+}
+.logo .logo-path{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:400; font-size:14px;
+  color:var(--text-muted);
+  letter-spacing:0.08em;
+}
+.nav-links{ display:flex; align-items:center; gap:36px; list-style:none; }
+.nav-links a{
+  color:var(--text-2);
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:12px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  text-decoration:none;
+  position:relative;
+  transition:color .3s ease;
+}
+.nav-links a:not(.nav-cta)::after{
+  content:'';
+  position:absolute; left:0; bottom:-5px;
+  width:100%; height:1px;
+  background:var(--accent-1);
+  transform:scaleX(0);
+  transform-origin:left;
+  transition:transform .4s cubic-bezier(0.16,1,0.3,1);
+}
+.nav-links a:not(.nav-cta):hover{ color:var(--text-1); }
+.nav-links a:not(.nav-cta):hover::after{ transform:scaleX(1); }
+.nav-cta{
+  border:1px solid var(--accent-1);
+  color:var(--accent-1) !important;
+  padding:10px 24px;
+  border-radius:100px;
+  transition:background .35s ease, color .35s ease !important;
+}
+.nav-cta:hover{ background:var(--accent-1); color:#050508 !important; }
+
+/* ============================================================
+   [5] HERO
+============================================================ */
+.hero{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:minmax(0,55fr) minmax(0,45fr);
+  align-items:center;
+  gap:60px;
+  padding:140px 60px 80px;
+  position:relative;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(108,0,255,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 30%, rgba(0,255,135,0.08) 0%, transparent 50%);
+  animation:pulse-bg 8s ease-in-out infinite alternate;
+  pointer-events:none;
+  will-change:opacity;
+}
+@keyframes pulse-bg{ from{ opacity:0.8; } to{ opacity:1; } }
+
+.hero-left{ position:relative; z-index:2; min-width:0; }
+
+.badge-chip{
+  display:inline-block;
+  background:rgba(0,255,135,0.08);
+  border:1px solid var(--border-acc);
+  border-radius:100px;
+  padding:6px 16px;
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:12px;
+  color:var(--accent-1);
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  margin-bottom:28px;
+}
+.hero-title{
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:clamp(42px, 5.6vw, 84px);
+  line-height:0.95;
+  letter-spacing:-0.04em;
+  text-transform:uppercase;
+  color:var(--text-1);
+  margin-bottom:28px;
+}
+.hero-title .line{ display:block; overflow:hidden; }
+.hero-title .word{ display:inline-block; margin-right:0.22em; will-change:transform; }
+.hero-title .word:last-child{ margin-right:0; }
+.hero-title .word.grad{
+  background:var(--accent-grad);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+.hero-title .word.muted{ color:var(--text-2); }
+.hero-body{
+  font-size:18px;
+  color:var(--text-2);
+  max-width:480px;
+  margin-bottom:36px;
+}
+.hero-body strong{ color:var(--text-1); font-weight:500; }
+.hero-buttons{ display:flex; gap:16px; flex-wrap:wrap; }
+.btn{
+  display:inline-block;
+  padding:14px 32px;
+  border-radius:100px;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:14px;
+  text-decoration:none;
+  border:none;
+  transition:transform .5s cubic-bezier(0.16,1,0.3,1), background .35s ease, color .35s ease, border-color .35s ease;
+  will-change:transform;
+}
+.btn:hover{ transform:translateY(-3px); }
+.btn-primary{
+  background:var(--accent-grad);
+  color:#050508;
+}
+.btn-ghost{
+  border:1px solid var(--border);
+  color:var(--text-1);
+  background:transparent;
+}
+.btn-ghost:hover{ border-color:var(--border-acc); color:var(--accent-1); }
+
+.hero-counters{ display:flex; gap:40px; margin-top:48px; flex-wrap:wrap; }
+.counter .num{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:32px;
+  color:var(--accent-1);
+  line-height:1.2;
+}
+.counter .lbl{
+  font-family:'Inter',sans-serif;
+  font-weight:400; font-size:13px;
+  color:var(--text-muted);
+}
+
+.hero-right{ position:relative; z-index:2; min-width:0; }
+.hero-visual{
+  position:relative;
+}
+.hero-frame{
+  position:relative;
+  overflow:hidden;
+  border-radius:24px;
+  border:1px solid var(--border);
+}
+.hero-frame img{
+  width:100%;
+  aspect-ratio:4/5;
+  object-fit:cover;
+  transition:transform .6s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform;
+}
+.hero-frame:hover img{ transform:scale(1.04); }
+.reveal-curtain{
+  position:absolute; inset:-1px;
+  background:var(--bg);
+  transform-origin:right;
+  transform:scaleX(1);
+  will-change:transform;
+  z-index:2;
+  pointer-events:none;
+}
+.float-card{
+  position:absolute;
+  bottom:36px; left:-36px;
+  display:flex; align-items:center; gap:14px;
+  background:rgba(10,10,16,0.85);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:18px;
+  padding:16px 22px;
+  animation:float 4s ease-in-out infinite;
+  will-change:transform;
+  z-index:3;
+}
+@keyframes float{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-12px); }
+}
+.fc-icon{
+  width:46px; height:46px;
+  border-radius:12px;
+  background:linear-gradient(135deg, #00FF87, #00D4FF);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  box-shadow:0 0 24px rgba(0,255,135,0.4);
+  flex:0 0 auto;
+}
+.fc-kicker{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:11px;
+  letter-spacing:0.22em;
+  color:var(--accent-1);
+  text-transform:uppercase;
+}
+.fc-name{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:17px;
+  color:var(--text-1);
+  margin-top:2px;
+}
+
+/* ============================================================
+   [6] MARQUEE
+============================================================ */
+.marquee-strip{
+  width:100%;
+  padding:20px 0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.marquee-heading{
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:11px;
+  color:var(--text-muted);
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  text-align:center;
+  margin-bottom:12px;
+}
+.marquee-track{
+  display:flex;
+  width:max-content;
+  animation:marquee 30s linear infinite;
+  will-change:transform;
+}
+.marquee-track:hover .marquee-item{ color:var(--text-1); }
+.marquee-item{
+  font-family:'Syne',sans-serif;
+  font-weight:700; font-size:14px;
+  color:var(--text-muted);
+  letter-spacing:0.08em;
+  white-space:nowrap;
+  padding-right:0.6em;
+  transition:color .4s ease;
+}
+@keyframes marquee{
+  0%{ transform:translateX(0); }
+  100%{ transform:translateX(-50%); }
+}
+
+/* ============================================================
+   [7] FEATURE SECTIONS
+============================================================ */
+.feature{
+  min-height:100vh;
+  padding:80px 60px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  gap:80px;
+  position:relative;
+}
+.feature-num{
+  position:absolute;
+  left:20px; top:50%;
+  transform:translateY(-50%) rotate(-90deg);
+  font-family:'JetBrains Mono',monospace;
+  font-weight:400; font-size:11px;
+  color:var(--text-muted);
+  letter-spacing:0.15em;
+  white-space:nowrap;
+}
+.img-frame{
+  position:relative;
+  overflow:hidden;
+  border-radius:16px;
+  border:1px solid var(--border);
+  will-change:clip-path;
+}
+.img-frame img{
+  width:100%;
+  aspect-ratio:4/3;
+  object-fit:cover;
+  transition:transform .6s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform;
+}
+.img-frame:hover img{ transform:scale(1.04); }
+.img-frame .img-overlay{
+  position:absolute; inset:0;
+  background:linear-gradient(to right, #050508 30%, transparent 70%);
+  opacity:0.5;
+  pointer-events:none;
+}
+.feature.media-right .f-media{ order:2; }
+.feature.media-right .f-copy{ order:1; }
+
+.f-label{
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:12px;
+  color:var(--accent-1);
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+.f-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:clamp(40px, 4vw, 56px);
+  line-height:1.05;
+  letter-spacing:-0.03em;
+  color:var(--text-1);
+  margin-bottom:22px;
+}
+.f-body{
+  font-size:17px;
+  color:var(--text-2);
+  max-width:480px;
+  margin-bottom:32px;
+}
+
+/* code panel */
+.code-panel{
+  background:#0D0D18;
+  border:1px solid var(--border-acc);
+  border-left:3px solid var(--accent-1);
+  border-radius:12px;
+  padding:24px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px;
+  line-height:1.9;
+  color:var(--text-1);
+  overflow-x:auto;
+}
+.code-panel .ck{ color:var(--text-2); }
+.code-panel .cv{ color:var(--accent-1); }
+.code-panel .cs{ color:var(--accent-2); }
+.code-panel .cm{ color:var(--text-muted); }
+.code-panel .cr{ color:#FF6B6B; }
+
+.metric-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:32px;
+}
+.metric-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 20px;
+  text-align:center;
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:13px;
+  color:var(--text-muted);
+  letter-spacing:0.04em;
+  transition:border-color .35s ease, color .35s ease;
+}
+.metric-card:hover{ border-color:var(--border-acc); color:var(--text-1); }
+
+/* challenge cards */
+.challenge-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px 24px;
+  margin-bottom:16px;
+  transition:border-color .35s ease;
+}
+.challenge-card:hover{ border-color:var(--border-acc); }
+.cc-head{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:8px;
+}
+.cc-name{
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:16px;
+  color:var(--text-1);
+}
+.cc-tag{
+  background:var(--accent-1);
+  color:#050508;
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:11px;
+  letter-spacing:0.08em;
+  padding:3px 12px;
+  border-radius:100px;
+}
+.cc-cond{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:13px;
+  color:var(--accent-2);
+  margin-bottom:6px;
+}
+.cc-meta{
+  font-size:13px;
+  color:var(--text-2);
+  margin-bottom:14px;
+}
+.cc-bar{
+  height:4px;
+  background:rgba(255,255,255,0.08);
+  border-radius:4px;
+  overflow:hidden;
+}
+.cc-bar .fill{
+  height:100%;
+  background:var(--accent-grad);
+  border-radius:4px;
+  width:0%;
+}
+
+/* badge rows */
+.badge-list{ display:flex; flex-direction:column; gap:14px; }
+.badge-row{
+  display:grid;
+  grid-template-columns:auto 92px 78px 1fr auto;
+  align-items:center;
+  gap:14px;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px 20px;
+  transition:border-color .35s ease;
+}
+.badge-row:hover{ border-color:var(--border-acc); }
+.badge-row .b-icon{ font-size:14px; }
+.badge-row .b-name{
+  font-family:'Syne',sans-serif;
+  font-weight:700; font-size:13px;
+  letter-spacing:0.06em;
+  color:var(--text-1);
+}
+.badge-row .b-th{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  color:var(--text-muted);
+}
+.badge-row .b-bar{
+  height:4px;
+  background:rgba(255,255,255,0.08);
+  border-radius:4px;
+  overflow:hidden;
+}
+.badge-row .b-bar .fill{
+  height:100%;
+  border-radius:4px;
+  width:0%;
+}
+.badge-row .b-status{
+  font-size:12px;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+.badge-row.earned .b-status{ color:var(--accent-1); }
+
+/* leaderboard */
+.lb-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+}
+.lb-row{
+  display:grid;
+  grid-template-columns:36px 1fr auto auto;
+  align-items:center;
+  gap:16px;
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+  border-left:2px solid transparent;
+}
+.lb-row:last-child{ border-bottom:none; }
+.lb-row.first{
+  background:rgba(0,255,135,0.06);
+  border-left:2px solid var(--accent-1);
+}
+.lb-rank{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:14px;
+  color:var(--text-muted);
+}
+.lb-row.first .lb-rank{ color:var(--accent-1); }
+.lb-user{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:400; font-size:14px;
+  color:var(--text-1);
+}
+.lb-pts{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:500; font-size:14px;
+  color:var(--accent-1);
+}
+.lb-badge{
+  font-size:13px;
+  color:var(--text-2);
+}
+.live-chip{
+  display:inline-block;
+  margin-left:10px;
+  padding:2px 10px;
+  border:1px solid var(--border-acc);
+  border-radius:100px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.15em;
+  color:var(--accent-1);
+  background:rgba(0,255,135,0.08);
+  vertical-align:middle;
+}
+
+/* explain live demo */
+.explain-controls{
+  display:flex; gap:10px; flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.explain-controls select{
+  background:#0D0D18;
+  color:var(--text-1);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  outline:none;
+  transition:border-color .3s ease;
+}
+.explain-controls select:hover,
+.explain-controls select:focus{ border-color:var(--border-acc); }
+.explain-btn{
+  padding:10px 22px;
+  font-size:13px;
+  border:none;
+}
+.explain-note{
+  margin-top:10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  color:var(--text-muted);
+}
+.explain-note .cs{ color:var(--accent-2); }
+#explainOut div{ overflow-wrap:anywhere; }
+
+/* ============================================================
+   [8] STATS
+============================================================ */
+.stats{
+  padding:120px 60px;
+  background:rgba(255,255,255,0.02);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:40px;
+  max-width:1100px;
+  margin:0 auto;
+}
+.stat .s-num{
+  font-family:'Syne',sans-serif;
+  font-weight:800; font-size:72px;
+  line-height:1;
+  color:var(--accent-1);
+  letter-spacing:-0.03em;
+}
+.stat .s-lbl{
+  font-family:'Inter',sans-serif;
+  font-weight:400; font-size:16px;
+  color:var(--text-2);
+  margin-top:10px;
+}
+.stats-tagline{
+  margin-top:64px;
+  font-family:'Syne',sans-serif;
+  font-weight:700; font-size:32px;
+  letter-spacing:-0.02em;
+  color:var(--text-1);
+}
+.stats-sub{
+  margin-top:10px;
+  font-size:16px;
+  color:var(--text-2);
+}
+
+/* ============================================================
+   [9] ARCHITECTURE
+============================================================ */
+.arch{
+  padding:120px 60px;
+  text-align:center;
+}
+.arch h2{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:clamp(40px,4vw,56px);
+  letter-spacing:-0.03em;
+  color:var(--text-1);
+  margin-bottom:14px;
+  text-transform:uppercase;
+}
+.arch .arch-sub{
+  font-size:17px;
+  color:var(--text-2);
+  margin-bottom:64px;
+}
+.arch-flow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  max-width:1240px;
+  margin:0 auto;
+}
+.arch-box{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 20px;
+  text-align:center;
+  transition:border-color .35s ease, box-shadow .35s ease;
+  will-change:transform;
+}
+.arch-box:hover{
+  border-color:var(--accent-1);
+  box-shadow:0 0 20px rgba(0,255,135,0.15);
+}
+.arch-box .ab-name{
+  font-family:'Inter',sans-serif;
+  font-weight:500; font-size:14px;
+  color:var(--text-1);
+  white-space:nowrap;
+}
+.arch-box .ab-sub{
+  font-family:'Inter',sans-serif;
+  font-weight:400; font-size:11px;
+  color:var(--text-muted);
+  margin-top:2px;
+}
+.arch-arrow{ flex:0 0 auto; display:flex; align-items:center; }
+.arch-arrow svg{ display:block; }
+
+/* ============================================================
+   [10] CTA
+============================================================ */
+.cta{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  padding:120px 60px;
+}
+.cta-ge{
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:400px;
+  color:var(--text-1);
+  opacity:0.03;
+  pointer-events:none;
+  user-select:none;
+  line-height:1;
+}
+.orbit{
+  position:absolute; top:50%; left:50%;
+  border-radius:50%;
+  pointer-events:none;
+  will-change:transform;
+}
+.orbit-1{
+  width:600px; height:600px;
+  margin:-300px 0 0 -300px;
+  border:1px solid rgba(0,255,135,0.06);
+  animation:orbit-spin 20s linear infinite;
+}
+.orbit-2{
+  width:800px; height:800px;
+  margin:-400px 0 0 -400px;
+  border:1px solid rgba(108,0,255,0.04);
+  animation:orbit-spin 30s linear infinite reverse;
+}
+.orbit .orbit-dot{
+  position:absolute;
+  top:-3px; left:50%;
+  width:6px; height:6px;
+  border-radius:50%;
+  background:var(--accent-1);
+  opacity:0.5;
+}
+.orbit-2 .orbit-dot{ background:var(--purple); }
+@keyframes orbit-spin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+.cta-inner{ position:relative; z-index:2; }
+.cta-title{
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:clamp(48px,6vw,84px);
+  line-height:1;
+  letter-spacing:-0.04em;
+  text-transform:uppercase;
+  color:var(--text-1);
+  margin:26px 0;
+}
+.cta-title .grad{
+  background:var(--accent-grad);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+.cta-body{
+  font-size:18px;
+  color:var(--text-2);
+  max-width:480px;
+  margin:0 auto;
+}
+.cta-buttons{
+  display:flex; gap:16px;
+  justify-content:center;
+  margin-top:40px;
+  flex-wrap:wrap;
+}
+
+/* ============================================================
+   [11] FOOTER
+============================================================ */
+footer{
+  border-top:1px solid var(--border);
+  padding:0 0 40px 0;
+}
+.footer-marquee{
+  padding:20px 0;
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.footer-marquee .marquee-track{
+  animation:marquee-rev 26s linear infinite;
+}
+.footer-marquee .marquee-item{ font-size:13px; letter-spacing:0.1em; }
+@keyframes marquee-rev{
+  0%{ transform:translateX(-50%); }
+  100%{ transform:translateX(0); }
+}
+.footer-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:24px;
+  padding:32px 60px 0;
+  flex-wrap:wrap;
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  color:var(--text-muted);
+}
+.footer-left{ display:flex; align-items:center; gap:14px; }
+.footer-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800; font-size:22px;
+  background:var(--accent-grad);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+.footer-links{ display:flex; gap:24px; }
+.footer-links a{
+  color:var(--text-muted);
+  text-decoration:none;
+  transition:color .3s ease;
+}
+.footer-links a:hover{ color:var(--accent-1); }
+
+/* ============================================================
+   REVEAL DEFAULT STATES (JS animates in)
+============================================================ */
+.js .img-frame, .js .hero-frame{ clip-path:inset(0 0 0 0); }
+
+/* ============================================================
+   MOBILE
+============================================================ */
+@media (max-width:768px){
+  *{ cursor:auto !important; }
+  #cursor-dot, #cursor-halo{ display:none; }
+
+  nav{ padding:16px 24px; }
+  .nav-links{ gap:18px; }
+  .nav-links li:nth-child(1), .nav-links li:nth-child(2){ display:none; }
+
+  .hero{
+    grid-template-columns:1fr;
+    padding:120px 24px 60px;
+    gap:64px;
+  }
+  .hero-title{ font-size:52px; }
+  .hero-frame img{ aspect-ratio:16/9; }
+  .float-card{ bottom:-12px; left:0; transform:scale(0.9); animation:none; }
+
+  .feature{
+    grid-template-columns:1fr;
+    padding:80px 24px;
+    gap:48px;
+    min-height:auto;
+  }
+  .feature.media-right .f-media{ order:1; }
+  .feature.media-right .f-copy{ order:2; }
+  .feature-num{ display:none; }
+  .f-title{ font-size:40px; }
+  .img-frame img{ aspect-ratio:16/9; }
+  .metric-row{ grid-template-columns:1fr; }
+
+  .stats{ padding:80px 24px; }
+  .stats-grid{ grid-template-columns:repeat(2,1fr); }
+  .stat .s-num{ font-size:52px; }
+  .stats-tagline{ font-size:24px; }
+
+  .arch{ padding:80px 24px; }
+  .arch-flow{
+    flex-wrap:nowrap;
+    justify-content:flex-start;
+    overflow-x:auto;
+    padding-bottom:16px;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .cta{ padding:100px 24px; }
+  .cta-ge{ font-size:180px; }
+  .orbit-1{ width:340px; height:340px; margin:-170px 0 0 -170px; }
+  .orbit-2{ width:460px; height:460px; margin:-230px 0 0 -230px; }
+
+  .footer-bottom{
+    flex-direction:column;
+    padding:32px 24px 0;
+    text-align:center;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- [1] Scroll progress -->
+<div id="scroll-progress"></div>
+
+<!-- [2] Grain -->
+<div id="grain"></div>
+
+<!-- [3] Custom cursor -->
+<div id="cursor-dot"></div>
+<div id="cursor-halo"><span class="halo-label">EXPLORE</span></div>
+
+<!-- [4] Navbar -->
+<nav id="navbar">
+  <a class="logo" href="#top">
+    <span class="logo-dot"></span>
+    <span class="logo-name">DGE</span>
+    <span class="logo-path">/engine</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">İlkeler</a></li>
+    <li><a href="#pipeline">Pipeline</a></li>
+    <li><a href="#ai">AI Katmanı</a></li>
+  </ul>
+</nav>
+
+<!-- [5] Hero -->
+<header class="hero" id="top">
+  <div class="hero-bg"></div>
+
+  <div class="hero-left">
+    <h1 class="hero-title" aria-label="Gamification Engine for Video Platforms">
+      <span class="line"><span class="word">GAMIFICATION</span></span>
+      <span class="line"><span class="word">ENGINE</span></span>
+      <span class="line"><span class="word muted">FOR</span></span>
+      <span class="line"><span class="word grad">VIDEO</span></span>
+      <span class="line"><span class="word grad">PLATFORMS</span></span>
+    </h1>
+
+    <p class="hero-body" data-hero="body">
+      İzleme davranışını <strong>puana, rozete ve sıralamalara</strong> dönüştür.
+      Her karar kural tabanlı, her çıktı açıklanabilir.
+    </p>
+
+    <div class="hero-buttons">
+      <a class="btn btn-primary" href="https://github.com/Weli-byte/turkcell-code-night/tree/main/docs" target="_blank" rel="noopener" data-hero="btn">Dokümantasyona Git →</a>
+      <a class="btn btn-ghost" href="https://github.com/Weli-byte/turkcell-code-night" target="_blank" rel="noopener" data-hero="btn">GitHub'da Gör</a>
+    </div>
+
+    <div class="hero-counters" data-hero="counters">
+      <div class="counter">
+        <div class="num" data-count="2.4" data-decimals="1" data-suffix="M+">0</div>
+        <div class="lbl">Events Processed</div>
+      </div>
+      <div class="counter">
+        <div class="num" data-count="847" data-decimals="0" data-suffix="K">0</div>
+        <div class="lbl">Badges Awarded</div>
+      </div>
+      <div class="counter">
+        <div class="num" data-count="12" data-decimals="0" data-suffix="K">0</div>
+        <div class="lbl">Active Users</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-visual">
+      <div class="hero-frame" id="heroFrame">
+        <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1600&q=80"
+             alt="Sinema salonunda film izleme deneyimi" width="1600" height="2000" loading="lazy">
+        <div class="reveal-curtain" id="heroCurtain"></div>
+      </div>
+      <div class="float-card" id="floatCard">
+        <div class="fc-icon">🏆</div>
+        <div>
+          <div class="fc-kicker">Gold Badge Unlocked</div>
+          <div class="fc-name">Binge Master</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- [6] Marquee -->
+<section class="marquee-strip">
+  <div class="marquee-heading">Bu Motoru Kullanan Platform Türleri</div>
+  <div class="marquee-track">
+    <span class="marquee-item">VIDEO STREAMING · WATCH PARTY · EPISODE TRACKER · BINGE ANALYZER · CONTENT DISCOVERY · USER RETENTION · ENGAGEMENT ENGINE ·&nbsp;</span>
+    <span class="marquee-item">VIDEO STREAMING · WATCH PARTY · EPISODE TRACKER · BINGE ANALYZER · CONTENT DISCOVERY · USER RETENTION · ENGAGEMENT ENGINE ·&nbsp;</span>
+  </div>
+</section>
+
+<!-- [7] Feature 1: Points Engine (görsel sol) -->
+<section class="feature" id="features">
+  <div class="feature-num">01 / 05</div>
+
+  <div class="f-media">
+    <div class="img-frame">
+      <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=900&q=80"
+           alt="Puan sistemi veri paneli" width="900" height="675" loading="lazy">
+      <div class="img-overlay"></div>
+    </div>
+  </div>
+
+  <div class="f-copy">
+    <div class="f-label">Puan Sistemi</div>
+    <h2 class="f-title">Her İzleme<br>Bir Kazanım</h2>
+    <p class="f-body">
+      Append-only ledger yapısıyla her puan hareketi kayıt altında.
+      Update yok, delete yok. Sadece gerçek veri.
+    </p>
+    <div class="code-panel f-card">
+<div><span class="ck">points_earned:</span>  <span class="cv">250</span></div>
+<div><span class="ck">trigger:</span>       <span class="cs">"watch_minutes >= 60"</span></div>
+<div><span class="ck">ledger_type:</span>   <span class="cv">"APPEND_ONLY"</span></div>
+<div><span class="ck">timestamp:</span>     <span class="cs">"2026-01-15T23:41:00Z"</span></div>
+<div><span class="ck">user_id:</span>       <span class="cs">"u001"</span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-card f-card">100 pts</div>
+      <div class="metric-card f-card">APPEND-ONLY</div>
+      <div class="metric-card f-card">ZERO DRIFT</div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature 2: Challenge Engine (metin sol, görsel sağ) -->
+<section class="feature media-right">
+  <div class="feature-num">02 / 05</div>
+
+  <div class="f-media">
+    <div class="img-frame">
+      <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&q=80"
+           alt="Devre kartı — kural motoru" width="900" height="675" loading="lazy">
+      <div class="img-overlay"></div>
+    </div>
+  </div>
+
+  <div class="f-copy">
+    <div class="f-label">Challenge Sistemi</div>
+    <h2 class="f-title">Kurallar Net,<br>Kararlar Şeffaf</h2>
+    <p class="f-body">
+      Her challenge konfigürasyon dosyasında tanımlı. Koşul parser güvenli,
+      eval() yok. Yeni challenge minimum değişiklikle eklenebilir.
+    </p>
+
+    <div class="challenge-card f-card">
+      <div class="cc-head">
+        <span class="cc-name">Daily Watcher</span>
+        <span class="cc-tag">HIGH</span>
+      </div>
+      <div class="cc-cond">watch_minutes >= 60</div>
+      <div class="cc-meta">🏅 100 Points · Priority: 10 · Active: true</div>
+      <div class="cc-bar"><div class="fill" data-fill="65%"></div></div>
+    </div>
+
+    <div class="challenge-card f-card">
+      <div class="cc-head">
+        <span class="cc-name">Binge Weekend</span>
+        <span class="cc-tag">HIGH</span>
+      </div>
+      <div class="cc-cond">episodes_completed >= 5</div>
+      <div class="cc-meta">🎯 250 Points · Priority: 8 · Active: true</div>
+      <div class="cc-bar"><div class="fill" data-fill="40%"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature 3: Badge System (görsel sol) -->
+<section class="feature">
+  <div class="feature-num">03 / 05</div>
+
+  <div class="f-media">
+    <div class="img-frame">
+      <img src="https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=900&q=80"
+           alt="Madalya — rozet sistemi" width="900" height="675" loading="lazy">
+      <div class="img-overlay"></div>
+    </div>
+  </div>
+
+  <div class="f-copy">
+    <div class="f-label">Rozet Sistemi</div>
+    <h2 class="f-title">Bronze'dan<br>Platinum'a</h2>
+    <p class="f-body">
+      4 seviyeli rozet sistemi. Her seviye bağımsız konfigüre edilebilir.
+      Rozet ataması deterministik, duplicate korumalı.
+    </p>
+
+    <div class="badge-list">
+      <div class="badge-row earned f-card">
+        <span class="b-icon" style="color:var(--accent-1)">◆</span>
+        <span class="b-name">BRONZE</span>
+        <span class="b-th">500 pts</span>
+        <div class="b-bar"><div class="fill" data-fill="100%" style="background:var(--accent-1)"></div></div>
+        <span class="b-status">Kazanıldı ✓</span>
+      </div>
+      <div class="badge-row f-card">
+        <span class="b-icon" style="color:var(--accent-2)">◆</span>
+        <span class="b-name">SILVER</span>
+        <span class="b-th">1500 pts</span>
+        <div class="b-bar"><div class="fill" data-fill="80%" style="background:var(--accent-2)"></div></div>
+        <span class="b-status">Devam</span>
+      </div>
+      <div class="badge-row f-card">
+        <span class="b-icon" style="color:#FFB800">◆</span>
+        <span class="b-name">GOLD</span>
+        <span class="b-th">3000 pts</span>
+        <div class="b-bar"><div class="fill" data-fill="55%" style="background:#FFB800"></div></div>
+        <span class="b-status">Devam</span>
+      </div>
+      <div class="badge-row f-card">
+        <span class="b-icon" style="color:var(--purple)">◆</span>
+        <span class="b-name">PLATINUM</span>
+        <span class="b-th">5000 pts</span>
+        <div class="b-bar"><div class="fill" data-fill="20%" style="background:var(--purple)"></div></div>
+        <span class="b-status">Devam</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature 4: Leaderboard (metin sol, görsel sağ) -->
+<section class="feature media-right" id="leaderboard">
+  <div class="feature-num">04 / 05</div>
+
+  <div class="f-media">
+    <div class="img-frame">
+      <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&q=80"
+           alt="Analitik ekran — leaderboard" width="900" height="675" loading="lazy">
+      <div class="img-overlay"></div>
+    </div>
+  </div>
+
+  <div class="f-copy">
+    <div class="f-label">Leaderboard <span class="live-chip" id="lbLive" hidden>● CANLI VERİ</span></div>
+    <h2 class="f-title">Deterministik<br>Sıralama</h2>
+    <p class="f-body">
+      Eşit puanda user_id'ye göre alfabetik sıralama.
+      Random yok, bias yok. Her çalıştırmada aynı sonuç.
+    </p>
+
+    <div class="lb-card" id="lbTable">
+      <div class="lb-row first">
+        <span class="lb-rank">1</span>
+        <span class="lb-user">u_alexm</span>
+        <span class="lb-pts">4,850 pts</span>
+        <span class="lb-badge">🏆 Platinum</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">2</span>
+        <span class="lb-user">u_bella</span>
+        <span class="lb-pts">4,200 pts</span>
+        <span class="lb-badge">🥇 Gold</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">3</span>
+        <span class="lb-user">u_carlos</span>
+        <span class="lb-pts">3,900 pts</span>
+        <span class="lb-badge">🥇 Gold</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">4</span>
+        <span class="lb-user">u_diana</span>
+        <span class="lb-pts">2,750 pts</span>
+        <span class="lb-badge">🥈 Silver</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">5</span>
+        <span class="lb-user">u_evan</span>
+        <span class="lb-pts">1,480 pts</span>
+        <span class="lb-badge">🥉 Bronze</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature 5: AI Explanation (görsel sol) -->
+<section class="feature" id="ai">
+  <div class="feature-num">05 / 05</div>
+
+  <div class="f-media">
+    <div class="img-frame">
+      <img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=900&q=80"
+           alt="Yapay zeka açıklama katmanı" width="900" height="675" loading="lazy">
+      <div class="img-overlay"></div>
+    </div>
+  </div>
+
+  <div class="f-copy">
+    <div class="f-label">AI Açıklama Katmanı</div>
+    <h2 class="f-title">Her Karar<br>Açıklanabilir</h2>
+    <p class="f-body">
+      LLM iş kuralı üretmez. Sadece mevcut deterministik açıklamayı
+      doğal dile çevirir. Sistem LLM olmadan da tam çalışır.
+    </p>
+
+    <div class="f-card">
+      <div class="explain-controls">
+        <select id="exUser" aria-label="Kullanıcı seç">
+          <option value="u001">u001</option>
+          <option value="u002">u002</option>
+          <option value="u003">u003</option>
+          <option value="u004">u004</option>
+          <option value="u005">u005</option>
+          <option value="u006">u006</option>
+        </select>
+        <select id="exQ" aria-label="Soru seç">
+          <option>Kaç puanım var?</option>
+          <option>Liderlik tablosunda neden bu sıradayım?</option>
+          <option>Gold rozetine ulaşmak için ne yapmalıyım?</option>
+          <option>Neden CH-001 ödülünü alamadım?</option>
+        </select>
+        <button class="btn btn-primary explain-btn" id="exAsk">Sor →</button>
+      </div>
+      <div class="code-panel" id="explainOut" style="font-size:13px">
+<div><span class="cm">{</span></div>
+<div>  <span class="ck">"soru":</span>   <span class="ck">"Gold badge neden yok?"</span>,</div>
+<div>  <span class="ck">"durum":</span>  <span class="cv">"2200 / 3000 pts"</span>,</div>
+<div>  <span class="ck">"eksik":</span>  <span class="cr">"800 pts"</span>,</div>
+<div>  <span class="ck">"öneri":</span>  <span class="cs">"3 gün Daily Watcher"</span>,</div>
+<div>  <span class="ck">"llm":</span>    <span class="cm">false</span></div>
+<div><span class="cm">}</span></div>
+      </div>
+      <div class="explain-note" id="exNote">Canlı demo motora bağlanır — başlatmak için: <span class="cs">python server.py</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- [8] Stats -->
+<section class="stats" id="statsSection">
+  <div class="stats-grid">
+    <div class="stat">
+      <div class="s-num" data-count="15" data-decimals="0" data-suffix="">0</div>
+      <div class="s-lbl">Sprint</div>
+    </div>
+    <div class="stat">
+      <div class="s-num" data-count="13" data-decimals="0" data-suffix="">0</div>
+      <div class="s-lbl">Modül</div>
+    </div>
+    <div class="stat">
+      <div class="s-num" data-count="100" data-decimals="0" data-suffix="%">0</div>
+      <div class="s-lbl">Deterministik</div>
+    </div>
+    <div class="stat">
+      <div class="s-num" data-count="0" data-decimals="0" data-suffix="">0</div>
+      <div class="s-lbl">Random Karar</div>
+    </div>
+  </div>
+  <div class="stats-tagline">Aynı input. Aynı output. Her zaman.</div>
+  <div class="stats-sub">Sprint 0'dan Sprint 15'e kadar determinizm birincil mimari ilke.</div>
+</section>
+
+<!-- [9] Architecture -->
+<section class="arch" id="pipeline">
+  <h2>Nasıl Çalışır</h2>
+  <p class="arch-sub">CSV'den JSON'a uçtan uca deterministik pipeline</p>
+
+  <div class="arch-flow" id="archFlow">
+    <div class="arch-box"><div class="ab-name">CSV Input</div><div class="ab-sub">aktivite verisi</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">State Engine</div><div class="ab-sub">günlük metrikler</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">Rule Evaluator</div><div class="ab-sub">güvenli parser</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">Points Ledger</div><div class="ab-sub">append-only</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">Badge Engine</div><div class="ab-sub">eşik kontrolü</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">Leaderboard</div><div class="ab-sub">tie-break sıralı</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">AI Explanation</div><div class="ab-sub">opsiyonel LLM</div></div>
+    <div class="arch-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h19M15 1l4 4-4 4" stroke="#444466" stroke-width="1.2"/></svg></div>
+    <div class="arch-box"><div class="ab-name">JSON Output</div><div class="ab-sub">7 stabil dosya</div></div>
+  </div>
+</section>
+
+<!-- [10] CTA -->
+<section class="cta" id="cta">
+  <div class="cta-ge">GE</div>
+  <div class="orbit orbit-1"><span class="orbit-dot"></span></div>
+  <div class="orbit orbit-2"><span class="orbit-dot"></span></div>
+
+  <div class="cta-inner">
+    <div class="badge-chip">Hazır mısınız?</div>
+    <h2 class="cta-title">
+      Platformunuzu<br>
+      <span class="grad">Oyunlaştırmaya</span><br>
+      Başlayalım
+    </h2>
+    <p class="cta-body">
+      15 sprint, 13 modül, sıfır random karar. Modüler mimari,
+      eksiksiz test coverage, production-ready Python engine.
+    </p>
+    <div class="cta-buttons">
+      <a class="btn btn-primary" href="https://github.com/Weli-byte/turkcell-code-night/tree/main/docs" target="_blank" rel="noopener">Dokümantasyonu Oku →</a>
+      <a class="btn btn-ghost" href="https://github.com/Weli-byte/turkcell-code-night" target="_blank" rel="noopener">GitHub'da Keşfet</a>
+    </div>
+  </div>
+</section>
+
+<!-- [11] Footer -->
+<footer>
+  <div class="footer-marquee">
+    <div class="marquee-track">
+      <span class="marquee-item">DETERMINISTIC · EXPLAINABLE · MODULAR · OPEN SOURCE · PYTHON · GAMIFICATION · APPEND-ONLY · VIDEO PLATFORMS ·&nbsp;</span>
+      <span class="marquee-item">DETERMINISTIC · EXPLAINABLE · MODULAR · OPEN SOURCE · PYTHON · GAMIFICATION · APPEND-ONLY · VIDEO PLATFORMS ·&nbsp;</span>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-left">
+      <span class="footer-logo">GE</span>
+      <span>© 2026 Gamification Engine</span>
+    </div>
+    <div>Built with Python · GSAP · Lenis</div>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#ai">Docs</a>
+      <a href="https://github.com/Weli-byte/turkcell-code-night" target="_blank" rel="noopener">GitHub</a>
+      <a href="#top">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
+
+  /* ── Lenis + GSAP entegrasyonu ─────────────────────────── */
+  const lenis = new Lenis({ lerp: 0.08, duration: 1.4 });
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+  lenis.on('scroll', ScrollTrigger.update);
+
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  /* ── [1] Scroll progress bar ───────────────────────────── */
+  const progressBar = document.getElementById('scroll-progress');
+  lenis.on('scroll', ({ progress }) => {
+    progressBar.style.transform = `scaleX(${progress})`;
+  });
+
+  /* ── [3] Custom cursor ─────────────────────────────────── */
+  const dot  = document.getElementById('cursor-dot');
+  const halo = document.getElementById('cursor-halo');
+
+  if (!isMobile) {
+    let mx = innerWidth / 2, my = innerHeight / 2;
+    let hx = mx, hy = my;
+    let haloScale = 1, haloTarget = 1;
+
+    window.addEventListener('mousemove', (e) => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate(${mx - 4}px, ${my - 4}px)`;
+    });
+
+    gsap.ticker.add(() => {
+      hx += (mx - hx) * 0.1;
+      hy += (my - hy) * 0.1;
+      haloScale += (haloTarget - haloScale) * 0.15;
+      halo.style.transform =
+        `translate(${hx - 24}px, ${hy - 24}px) scale(${haloScale})`;
+    });
+
+    const setHover = (on) => {
+      haloTarget = on ? 1.8 : 1;
+      halo.style.background  = on ? 'rgba(0,255,135,0.08)' : 'transparent';
+      halo.style.borderColor = on ? 'rgba(0,255,135,0.85)' : 'rgba(0,255,135,0.4)';
+      dot.style.opacity   = on ? '0' : '1';
+      dot.style.transform += on ? ' scale(0)' : '';
+    };
+
+    document.querySelectorAll('a, button').forEach((el) => {
+      el.addEventListener('mouseenter', () => setHover(true));
+      el.addEventListener('mouseleave', () => setHover(false));
+    });
+
+    document.querySelectorAll('.img-frame, .hero-frame').forEach((el) => {
+      el.addEventListener('mouseenter', () => {
+        haloTarget = 1.8;
+        halo.classList.add('is-img');
+        halo.style.borderColor = 'rgba(0,255,135,0.85)';
+        dot.style.opacity = '0';
+      });
+      el.addEventListener('mouseleave', () => {
+        haloTarget = 1;
+        halo.classList.remove('is-img');
+        halo.style.borderColor = 'rgba(0,255,135,0.4)';
+        dot.style.opacity = '1';
+      });
+    });
+  } else {
+    dot.style.display = 'none';
+    halo.style.display = 'none';
+  }
+
+  /* ── [4] Navbar scroll durumu ──────────────────────────── */
+  const navbar = document.getElementById('navbar');
+  lenis.on('scroll', ({ scroll }) => {
+    navbar.classList.toggle('scrolled', scroll > 50);
+  });
+
+  /* ── Anchor linkleri Lenis ile kaydır ──────────────────── */
+  document.querySelectorAll('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -70 }); }
+    });
+  });
+
+  /* ── CountUp yardımcı fonksiyonu ───────────────────────── */
+  function countUp(el, opts = {}) {
+    const target   = parseFloat(el.dataset.count);
+    const decimals = parseInt(el.dataset.decimals || '0', 10);
+    const suffix   = el.dataset.suffix || '';
+    const proxy = { v: 0 };
+    gsap.to(proxy, {
+      v: target,
+      duration: opts.duration || 2,
+      ease: 'power2.out',
+      delay: opts.delay || 0,
+      scrollTrigger: opts.trigger
+        ? { trigger: opts.trigger, start: 'top 70%', once: true }
+        : undefined,
+      onUpdate: () => {
+        el.textContent = proxy.v.toFixed(decimals) + suffix;
+      },
+      onComplete: () => {
+        el.textContent = target.toFixed(decimals) + suffix;
+      }
+    });
+  }
+
+  /* ── [5] Hero intro timeline ───────────────────────────── */
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  tl.from('.hero-title .word', {
+      opacity: 0, y: 70, stagger: 0.08, duration: 0.9, ease: 'expo.out'
+    })
+    .from('[data-hero="body"]', { opacity: 0, y: 30, duration: 0.7 }, '-=0.5')
+    .from('[data-hero="btn"]', { opacity: 0, y: 20, stagger: 0.1, duration: 0.6 }, '-=0.4')
+    .from('[data-hero="counters"]', { opacity: 0, y: 20, duration: 0.6 }, '-=0.3')
+    .to('#heroCurtain', {
+      scaleX: 0, duration: 1.1, ease: 'expo.inOut'
+    }, '-=0.9')
+    .from('#floatCard', { opacity: 0, x: -20, duration: 0.6 }, '-=0.4')
+    .add(() => {
+      document.querySelectorAll('.hero-counters .num')
+        .forEach((el) => countUp(el, { duration: 2 }));
+    }, '-=1.0');
+
+  /* ── Görsel clip-path reveal (scroll) ──────────────────── */
+  gsap.utils.toArray('.feature .img-frame').forEach((frame) => {
+    gsap.from(frame, {
+      clipPath: 'inset(0 100% 0 0)',
+      duration: 1.4,
+      ease: 'expo.inOut',
+      scrollTrigger: { trigger: frame, start: 'top 75%', once: true }
+    });
+  });
+
+  /* ── Section içerik animasyonları ──────────────────────── */
+  gsap.utils.toArray('.f-label').forEach((label) => {
+    gsap.from(label, {
+      y: 20, opacity: 0, duration: 0.7, ease: 'power3.out',
+      scrollTrigger: { trigger: label, start: 'top 85%', once: true }
+    });
+  });
+
+  gsap.utils.toArray('.f-title, .arch h2, .stats-tagline').forEach((title) => {
+    gsap.from(title, {
+      y: 90, opacity: 0, duration: 1.1, ease: 'expo.out',
+      scrollTrigger: { trigger: title, start: 'top 80%', once: true }
+    });
+  });
+
+  gsap.utils.toArray('.f-body, .arch-sub, .stats-sub').forEach((body) => {
+    gsap.from(body, {
+      y: 40, opacity: 0, duration: 0.9, ease: 'power2.out',
+      scrollTrigger: { trigger: body, start: 'top 80%', once: true }
+    });
+  });
+
+  /* ── Kartlar / paneller ────────────────────────────────── */
+  gsap.utils.toArray('.f-copy').forEach((copy) => {
+    const cards = copy.querySelectorAll('.f-card');
+    if (!cards.length) return;
+    gsap.from(cards, {
+      y: 60, opacity: 0, stagger: 0.12, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: { trigger: copy, start: 'top 70%', once: true }
+    });
+  });
+
+  /* ── Progress barlar (badge + challenge) ───────────────── */
+  gsap.utils.toArray('[data-fill]').forEach((bar) => {
+    gsap.to(bar, {
+      width: bar.dataset.fill,
+      duration: 1.4,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: bar, start: 'top 85%', once: true }
+    });
+  });
+
+  /* ── Leaderboard satırları ─────────────────────────────── */
+  gsap.from('#lbTable .lb-row', {
+    x: -30, opacity: 0, stagger: 0.08, duration: 0.7, ease: 'power3.out',
+    scrollTrigger: { trigger: '#lbTable', start: 'top 75%', once: true }
+  });
+
+  /* ── [8] Stats sayaçları ───────────────────────────────── */
+  document.querySelectorAll('.stats .s-num').forEach((el) => {
+    countUp(el, { trigger: '#statsSection', duration: 2 });
+  });
+
+  /* ── [9] Arkitektür kutuları ───────────────────────────── */
+  gsap.from('#archFlow .arch-box', {
+    opacity: 0, x: -40, stagger: 0.1, duration: 0.7, ease: 'power3.out',
+    scrollTrigger: { trigger: '#archFlow', start: 'top 70%', once: true }
+  });
+  gsap.from('#archFlow .arch-arrow', {
+    opacity: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out',
+    scrollTrigger: { trigger: '#archFlow', start: 'top 70%', once: true }
+  });
+
+  /* ── CTA içerik ────────────────────────────────────────── */
+  gsap.from('.cta-inner > *', {
+    y: 50, opacity: 0, stagger: 0.12, duration: 0.9, ease: 'power3.out',
+    scrollTrigger: { trigger: '.cta', start: 'top 65%', once: true }
+  });
+
+  /* ══ Backend köprüsü (server.py /api/*) ═════════════════
+     Server yoksa (file:// veya kapalı) sayfa statik mock
+     verilerle çalışmaya devam eder. */
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+
+  const medal = (badges) => {
+    const list = badges || [];
+    if (list.includes('GOLD')) return '🥇 Gold';
+    if (list.includes('SILVER')) return '🥈 Silver';
+    if (list.includes('BRONZE')) return '🥉 Bronze';
+    return '—';
+  };
+
+  /* Canlı leaderboard: data/output/leaderboard.json */
+  (async () => {
+    try {
+      const res = await fetch('/api/leaderboard');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return;
+      const table = document.getElementById('lbTable');
+      table.innerHTML = data.slice(0, 5).map((e, i) => (
+        `<div class="lb-row${i === 0 ? ' first' : ''}">` +
+        `<span class="lb-rank">${esc(e.rank)}</span>` +
+        `<span class="lb-user">${esc(e.user_id)}</span>` +
+        `<span class="lb-pts">${Number(e.total_points).toLocaleString('tr-TR')} pts</span>` +
+        `<span class="lb-badge">${medal(e.badges)}</span>` +
+        `</div>`
+      )).join('');
+      const live = document.getElementById('lbLive');
+      if (live) live.hidden = false;
+    } catch { /* statik mock kalır */ }
+  })();
+
+  /* Canlı açıklama demosu: /api/explain → deterministik motor */
+  const exBtn = document.getElementById('exAsk');
+  if (exBtn) {
+    exBtn.addEventListener('click', async () => {
+      const user = document.getElementById('exUser').value;
+      const q = document.getElementById('exQ').value;
+      const out = document.getElementById('explainOut');
+      const note = document.getElementById('exNote');
+      out.innerHTML = '<div><span class="cm">// deterministik motor çalışıyor…</span></div>';
+      try {
+        const url = `/api/explain?user_id=${encodeURIComponent(user)}` +
+                    `&question=${encodeURIComponent(q)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const evidence = esc(JSON.stringify(data.evidence || {}, null, 2))
+          .split('\n')
+          .map((l) => `<div><span class="cm">${l.replace(/ /g, '&nbsp;')}</span></div>`)
+          .join('');
+        out.innerHTML =
+          `<div><span class="ck">"soru":</span>  <span class="cs">"${esc(data.question)}"</span></div>` +
+          `<div><span class="ck">"cevap":</span> <span class="cv">"${esc(data.answer)}"</span></div>` +
+          `<div><span class="ck">"evidence":</span></div>` + evidence;
+        if (note) {
+          note.innerHTML = '<span class="cs">● canlı</span> — cevap Python motorundan, kural tabanlı üretildi';
+        }
+      } catch {
+        out.innerHTML =
+          '<div><span class="cr">API erişilemedi.</span> ' +
+          '<span class="cm">Backend köprüsü için: python server.py</span></div>';
+      }
+    });
+  }
+});
+</script>
+</body>
+</html>
