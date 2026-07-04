@@ -1,0 +1,17 @@
+# Gamification platform API (FastAPI + SQLite).
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY data/input ./data/input
+
+RUN pip install --no-cache-dir ".[backend]"
+
+# SQLite file lives on a volume mounted at /data (see docker-compose.yml).
+ENV GAMIFICATION_BACKEND_DATABASE_URL="sqlite:////data/gamification.db"
+
+EXPOSE 8000
+
+CMD ["uvicorn", "gamification_backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

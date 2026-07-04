@@ -5,11 +5,14 @@ Processes daily video-platform activity CSVs → user states, challenge rewards,
 append-only points ledger, badges, leaderboard, notifications, JSON exports,
 and a template-based Turkish explanation layer (optional LLM rephrasing).
 
-**Faz 2 in progress** (`docs/v2_plan.md`, sprints 20-30, status table at
-bottom): turning the batch demo into a live platform — FastAPI+SQLite backend
-(`src/gamification_backend/`), React SPA (planned `frontend/`), live event
-evaluation + nightly batch, JWT auth, SSE. Engine core stays the pure
-deterministic library; backend deps live in the `backend` extra.
+**Faz 2 COMPLETE** (`docs/v2_plan.md`, sprints 20-30 all done, 2026-07-04):
+live platform — FastAPI+SQLite backend (`src/gamification_backend/`), React
+SPA (`frontend/`), live event evaluation + nightly batch, JWT auth, SSE,
+admin panel, traffic simulator, live AI explain. Engine core stays the pure
+deterministic library; backend deps in the `backend` extra. Docker:
+`docker compose up --build` → SPA :8080 / API :8000 (deploy/ Dockerfiles +
+nginx.conf; NOT build-tested locally, no Docker on this machine).
+Remaining debt: docs/backlog.md.
 
 ## Commands
 

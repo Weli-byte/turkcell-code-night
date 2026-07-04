@@ -59,10 +59,24 @@ filtresi veya önceki state'ten artımlı hesaplama gerekebilir.
 - LLM çıktısında sayısal değerlerin deterministik cevapla tutarlılık
   doğrulaması (post-validation guardrail).
 
+## Faz 2 ile Teslim Edilenler (eski "kapsam dışı" maddeler)
+
+- ✅ Web arayüzü / REST API (React SPA + FastAPI)
+- ✅ Veritabanı entegrasyonu (SQLite + SQLAlchemy, append-only trigger'lar)
+- ✅ Kullanıcı authentication (JWT + bcrypt)
+- ✅ Gerçek zamanlıya yakın event akışı (canlı değerlendirme + SSE)
+
+## Faz 2 Sonrası Teknik Borç
+
+| Konu | Detay | Etki |
+|---|---|---|
+| SSE broker tek süreç | `NotificationBroker` in-process; çoklu uvicorn worker'da Redis pub/sub gerekir. | Orta |
+| SQLite eşzamanlılık | Yüksek trafik için PostgreSQL'e geçiş (SQLAlchemy sayesinde URL değişimi + trigger portu). | Orta |
+| Frontend test altyapısı | vitest + React Testing Library kurulmadı; kritik mantık backend'de testli. | Düşük |
+| Docker imajları CI'da build edilmiyor | Compose dosyaları elle doğrulandı; CI'a build adımı eklenebilir. | Düşük |
+| Canlı "günde tek ödül" zamanlaması | Gün içi ilk tetiklenen kazanır; batch daha yüksek öncelikliyi geriye dönük seçemez (bilinçli tasarım, docs/sprint_23.md). | Bilgi |
+
 ## Kapsam Dışı (bilinçli)
 
-- Gerçek zamanlı event streaming
-- Web arayüzü / REST API
-- Veritabanı entegrasyonu (dosya tabanlı depolama yeterli)
-- Kullanıcı authentication
 - Production observability (metrics/tracing)
+- E-posta/BIP kanal gönderimi (kayıtlar üretiliyor, gönderim yok)

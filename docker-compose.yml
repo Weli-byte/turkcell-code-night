@@ -1,0 +1,32 @@
+# Full platform: API + SPA. Start with `docker compose up --build`,
+# then open http://localhost:8080.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.backend
+    environment:
+      GAMIFICATION_BACKEND_DATABASE_URL: "sqlite:////data/gamification.db"
+      # Bootstrap an admin account on first start (change these!):
+      GAMIFICATION_BACKEND_ADMIN_USERNAME: "admin"
+      GAMIFICATION_BACKEND_ADMIN_PASSWORD: "change-me-admin-1"
+      # Set a strong secret in production:
+      GAMIFICATION_BACKEND_JWT_SECRET: "change-me-jwt-secret"
+      # Optional LLM rephrasing (deterministic answers work without it):
+      # GEMINI_API_KEY: "..."
+    volumes:
+      - gamification-data:/data
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  gamification-data:

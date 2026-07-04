@@ -137,4 +137,6 @@ SQLite (gamification.db)
 | 27 | **tamamlandı** (docs/sprint_27.md) |
 | 28 | **tamamlandı** (docs/sprint_28.md) |
 | 29 | **tamamlandı** (docs/sprint_29.md) |
-| 30 | bekliyor |
+| 30 | **tamamlandı** (docs/sprint_30.md) |
+
+**Faz 2 planı tamamlandı (2026-07-04).** Kalan işler docs/backlog.md'de.

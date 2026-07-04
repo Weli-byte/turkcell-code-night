@@ -11,6 +11,7 @@ const apiPaths = [
   "/sse",
   "/admin",
   "/health",
+  "/explain",
 ];
 
 export default defineConfig({
