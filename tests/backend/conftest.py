@@ -63,6 +63,8 @@ def test_settings(challenges_csv: Path) -> BackendSettings:
         database_url="sqlite://",
         challenges_csv=challenges_csv,
         seed_on_startup=True,
+        jwt_secret="test-secret",  # noqa: S106
+        bcrypt_rounds=4,
     )
 
 

@@ -19,6 +19,8 @@ backend = [
   "uvicorn>=0.30",
   "sqlalchemy>=2.0.30",
   "pydantic-settings>=2.4",
+  "pyjwt>=2.8",
+  "bcrypt>=4.1",
 ]
 dev = [
   "gamification-engine[backend]",

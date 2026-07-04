@@ -128,7 +128,7 @@ SQLite (gamification.db)
 | Sprint | Durum |
 |---|---|
 | 20 | **tamamlandı** (docs/sprint_20.md) |
-| 21 | bekliyor |
+| 21 | **tamamlandı** (docs/sprint_21.md) |
 | 22 | bekliyor |
 | 23 | bekliyor |
 | 24 | bekliyor |

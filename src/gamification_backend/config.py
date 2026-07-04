@@ -28,6 +28,12 @@ class BackendSettings(BaseSettings):
             startup when the file exists.
         seed_on_startup: Disable to skip challenge seeding (used by tests
             that want full control over database contents).
+        jwt_secret: HS256 signing key for access tokens. The default is a
+            development-only value; set a strong secret in production.
+        jwt_expires_minutes: Access token lifetime.
+        bcrypt_rounds: bcrypt cost factor (tests lower it for speed).
+        admin_username / admin_password: when both are set, an admin
+            account is bootstrapped on startup if it does not exist yet.
     """
 
     model_config = SettingsConfigDict(
@@ -38,3 +44,8 @@ class BackendSettings(BaseSettings):
     database_url: str = f"sqlite:///{(_REPO_ROOT / 'gamification.db').as_posix()}"
     challenges_csv: Path = _REPO_ROOT / "data" / "input" / "challenges.csv"
     seed_on_startup: bool = True
+    jwt_secret: str = "change-me-dev-secret"  # noqa: S105 (dev default)
+    jwt_expires_minutes: int = 60 * 24
+    bcrypt_rounds: int = 12
+    admin_username: str | None = None
+    admin_password: str | None = None
