@@ -162,6 +162,47 @@ class ChallengeProgressResponse(BaseModel):
     won_today: bool
 
 
+class LeaderboardEntryResponse(BaseModel):
+    """One ranked leaderboard row."""
+
+    rank: int
+    user_id: str
+    username: str
+    total_points: int
+    badges: list[str]
+    is_bot: bool
+
+
+class RunResponse(BaseModel):
+    """One recorded pipeline execution."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    run_date: date
+    run_type: str
+    status: str
+    executed_at: datetime
+    summary_json: str | None
+
+
+class BatchRunRequest(BaseModel):
+    """Manual batch trigger; defaults to today (UTC) when omitted."""
+
+    run_date: date | None = None
+
+
+class BatchRunSummaryResponse(BaseModel):
+    """Outcome of a manual batch run."""
+
+    run_date: date
+    users_processed: int
+    new_rewards: int
+    new_badges: int
+    new_notifications: int
+    leaderboard_size: int
+
+
 class NotificationResponse(BaseModel):
     """A stored notification."""
 

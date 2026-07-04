@@ -21,6 +21,7 @@ from gamification_backend.api.auth import router as auth_router
 from gamification_backend.api.catalog import router as catalog_router
 from gamification_backend.api.events import router as events_router
 from gamification_backend.api.health import router as health_router
+from gamification_backend.api.leaderboard import router as leaderboard_router
 from gamification_backend.api.me import router as me_router
 from gamification_backend.api.sse import router as sse_router
 from gamification_backend.config import BackendSettings
@@ -31,9 +32,12 @@ from gamification_backend.db.base import (
 )
 from gamification_backend.repositories.catalog import seed_catalog_from_json
 from gamification_backend.repositories.challenges import seed_challenges_from_csv
+from gamification_backend.repositories.events import today_utc
 from gamification_backend.repositories.users import UserRepository
 from gamification_backend.security import hash_password
+from gamification_backend.services.daily_batch import run_daily_batch
 from gamification_backend.services.notifier import NotificationBroker
+from gamification_backend.services.scheduler import DailyJobScheduler
 
 
 def _bootstrap_admin(
@@ -63,6 +67,10 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     engine = create_db_engine(app_settings.database_url)
     session_factory = create_session_factory(engine)
 
+    def _batch_job() -> None:
+        with session_factory() as session:
+            run_daily_batch(session, run_date=today_utc())
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         init_database(engine)
@@ -73,7 +81,18 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
                 if app_settings.catalog_json.exists():
                     seed_catalog_from_json(session, app_settings.catalog_json)
         _bootstrap_admin(session_factory, app_settings)
+        scheduler: DailyJobScheduler | None = None
+        if app_settings.scheduler_enabled:
+            scheduler = DailyJobScheduler(
+                _batch_job,
+                hour=app_settings.batch_hour,
+                minute=app_settings.batch_minute,
+            )
+            scheduler.start()
+        app.state.scheduler = scheduler
         yield
+        if scheduler is not None:
+            await scheduler.stop()
         engine.dispose()
 
     app = FastAPI(
@@ -92,6 +111,7 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     app.include_router(catalog_router)
     app.include_router(events_router)
     app.include_router(sse_router)
+    app.include_router(leaderboard_router)
     return app
 
 

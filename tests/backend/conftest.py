@@ -19,6 +19,7 @@ from gamification_backend.db.base import (
 from gamification_backend.db.models import UserRecord
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+CHALLENGES_CSV = _REPO_ROOT / "data" / "input" / "challenges.csv"
 
 
 class UserFactory(Protocol):
@@ -52,7 +53,19 @@ def session(engine: Engine) -> Iterator[Session]:
 def challenges_csv() -> Path:
     """Path to the committed sample challenge definitions."""
 
-    return _REPO_ROOT / "data" / "input" / "challenges.csv"
+    return CHALLENGES_CSV
+
+
+@pytest.fixture()
+def second_database() -> Iterator[Session]:
+    """A session on a completely independent in-memory database."""
+
+    engine = create_db_engine("sqlite://")
+    init_database(engine)
+    factory = create_session_factory(engine)
+    with factory() as session:
+        yield session
+    engine.dispose()
 
 
 @pytest.fixture()
@@ -65,6 +78,7 @@ def test_settings(challenges_csv: Path) -> BackendSettings:
         seed_on_startup=True,
         jwt_secret="test-secret",  # noqa: S106
         bcrypt_rounds=4,
+        scheduler_enabled=False,
     )
 
 

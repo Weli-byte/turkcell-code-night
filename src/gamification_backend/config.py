@@ -50,3 +50,6 @@ class BackendSettings(BaseSettings):
     bcrypt_rounds: int = 12
     admin_username: str | None = None
     admin_password: str | None = None
+    scheduler_enabled: bool = True
+    batch_hour: int = 23
+    batch_minute: int = 55
