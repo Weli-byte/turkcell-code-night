@@ -345,24 +345,106 @@ function RunsTab() {
 }
 
 function SimulatorTab() {
+  const queryClient = useQueryClient();
+  const { push } = useToasts();
+  const [botCount, setBotCount] = useState(6);
+  const [tickSeconds, setTickSeconds] = useState(5);
+
   const status = useQuery({
     queryKey: ["admin-simulator"],
     queryFn: () => api<SimulatorStatus>("/admin/simulator"),
+    refetchInterval: 3_000,
   });
+
+  const refresh = () =>
+    void queryClient.invalidateQueries({ queryKey: ["admin-simulator"] });
+
+  const start = useMutation({
+    mutationFn: () =>
+      api<SimulatorStatus>("/admin/simulator/start", {
+        method: "POST",
+        body: { bot_count: botCount, tick_seconds: tickSeconds },
+      }),
+    onSuccess: (data) => {
+      push("info", `Simülatör başladı: ${data.bot_count} bot.`);
+      refresh();
+    },
+    onError: (err) =>
+      push("info", err instanceof ApiError ? err.message : "Başlatılamadı."),
+  });
+
+  const stop = useMutation({
+    mutationFn: () =>
+      api<SimulatorStatus>("/admin/simulator/stop", { method: "POST" }),
+    onSuccess: () => {
+      push("info", "Simülatör durduruldu.");
+      refresh();
+    },
+  });
+
+  const running = status.data?.running === true;
 
   return (
     <div className="sim-card">
       <h3>Trafik Simülatörü</h3>
       <p className="muted">
         Durum:{" "}
-        {status.data?.running === true ? (
-          <span className="status-on">çalışıyor</span>
+        {running ? (
+          <span className="status-on">● çalışıyor</span>
         ) : (
           <span className="status-off">durdu</span>
         )}{" "}
-        · {status.data?.bot_count ?? 0} bot
+        · {status.data?.bot_count ?? 0} bot · {status.data?.ticks_completed ?? 0}{" "}
+        tur · {status.data?.events_recorded ?? 0} event
       </p>
-      <p className="muted">{status.data?.detail}</p>
+      <p className="muted">
+        Botlar (binge'çi / gündelik / eleştirmen) gerçek ingestion yolundan
+        event üretir; günlük kotalar ve ödül kuralları onlara da aynen
+        uygulanır. Liderlik tablosunda 🤖 ile görünürler.
+      </p>
+      {!running && (
+        <div className="sim-controls">
+          <label>
+            Bot sayısı
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={botCount}
+              onChange={(e) => setBotCount(Number(e.target.value))}
+            />
+          </label>
+          <label>
+            Tur aralığı (sn)
+            <input
+              type="number"
+              min={1}
+              max={60}
+              value={tickSeconds}
+              onChange={(e) => setTickSeconds(Number(e.target.value))}
+            />
+          </label>
+        </div>
+      )}
+      <div className="admin-form-actions">
+        {running ? (
+          <button
+            className="btn-primary"
+            onClick={() => stop.mutate()}
+            disabled={stop.isPending}
+          >
+            ■ Durdur
+          </button>
+        ) : (
+          <button
+            className="btn-primary"
+            onClick={() => start.mutate()}
+            disabled={start.isPending}
+          >
+            ▶ Başlat
+          </button>
+        )}
+      </div>
     </div>
   );
 }

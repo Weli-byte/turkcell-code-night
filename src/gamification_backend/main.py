@@ -39,6 +39,7 @@ from gamification_backend.security import hash_password
 from gamification_backend.services.daily_batch import run_daily_batch
 from gamification_backend.services.notifier import NotificationBroker
 from gamification_backend.services.scheduler import DailyJobScheduler
+from gamification_backend.services.simulator import TrafficSimulator
 
 
 def _bootstrap_admin(
@@ -92,6 +93,7 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
             scheduler.start()
         app.state.scheduler = scheduler
         yield
+        await app.state.simulator.stop()
         if scheduler is not None:
             await scheduler.stop()
         engine.dispose()
@@ -112,6 +114,7 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     app.state.engine = engine
     app.state.session_factory = session_factory
     app.state.broker = NotificationBroker()
+    app.state.simulator = TrafficSimulator(session_factory)
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(me_router)

@@ -254,11 +254,21 @@ class AdminUserResponse(BaseModel):
 
 
 class SimulatorStatusResponse(BaseModel):
-    """Traffic simulator state (implementation lands in Sprint 28)."""
+    """Traffic simulator state and counters."""
 
     running: bool
     bot_count: int
+    tick_seconds: float
+    ticks_completed: int
+    events_recorded: int
     detail: str
+
+
+class SimulatorStartRequest(BaseModel):
+    """Simulator start parameters."""
+
+    bot_count: int = Field(default=6, ge=1, le=50)
+    tick_seconds: float = Field(default=5.0, ge=0.5, le=60.0)
 
 
 class NotificationResponse(BaseModel):

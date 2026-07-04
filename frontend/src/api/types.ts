@@ -122,6 +122,9 @@ export interface BatchRunSummary {
 export interface SimulatorStatus {
   running: boolean;
   bot_count: number;
+  tick_seconds: number;
+  ticks_completed: number;
+  events_recorded: number;
   detail: string;
 }
 

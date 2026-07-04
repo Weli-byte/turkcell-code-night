@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy import func, select
 
 from gamification_backend.api.deps import AdminDep, SessionDep
@@ -16,6 +16,7 @@ from gamification_backend.api.schemas import (
     ChallengeCreateRequest,
     ChallengeUpdateRequest,
     RunResponse,
+    SimulatorStartRequest,
     SimulatorStatusResponse,
 )
 from gamification_backend.db.models import (
@@ -27,6 +28,7 @@ from gamification_backend.db.models import (
 from gamification_backend.repositories.events import today_utc
 from gamification_backend.services.condition_validation import validate_condition
 from gamification_backend.services.daily_batch import run_daily_batch
+from gamification_backend.services.simulator import TrafficSimulator
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -150,15 +152,55 @@ def list_users(admin: AdminDep, session: SessionDep) -> list[AdminUserResponse]:
     ]
 
 
-@router.get("/simulator")
-def simulator_status(admin: AdminDep) -> SimulatorStatusResponse:
-    """Traffic simulator status — control lands in Sprint 28."""
-
-    return SimulatorStatusResponse(
-        running=False,
-        bot_count=0,
-        detail="Simülatör Sprint 28'de geliyor.",
+def _simulator_response(simulator: TrafficSimulator) -> SimulatorStatusResponse:
+    state = simulator.status()
+    detail = (
+        f"{state.bot_count} bot canlı trafik üretiyor."
+        if state.running
+        else "Simülatör durdu."
     )
+    return SimulatorStatusResponse(
+        running=state.running,
+        bot_count=state.bot_count,
+        tick_seconds=state.tick_seconds,
+        ticks_completed=state.ticks_completed,
+        events_recorded=state.events_recorded,
+        detail=detail,
+    )
+
+
+@router.get("/simulator")
+def simulator_status(admin: AdminDep, request: Request) -> SimulatorStatusResponse:
+    """Traffic simulator status and counters."""
+
+    return _simulator_response(request.app.state.simulator)
+
+
+@router.post("/simulator/start")
+async def start_simulator(
+    body: SimulatorStartRequest, admin: AdminDep, request: Request
+) -> SimulatorStatusResponse:
+    """Create/reuse bot accounts and begin emitting live traffic."""
+
+    simulator: TrafficSimulator = request.app.state.simulator
+    started = await simulator.start(
+        bot_count=body.bot_count, tick_seconds=body.tick_seconds
+    )
+    if not started:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Simülatör zaten çalışıyor.",
+        )
+    return _simulator_response(simulator)
+
+
+@router.post("/simulator/stop")
+async def stop_simulator(admin: AdminDep, request: Request) -> SimulatorStatusResponse:
+    """Stop the traffic simulator (idempotent)."""
+
+    simulator: TrafficSimulator = request.app.state.simulator
+    await simulator.stop()
+    return _simulator_response(simulator)
 
 
 @router.get("/runs")
