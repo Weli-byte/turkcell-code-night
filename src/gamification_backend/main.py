@@ -18,6 +18,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from gamification_backend.api.admin import router as admin_router
 from gamification_backend.api.auth import router as auth_router
+from gamification_backend.api.catalog import router as catalog_router
+from gamification_backend.api.events import router as events_router
 from gamification_backend.api.health import router as health_router
 from gamification_backend.api.me import router as me_router
 from gamification_backend.config import BackendSettings
@@ -26,6 +28,7 @@ from gamification_backend.db.base import (
     create_session_factory,
     init_database,
 )
+from gamification_backend.repositories.catalog import seed_catalog_from_json
 from gamification_backend.repositories.challenges import seed_challenges_from_csv
 from gamification_backend.repositories.users import UserRepository
 from gamification_backend.security import hash_password
@@ -61,9 +64,12 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         init_database(engine)
-        if app_settings.seed_on_startup and app_settings.challenges_csv.exists():
+        if app_settings.seed_on_startup:
             with session_factory() as session:
-                seed_challenges_from_csv(session, app_settings.challenges_csv)
+                if app_settings.challenges_csv.exists():
+                    seed_challenges_from_csv(session, app_settings.challenges_csv)
+                if app_settings.catalog_json.exists():
+                    seed_catalog_from_json(session, app_settings.catalog_json)
         _bootstrap_admin(session_factory, app_settings)
         yield
         engine.dispose()
@@ -80,6 +86,8 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(me_router)
     app.include_router(admin_router)
+    app.include_router(catalog_router)
+    app.include_router(events_router)
     return app
 
 

@@ -43,6 +43,7 @@ class BackendSettings(BaseSettings):
 
     database_url: str = f"sqlite:///{(_REPO_ROOT / 'gamification.db').as_posix()}"
     challenges_csv: Path = _REPO_ROOT / "data" / "input" / "challenges.csv"
+    catalog_json: Path = _REPO_ROOT / "data" / "input" / "catalog.json"
     seed_on_startup: bool = True
     jwt_secret: str = "change-me-dev-secret"  # noqa: S105 (dev default)
     jwt_expires_minutes: int = 60 * 24

@@ -1,0 +1,126 @@
+{
+  "series": [
+    {
+      "id": "S-001",
+      "title": "Daha Buyuk Dunyalar",
+      "genre": "macera",
+      "description": "Kisa soluklu macera bolumleri: her bolum tek oturusta bitiyor."
+    },
+    {
+      "id": "S-002",
+      "title": "Yol Hikayeleri",
+      "genre": "belgesel",
+      "description": "Yollarda gecen belgesel tadinda bolumler."
+    }
+  ],
+  "videos": [
+    {
+      "id": "V-BBB",
+      "series_id": null,
+      "title": "Big Buck Bunny",
+      "genre": "animasyon",
+      "duration_seconds": 596,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      "episode_number": null
+    },
+    {
+      "id": "V-ED",
+      "series_id": null,
+      "title": "Elephants Dream",
+      "genre": "bilim-kurgu",
+      "duration_seconds": 653,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      "episode_number": null
+    },
+    {
+      "id": "V-SIN",
+      "series_id": null,
+      "title": "Sintel",
+      "genre": "fantastik",
+      "duration_seconds": 888,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+      "episode_number": null
+    },
+    {
+      "id": "V-TOS",
+      "series_id": null,
+      "title": "Tears of Steel",
+      "genre": "bilim-kurgu",
+      "duration_seconds": 734,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+      "episode_number": null
+    },
+    {
+      "id": "V-S1E1",
+      "series_id": "S-001",
+      "title": "Alevler",
+      "genre": "macera",
+      "duration_seconds": 15,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      "episode_number": 1
+    },
+    {
+      "id": "V-S1E2",
+      "series_id": "S-001",
+      "title": "Kacislar",
+      "genre": "macera",
+      "duration_seconds": 15,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      "episode_number": 2
+    },
+    {
+      "id": "V-S1E3",
+      "series_id": "S-001",
+      "title": "Eglence",
+      "genre": "macera",
+      "duration_seconds": 60,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      "episode_number": 3
+    },
+    {
+      "id": "V-S1E4",
+      "series_id": "S-001",
+      "title": "Neseli Suruculer",
+      "genre": "macera",
+      "duration_seconds": 15,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+      "episode_number": 4
+    },
+    {
+      "id": "V-S1E5",
+      "series_id": "S-001",
+      "title": "Erimeler",
+      "genre": "macera",
+      "duration_seconds": 15,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+      "episode_number": 5
+    },
+    {
+      "id": "V-S2E1",
+      "series_id": "S-002",
+      "title": "Sehir ve Toprak",
+      "genre": "belgesel",
+      "duration_seconds": 594,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+      "episode_number": 1
+    },
+    {
+      "id": "V-S2E2",
+      "series_id": "S-002",
+      "title": "Bullrun Yolculugu",
+      "genre": "belgesel",
+      "duration_seconds": 47,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
+      "episode_number": 2
+    },
+    {
+      "id": "V-S2E3",
+      "series_id": "S-002",
+      "title": "Bin Liraya Araba",
+      "genre": "belgesel",
+      "duration_seconds": 594,
+      "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
+      "episode_number": 3
+    }
+  ]
+}
