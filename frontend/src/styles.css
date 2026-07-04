@@ -873,6 +873,99 @@ button {
   width: 130px;
 }
 
+/* ---------- explain box ---------- */
+
+.explain-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.quick-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.chip {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chip:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.explain-form {
+  display: flex;
+  gap: 10px;
+}
+
+.explain-form input {
+  flex: 1;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.explain-form input:focus {
+  outline: 1px solid var(--accent);
+}
+
+.chat-history {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.chat-entry {
+  border-left: 2px solid var(--accent);
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-question {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.chat-answer {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chat-evidence summary {
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chat-evidence pre {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-x: auto;
+}
+
 /* ---------- toasts ---------- */
 
 .toast-stack {

@@ -21,6 +21,7 @@ from gamification_backend.api.admin import router as admin_router
 from gamification_backend.api.auth import router as auth_router
 from gamification_backend.api.catalog import router as catalog_router
 from gamification_backend.api.events import router as events_router
+from gamification_backend.api.explain import router as explain_router
 from gamification_backend.api.health import router as health_router
 from gamification_backend.api.leaderboard import router as leaderboard_router
 from gamification_backend.api.me import router as me_router
@@ -123,6 +124,7 @@ def create_app(settings: BackendSettings | None = None) -> FastAPI:
     app.include_router(events_router)
     app.include_router(sse_router)
     app.include_router(leaderboard_router)
+    app.include_router(explain_router)
     return app
 
 

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import type { Badge, ChallengeProgress, PointsResponse } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { ExplainBox } from "../components/ExplainBox";
 
 const BADGE_ICONS: Record<string, string> = {
   BRONZE: "🥉",
@@ -109,6 +110,8 @@ export function DashboardPage() {
           </div>
         </section>
       </div>
+
+      <ExplainBox />
 
       <section>
         <h2 className="section-title">Puan Geçmişi</h2>

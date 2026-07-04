@@ -271,6 +271,21 @@ class SimulatorStartRequest(BaseModel):
     tick_seconds: float = Field(default=5.0, ge=0.5, le=60.0)
 
 
+class ExplainRequest(BaseModel):
+    """A natural-language question about the user's own gamification state."""
+
+    question: str = Field(min_length=3, max_length=300)
+
+
+class ExplainResponse(BaseModel):
+    """Deterministic answer with its supporting evidence."""
+
+    user_id: str
+    question: str
+    answer: str
+    evidence: dict[str, object]
+
+
 class NotificationResponse(BaseModel):
     """A stored notification."""
 

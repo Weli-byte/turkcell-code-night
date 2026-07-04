@@ -128,6 +128,13 @@ export interface SimulatorStatus {
   detail: string;
 }
 
+export interface ExplainResponse {
+  user_id: string;
+  question: string;
+  answer: string;
+  evidence: Record<string, unknown>;
+}
+
 export interface NotificationItem {
   notification_id: string;
   notification_type: string;
