@@ -25,5 +25,8 @@ dist/
 # Temporary outputs
 output_temp/
 
+# Local SQLite databases (backend service)
+*.db
+
 # Local extracted archive copy
 turkcell-code-night-main/

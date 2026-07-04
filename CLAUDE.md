@@ -1,9 +1,15 @@
 # CLAUDE.md
 
-Deterministic gamification engine (Python 3.11+, stdlib-only runtime deps).
+Deterministic gamification engine (Python 3.11+; engine core stdlib-only).
 Processes daily video-platform activity CSVs → user states, challenge rewards,
 append-only points ledger, badges, leaderboard, notifications, JSON exports,
 and a template-based Turkish explanation layer (optional LLM rephrasing).
+
+**Faz 2 in progress** (`docs/v2_plan.md`, sprints 20-30, status table at
+bottom): turning the batch demo into a live platform — FastAPI+SQLite backend
+(`src/gamification_backend/`), React SPA (planned `frontend/`), live event
+evaluation + nightly batch, JWT auth, SSE. Engine core stays the pure
+deterministic library; backend deps live in the `backend` extra.
 
 ## Commands
 
@@ -15,6 +21,7 @@ ruff format src tests               # format (CI checks with --check)
 mypy                                # strict mode, must be clean
 gamification-engine run --activities <csv> --challenges <csv> --output-dir <dir> --run-date YYYY-MM-DD
 gamification-engine explain --user-id <id> --question "<tr question>" --output-dir <dir> --challenges <csv>
+uvicorn gamification_backend.main:app --reload   # Faz 2 API (http://127.0.0.1:8000, Swagger at /docs)
 ```
 
 CI: `.github/workflows/ci.yml` runs ruff check + format check + mypy + pytest on Python 3.11/3.12.
@@ -33,6 +40,14 @@ CI: `.github/workflows/ci.yml` runs ruff check + format check + mypy + pytest on
 - `orchestration/` — pipeline.py (no business logic) + run_context.py.
 - `cli/main.py` — argparse subcommands `run` and `explain`.
 - `ai/` — explanation_engine (keyword intent → template answers + evidence), templates, llm_adapter (LLMAdapter ABC, NoOp/Gemini/OpenAI adapters + factory; any failure → deterministic fallback), llm_client (pure HTTPS transport + prompt contract). Env vars read ONLY in config/llm_config.py: GEMINI_API_KEY (precedence), OPENAI_API_KEY, GAMIFICATION_LLM_ENABLED=0 kill switch. See docs/ai_layer.md.
+
+## Layout (src/gamification_backend/) — Faz 2 service layer
+
+- `config.py` — BackendSettings (pydantic-settings). Backend env vars read ONLY here, prefix `GAMIFICATION_BACKEND_` (DATABASE_URL, CHALLENGES_CSV, SEED_ON_STARTUP).
+- `db/models.py` — SQLAlchemy 2.0 typed ORM: users, challenges, series, videos, watch_events, points_ledger, badges, notifications, runs. `db/base.py` — engine setup (SQLite FK pragma ON, StaticPool for in-memory) + `init_database` installs SQLite triggers making points_ledger append-only at DB level (UPDATE/DELETE → RAISE(ABORT), surfaces as IntegrityError). Unique guards: (user_id, source_ref) on ledger, (user_id, badge_type) on badges.
+- `repositories/` — ledger (AppendOnlyLedgerRepository: insert-only by design, no update/delete methods), challenges (CSV seed via engine's strict loader; existing rows never overwritten).
+- `api/` — routers + `deps.py` SessionDep (use `Annotated[..., Depends]`, never `= Depends()` — ruff B008). `main.py` — `create_app()` factory, lifespan does schema+seed; module-level `app` for uvicorn.
+- Tests in `tests/backend/` (in-memory SQLite fixtures in conftest; UserFactory protocol fixture `make_user`).
 
 Root extras: `index.html` (single-file GSAP/Lenis landing page) + `server.py` (stdlib dev server: serves index.html and bridges UI↔engine via GET /api/summary|leaderboard|badges|explain; reads data/output, never mutates). Run with `python server.py` → http://localhost:8000. Both outside ruff/mypy scope (src+tests only).
 
