@@ -182,6 +182,41 @@
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 16px;
     }
+
+    /* AI Digest */
+    .digest-box {
+      background: linear-gradient(135deg, rgba(108,0,255,0.07) 0%, rgba(0,212,255,0.04) 100%);
+      border: 1px solid var(--border-acc);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-top: 16px;
+      display: none;
+    }
+    .digest-box.show { display: block; }
+    .digest-text {
+      font-size: 15px;
+      color: var(--text-1);
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+    .digest-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* AI tip chip on challenge card */
+    .challenge-tip {
+      font-size: 12px;
+      color: var(--accent-2);
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      line-height: 1.5;
+    }
+    .challenge-tip::before { content: '💡'; flex-shrink: 0; }
   </style>
   <!-- GSAP + Lenis CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -290,6 +325,20 @@
           <div class="spinner"></div> GPT-4o yanıt hazırlıyor…
         </div>
         <div class="ai-answers-stack" id="ai-stack"></div>
+
+        <!-- GÜNLÜK DIGEST -->
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn-ghost" id="digest-btn" style="font-size:13px">
+            📋 Günlük Raporumu Al
+          </button>
+          <span id="digest-loading" style="display:none;font-size:13px;color:var(--text-muted)">
+            <span class="spinner" style="width:14px;height:14px"></span> GPT-4o özet hazırlıyor…
+          </span>
+        </div>
+        <div class="digest-box" id="digest-box">
+          <div class="digest-text" id="digest-text"></div>
+          <div class="digest-meta" id="digest-meta"></div>
+        </div>
       </div>
 
       <!-- TWO COL: Badges + History -->
@@ -417,20 +466,50 @@
       }
     }
 
-    // CHALLENGES
+    // CHALLENGES — AI tips entegre
     async function loadChallenges() {
       const el = document.getElementById('challenges-grid');
       try {
-        const data   = await API.getChallenges();
-        challenges   = data.challenges || data || [];
-        const todayM = userState ? (userState.watch_minutes_today || 0) : 0;
+        // AI tips + challenges paralel yükle
+        const [tipsData, chData] = await Promise.allSettled([
+          API.getAIChallengeTips(),
+          API.getChallenges(),
+        ]);
 
+        const tipsResult = tipsData.status === 'fulfilled' ? tipsData.value : null;
+        const chResult   = chData.status === 'fulfilled' ? chData.value : null;
+
+        // Tips varsa onları esas al (içinde tüm challenge bilgisi var)
+        if (tipsResult && tipsResult.tips && tipsResult.tips.length) {
+          const tips = tipsResult.tips;
+          el.innerHTML = tips.map(t => `
+            <div class="challenge-card ${t.done ? 'completed' : ''}">
+              <div class="challenge-header">
+                <div class="challenge-name">${t.name}</div>
+                <div class="challenge-points">+${t.reward_points} puan</div>
+              </div>
+              <div class="challenge-condition">${t.condition}</div>
+              <div class="progress-wrap">
+                <div class="progress-fill" style="width:${t.pct}%"></div>
+              </div>
+              <div class="challenge-footer">
+                <span class="challenge-progress-text">${t.current_value} / ${t.target_value}</span>
+                ${t.done ? '<span class="badge-chip sm badge-gold">✓ Tamamlandı</span>' : `<span class="badge-chip sm" style="background:rgba(0,212,255,0.08);color:var(--accent-2);border:1px solid rgba(0,212,255,0.2)">${t.pct.toFixed(0)}%</span>`}
+              </div>
+              ${t.tip ? `<div class="challenge-tip">${t.tip}${t.llm_enhanced ? ' <span style="font-size:10px;opacity:0.6">· GPT-4o</span>' : ''}</div>` : ''}
+            </div>`).join('');
+          return;
+        }
+
+        // Fallback: klasik challenge listesi
+        challenges = chResult ? (chResult.challenges || chResult || []) : [];
+        const todayM = userState ? (userState.watch_minutes_today || 0) : 0;
         if (!challenges.length) {
           el.innerHTML = '<div class="empty-state"><div class="icon">🎯</div><p>Aktif görev bulunamadı.</p></div>';
           return;
         }
         el.innerHTML = challenges.map(c => {
-          const thresh = c.threshold || 60;
+          const thresh = c.target_value || c.threshold || 60;
           const pct    = Math.min(100, (todayM / thresh) * 100);
           const done   = pct >= 100;
           return `
@@ -453,6 +532,36 @@
         el.innerHTML = `<p class="text-muted">${e.message}</p>`;
       }
     }
+
+    // AI DIGEST
+    document.getElementById('digest-btn').addEventListener('click', async () => {
+      const btn     = document.getElementById('digest-btn');
+      const loadEl  = document.getElementById('digest-loading');
+      const box     = document.getElementById('digest-box');
+      const textEl  = document.getElementById('digest-text');
+      const metaEl  = document.getElementById('digest-meta');
+
+      btn.disabled = true;
+      loadEl.style.display = 'inline-flex';
+      box.classList.remove('show');
+
+      try {
+        const d = await API.getAIDigest();
+        textEl.textContent = d.answer || '';
+        metaEl.textContent = d.llm_enhanced
+          ? `⚡ GPT-4o · model: ${d.model}`
+          : '📋 Template özet (LLM devre dışı)';
+        box.classList.add('show');
+        if (window.gsap) {
+          gsap.from(box, { opacity: 0, y: 10, duration: 0.4, ease: 'power3.out' });
+        }
+      } catch (e) {
+        showToast({ title: 'Digest Hatası', msg: e.message, icon: '⚠️' });
+      } finally {
+        loadEl.style.display = 'none';
+        btn.disabled = false;
+      }
+    });
 
     // AI ASISTAN
     const aiStack = document.getElementById('ai-stack');
