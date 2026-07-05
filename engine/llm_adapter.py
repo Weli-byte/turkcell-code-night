@@ -1,7 +1,12 @@
 """
-LLM Adapter — OpenAI GPT-4o entegrasyonu.
-LLM sadece template cevabı doğal dile çevirir.
-Hata olursa template döner, sistem çalışmaya devam eder.
+LLM Adapter — OpenAI GPT-4o entegrasyonu, TEK merkezi çağrı noktası.
+
+Kurallar:
+- API key varsa LLM otomatik aktif (LLM_ENABLED=false açıkça yazılırsa kapanır).
+- LLM asla iş kararı vermez (puan/rozet/sıra); sadece deterministik motorun
+  ürettiği gerçek veriyi doğal dile çevirir veya soruyu sınıflandırır.
+- Her hata deterministik fallback'e düşer — sistem LLM'siz de çalışır.
+- Bu modül dışında hiçbir dosya doğrudan OpenAI çağrısı yapmaz.
 """
 
 import os
@@ -11,7 +16,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OPENAI_API_KEY  = os.environ.get("OPENAI_API_KEY", "")
-LLM_ENABLED     = os.environ.get("LLM_ENABLED", "false").lower() == "true"
+# Kill switch: LLM_ENABLED=false açıkça yazılmadıkça key varsa LLM aktif.
+LLM_ENABLED     = os.environ.get("LLM_ENABLED", "true").lower() != "false"
 LLM_MODEL       = os.environ.get("LLM_MODEL", "gpt-4o")
 LLM_MAX_TOKENS  = int(os.environ.get("LLM_MAX_TOKENS", "300"))
 LLM_TEMPERATURE = float(os.environ.get("LLM_TEMPERATURE", "0.4"))
@@ -29,69 +35,93 @@ KESİN KURALLAR:
 6. Türkçe yaz"""
 
 
+def is_llm_available() -> bool:
+    return LLM_ENABLED and bool(OPENAI_API_KEY)
+
+
+def llm_call(
+    system: str,
+    user: str,
+    max_tokens: int | None = None,
+    temperature: float | None = None,
+) -> str | None:
+    """
+    Merkezi GPT-4o çağrısı. Tüm engine'ler bunu kullanır.
+    LLM kapalı/hatalı → None döner; çağıran deterministik fallback uygular.
+    """
+    if not is_llm_available():
+        return None
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        resp = client.chat.completions.create(
+            model       = LLM_MODEL,
+            max_tokens  = max_tokens or LLM_MAX_TOKENS,
+            temperature = LLM_TEMPERATURE if temperature is None else temperature,
+            messages    = [
+                {"role": "system", "content": system},
+                {"role": "user",   "content": user},
+            ],
+        )
+        answer = (resp.choices[0].message.content or "").strip()
+        return answer if answer else None
+    except Exception:
+        return None
+
+
+def classify_intent_llm(question: str, valid_intents: list[str]) -> str | None:
+    """
+    Keyword eşleşmesi başarısız olduğunda GPT-4o soruyu sınıflandırır.
+    Cevap listede yoksa None → deterministik 'general' fallback.
+    """
+    intents = ", ".join(valid_intents)
+    result  = llm_call(
+        system=(
+            "Sen bir intent sınıflandırıcısın. Kullanıcının Türkçe sorusunu "
+            "verilen kategorilerden birine ata. SADECE kategori adını yaz, "
+            "başka hiçbir şey yazma."
+        ),
+        user=f"Kategoriler: {intents}\n\nSoru: {question}\n\nKategori:",
+        max_tokens=12,
+        temperature=0.0,
+    )
+    if result:
+        cleaned = result.strip().lower().strip(".:\"' ")
+        if cleaned in valid_intents:
+            return cleaned
+    return None
+
+
 def enhance_with_llm(
     question: str,
     template_answer: str,
     evidence: dict,
     intent: str,
 ) -> dict:
-    if not LLM_ENABLED or not OPENAI_API_KEY:
+    """Deterministik cevabı GPT-4o ile doğallaştırır. Hata → template."""
+    user_msg = (
+        f"Kullanıcı sorusu: {question}\n\n"
+        f"Engine analizi:\n{template_answer}\n\n"
+        f"Kanıt veriler (sayıları değiştirme):\n"
+        f"{json.dumps(evidence, ensure_ascii=False, indent=2)}\n\n"
+        f"Soruyu doğal Türkçeyle yanıtla. "
+        f"Sayıları kesinlikle değiştirme. Maks 3 cümle."
+    )
+    answer = llm_call(SYSTEM_PROMPT, user_msg)
+
+    if answer is None or len(answer) < 10:
         return {
             "answer":       template_answer,
             "llm_enhanced": False,
-            "llm_error":    None,
-            "model":        "template",
+            "llm_error":    None if not is_llm_available() else "LLM cevabı alınamadı",
+            "model":        "template" if not is_llm_available() else LLM_MODEL,
         }
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=OPENAI_API_KEY)
-
-        user_msg = (
-            f"Kullanıcı sorusu: {question}\n\n"
-            f"Engine analizi:\n{template_answer}\n\n"
-            f"Kanıt veriler (sayıları değiştirme):\n"
-            f"{json.dumps(evidence, ensure_ascii=False, indent=2)}\n\n"
-            f"Soruyu doğal Türkçeyle yanıtla. "
-            f"Sayıları kesinlikle değiştirme. Maks 3 cümle."
-        )
-
-        resp = client.chat.completions.create(
-            model       = LLM_MODEL,
-            max_tokens  = LLM_MAX_TOKENS,
-            temperature = LLM_TEMPERATURE,
-            messages    = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": user_msg},
-            ],
-        )
-        answer = resp.choices[0].message.content.strip()
-
-        if len(answer) < 10:
-            return {
-                "answer":       template_answer,
-                "llm_enhanced": False,
-                "llm_error":    "Cevap çok kısa",
-                "model":        LLM_MODEL,
-            }
-
-        return {
-            "answer":       answer,
-            "llm_enhanced": True,
-            "llm_error":    None,
-            "model":        LLM_MODEL,
-        }
-
-    except Exception as e:
-        return {
-            "answer":       template_answer,
-            "llm_enhanced": False,
-            "llm_error":    str(e),
-            "model":        LLM_MODEL,
-        }
-
-
-def is_llm_available() -> bool:
-    return LLM_ENABLED and bool(OPENAI_API_KEY)
+    return {
+        "answer":       answer,
+        "llm_enhanced": True,
+        "llm_error":    None,
+        "model":        LLM_MODEL,
+    }
 
 
 def get_llm_status() -> dict:

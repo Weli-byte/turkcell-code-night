@@ -207,16 +207,10 @@
         <div class="rec-grid" id="rec-grid"></div>
       </div>
 
-      <!-- FILTER BAR -->
-      <div class="filter-bar will-animate">
+      <!-- FILTER BAR — tür chip'leri gerçek katalog verisinden üretilir -->
+      <div class="filter-bar will-animate" id="filter-bar">
         <input class="search-input" type="text" id="search-input" placeholder="Video ara…" />
         <button class="filter-chip active" data-genre="all">Tümü</button>
-        <button class="filter-chip" data-genre="animasyon">Animasyon</button>
-        <button class="filter-chip" data-genre="bilim-kurgu">Bilim Kurgu</button>
-        <button class="filter-chip" data-genre="fantastik">Fantastik</button>
-        <button class="filter-chip" data-genre="macera">Macera</button>
-        <button class="filter-chip" data-genre="belgesel">Belgesel</button>
-        <button class="filter-chip" data-genre="otomobil">Otomobil</button>
       </div>
 
       <!-- CONTENT -->
@@ -349,26 +343,43 @@
         </div>`;
     }
 
+    function renderGenreChips() {
+      // Tür chip'leri GERÇEK katalog verisinden — hardcode yok,
+      // yeni tür eklendiğinde otomatik görünür
+      const bar    = document.getElementById('filter-bar');
+      const genres = [...new Set(allVideos.map(v => (v.genre || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'tr'));
+      bar.querySelectorAll('.filter-chip:not([data-genre="all"])').forEach(c => c.remove());
+      genres.forEach(g => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-chip';
+        btn.dataset.genre = g;
+        btn.textContent = g.split('-').map(w => w.charAt(0).toLocaleUpperCase('tr') + w.slice(1)).join(' ');
+        bar.appendChild(btn);
+      });
+    }
+
     async function loadCatalog() {
       root.innerHTML = `<div class="video-grid">${makeSkeletons(6)}</div>`;
       try {
         const data = await API.getCatalog();
         allVideos   = data.videos || data || [];
         activeSeries = data.series  || [];
+        renderGenreChips();
         renderCatalog();
       } catch (e) {
         root.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
       }
     }
 
-    // GENRE FILTER
-    document.querySelectorAll('.filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentGenre = btn.dataset.genre;
-        renderCatalog();
-      });
+    // GENRE FILTER — delegation (chip'ler dinamik üretildiği için)
+    document.getElementById('filter-bar').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGenre = btn.dataset.genre;
+      renderCatalog();
     });
 
     // SEARCH

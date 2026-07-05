@@ -82,39 +82,26 @@ def build_digest(user_id: str) -> dict:
         f"{next_badge_text}"
     )
 
-    # GPT-4o
-    from engine.llm_adapter import LLM_ENABLED, OPENAI_API_KEY, LLM_MODEL, LLM_MAX_TOKENS
-    if LLM_ENABLED and OPENAI_API_KEY:
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=OPENAI_API_KEY)
-            prompt = (
-                f"Kullanıcının günlük özet verileri:\n"
-                f"{json.dumps(evidence, ensure_ascii=False, indent=2)}\n\n"
-                f"Bu verilere dayanarak kullanıcıya kişisel, sıcak ve motive edici bir günlük özet yaz. "
-                f"Rakamları olduğu gibi kullan, değiştirme. Maksimum 4 cümle. Türkçe."
-            )
-            resp = client.chat.completions.create(
-                model=LLM_MODEL, max_tokens=LLM_MAX_TOKENS, temperature=0.45,
-                messages=[
-                    {"role": "system", "content": "Sen bir video platformu koçusun. Kullanıcıların günlük performansını özetleyerek onları motive et."},
-                    {"role": "user",   "content": prompt},
-                ],
-            )
-            answer       = resp.choices[0].message.content.strip()
-            llm_enhanced = True
-            llm_error    = None
-            model        = LLM_MODEL
-        except Exception as exc:
-            answer       = template
-            llm_enhanced = False
-            llm_error    = str(exc)
-            model        = LLM_MODEL
+    # GPT-4o — merkezi adapter üzerinden; hata → deterministik template
+    from engine.llm_adapter import llm_call, is_llm_available, LLM_MODEL
+    prompt = (
+        f"Kullanıcının günlük özet verileri:\n"
+        f"{json.dumps(evidence, ensure_ascii=False, indent=2)}\n\n"
+        f"Bu verilere dayanarak kullanıcıya kişisel, sıcak ve motive edici bir günlük özet yaz. "
+        f"Rakamları olduğu gibi kullan, değiştirme. Maksimum 4 cümle. Türkçe."
+    )
+    llm_answer = llm_call(
+        system="Sen bir video platformu koçusun. Kullanıcıların günlük performansını özetleyerek onları motive et.",
+        user=prompt,
+        temperature=0.45,
+    )
+    if llm_answer:
+        answer, llm_enhanced, llm_error, model = llm_answer, True, None, LLM_MODEL
     else:
         answer       = template
         llm_enhanced = False
-        llm_error    = None
-        model        = "template"
+        llm_error    = "LLM cevabı alınamadı" if is_llm_available() else None
+        model        = LLM_MODEL if is_llm_available() else "template"
 
     return {
         "answer":       answer,

@@ -86,43 +86,37 @@ def get_challenge_tips(user_id: str) -> dict:
             "llm_enhanced":  False,
         })
 
-    # GPT-4o motivasyon metni (sadece tamamlanmamışlar için)
-    from engine.llm_adapter import LLM_ENABLED, OPENAI_API_KEY, LLM_MODEL
+    # GPT-4o motivasyon metni (sadece tamamlanmamışlar için) — merkezi adapter
+    from engine.llm_adapter import llm_call
     pending = [t for t in tips if not t["done"]]
 
-    if LLM_ENABLED and OPENAI_API_KEY and pending:
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=OPENAI_API_KEY)
-
-            ch_lines = "\n".join(
-                f"- {t['name']}: {t['current_value']:.0f}/{t['target_value']:.0f} "
-                f"({t['pct']:.0f}% tamamlandı, {t['gap']:.0f} kaldı, {t['reward_points']} puan)"
-                for t in pending
-            )
-            prompt = (
-                f"Kullanıcının aktif görev durumu:\n{ch_lines}\n\n"
-                f"Streak: {state['streak_days']} gün, "
-                f"Bugün: {state['watch_minutes_today']:.0f} dk izleme, "
-                f"{state['today_points']} puan.\n\n"
-                f"Her tamamlanmamış görev için tam olarak 1 satır motivasyon mesajı yaz. "
-                f"Görev adıyla başla. Türkçe, enerjik, kısa. "
-                f"Kesinlikle {len(pending)} satır yaz, başka bir şey ekleme."
-            )
-            resp  = client.chat.completions.create(
-                model=LLM_MODEL, max_tokens=250, temperature=0.5,
-                messages=[
-                    {"role": "system", "content": "Sen bir oyunlaştırma motivasyon asistanısın. Kullanıcıları kısa, enerjik Türkçe mesajlarla motive et."},
-                    {"role": "user",   "content": prompt},
-                ],
-            )
-            lines = [l.strip() for l in resp.choices[0].message.content.strip().split("\n") if l.strip()]
+    if pending:
+        ch_lines = "\n".join(
+            f"- {t['name']}: {t['current_value']:.0f}/{t['target_value']:.0f} "
+            f"({t['pct']:.0f}% tamamlandı, {t['gap']:.0f} kaldı, {t['reward_points']} puan)"
+            for t in pending
+        )
+        prompt = (
+            f"Kullanıcının aktif görev durumu:\n{ch_lines}\n\n"
+            f"Streak: {state['streak_days']} gün, "
+            f"Bugün: {state['watch_minutes_today']:.0f} dk izleme, "
+            f"{state['today_points']} puan.\n\n"
+            f"Her tamamlanmamış görev için tam olarak 1 satır motivasyon mesajı yaz. "
+            f"Görev adıyla başla. Türkçe, enerjik, kısa. "
+            f"Kesinlikle {len(pending)} satır yaz, başka bir şey ekleme."
+        )
+        llm_answer = llm_call(
+            system="Sen bir oyunlaştırma motivasyon asistanısın. Kullanıcıları kısa, enerjik Türkçe mesajlarla motive et.",
+            user=prompt,
+            max_tokens=250,
+            temperature=0.5,
+        )
+        if llm_answer:  # LLM yoksa/hatalıysa template ipuçları zaten hazır
+            lines = [l.strip() for l in llm_answer.split("\n") if l.strip()]
             for i, t in enumerate(pending):
                 if i < len(lines):
                     t["tip"]          = lines[i]
                     t["llm_enhanced"] = True
-        except Exception:
-            pass  # template ipuçları zaten hazır
 
     return {
         "tips":  tips,

@@ -87,43 +87,27 @@ def get_recommendations(user_id: str) -> dict:
             ", ".join(v["title"] for v in top[:3]) + "."
         )
 
-    # GPT-4o
-    from engine.llm_adapter import (
-        LLM_ENABLED, OPENAI_API_KEY, LLM_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE,
+    # GPT-4o — merkezi adapter üzerinden; hata → deterministik template
+    from engine.llm_adapter import llm_call, is_llm_available, LLM_MODEL
+    prompt = (
+        f"Kullanıcının izleme profili (tür → toplam dakika):\n"
+        f"{json.dumps(genre_profile, ensure_ascii=False)}\n\n"
+        f"Önerilen içerikler (henüz izlememiş):\n"
+        f"{json.dumps([{'başlık': v['title'], 'tür': v['genre'], 'süre': str(v['duration_minutes']) + ' dk'} for v in top], ensure_ascii=False, indent=2)}\n\n"
+        f"Bu kullanıcıya neden bu videoları öneriyorsun? "
+        f"Her video için en fazla 1 cümle yaz. Türkçe, samimi, motive edici. Toplam 4 cümleyi geçme."
     )
-    if LLM_ENABLED and OPENAI_API_KEY:
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=OPENAI_API_KEY)
-            prompt = (
-                f"Kullanıcının izleme profili (tür → toplam dakika):\n"
-                f"{json.dumps(genre_profile, ensure_ascii=False)}\n\n"
-                f"Önerilen içerikler (henüz izlememiş):\n"
-                f"{json.dumps([{'başlık': v['title'], 'tür': v['genre'], 'süre': str(v['duration_minutes']) + ' dk'} for v in top], ensure_ascii=False, indent=2)}\n\n"
-                f"Bu kullanıcıya neden bu videoları öneriyorsun? "
-                f"Her video için en fazla 1 cümle yaz. Türkçe, samimi, motive edici. Toplam 4 cümleyi geçme."
-            )
-            resp = client.chat.completions.create(
-                model=LLM_MODEL, max_tokens=LLM_MAX_TOKENS, temperature=LLM_TEMPERATURE,
-                messages=[
-                    {"role": "system", "content": "Sen bir video platformu öneri asistanısın. Kullanıcının izleme profiline göre kişiselleştirilmiş, samimi öneriler yap."},
-                    {"role": "user",   "content": prompt},
-                ],
-            )
-            answer       = resp.choices[0].message.content.strip()
-            llm_enhanced = True
-            llm_error    = None
-            model        = LLM_MODEL
-        except Exception as exc:
-            answer       = template
-            llm_enhanced = False
-            llm_error    = str(exc)
-            model        = LLM_MODEL
+    llm_answer = llm_call(
+        system="Sen bir video platformu öneri asistanısın. Kullanıcının izleme profiline göre kişiselleştirilmiş, samimi öneriler yap.",
+        user=prompt,
+    )
+    if llm_answer:
+        answer, llm_enhanced, llm_error, model = llm_answer, True, None, LLM_MODEL
     else:
         answer       = template
         llm_enhanced = False
-        llm_error    = None
-        model        = "template"
+        llm_error    = "LLM cevabı alınamadı" if is_llm_available() else None
+        model        = LLM_MODEL if is_llm_available() else "template"
 
     return {
         "answer":       answer,
