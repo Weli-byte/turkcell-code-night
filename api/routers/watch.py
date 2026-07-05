@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from api.auth_utils import verify_token
 from database.setup import get_db
-from engine.pipeline import run_pipeline
+from engine.pipeline import run_pipeline, evaluate_user
+from api.notifications_store import push_notification
 from datetime import datetime
 import uuid
-import threading
 
 router = APIRouter(tags=["Watch"])
 
@@ -119,24 +119,37 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
     db.commit()
     db.close()
 
-    def _run():
-        try:
-            run_pipeline(today)
-        except Exception as e:
-            print(f"[PIPELINE ERROR] {e}")
+    # Senkron evaluasyon — sadece bu kullanıcı için, hızlı
+    result = evaluate_user(token["sub"], today)
 
-    threading.Thread(target=_run, daemon=True).start()
+    # SSE bildirimi kuyruğa ekle
+    if result["points_earned"] > 0:
+        push_notification(token["sub"], {
+            "type":        "points",
+            "points":      result["points_earned"],
+            "reason":      result["reward_name"] or "Görev tamamlandı",
+            "total_points":result["total_points"],
+        })
+    for badge in result["new_badges"]:
+        push_notification(token["sub"], {
+            "type":  "badge",
+            "badge": badge,
+        })
 
     return {
         "session_id":    body.session_id,
         "watch_minutes": round(effective_minutes, 1),
         "completed":     bool(completed),
         "activity_date": today,
+        "points_earned": result["points_earned"],
+        "reward_name":   result["reward_name"],
+        "new_badges":    result["new_badges"],
+        "total_points":  result["total_points"],
         "message":       (
-            f"{round(effective_minutes, 1)} dakika izlendi. "
-            "Puanlar hesaplaniyor..."
+            f"{round(effective_minutes, 1)} dakika izlendi."
+            + (f" +{result['points_earned']} puan kazandın!" if result["points_earned"] > 0 else "")
         ),
-        "capped":        False,
+        "capped": False,
     }
 
 

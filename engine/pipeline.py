@@ -119,6 +119,59 @@ def _run_pipeline_locked(run_date: str = None) -> dict:
     return stats
 
 
+def evaluate_user(user_id: str, run_date: str = None) -> dict:
+    """
+    Tek kullanıcı için senkron evaluasyon — end_session tarafından çağrılır.
+    Sadece bu kullanıcının challenge/badge durumunu hesaplar.
+    """
+    if run_date is None:
+        run_date = datetime.now().strftime("%Y-%m-%d")
+
+    db = get_db()
+    challenges = db.execute(
+        "SELECT * FROM challenges WHERE is_active = 1"
+    ).fetchall()
+    db.close()
+
+    state = build_user_state(user_id, run_date)
+
+    passed: list = []
+    for ch in challenges:
+        try:
+            ok = parse_condition(ch["condition"], state)
+        except ValueError:
+            continue
+        if ok and not already_rewarded(user_id, ch["id"], run_date):
+            passed.append(dict(ch))
+
+    points_earned = 0
+    reward_name: str | None = None
+
+    if passed:
+        best = max(passed, key=lambda c: c["priority"])
+        append_points(
+            user_id       = user_id,
+            points        = best["reward_points"],
+            reason        = f"Challenge tamamlandi: {best['name']}",
+            activity_date = run_date,
+            challenge_id  = best["id"],
+        )
+        points_earned = best["reward_points"]
+        reward_name   = best["name"]
+
+    total      = get_total_points(user_id)
+    new_badges = assign_badges(user_id, total)
+
+    return {
+        "user_id":       user_id,
+        "points_earned": points_earned,
+        "reward_name":   reward_name,
+        "new_badges":    new_badges,
+        "total_points":  total,
+        "run_date":      run_date,
+    }
+
+
 if __name__ == "__main__":
     import sys
     sys.stdout.reconfigure(encoding='utf-8')
