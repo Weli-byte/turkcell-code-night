@@ -8,163 +8,110 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="css/main.css" />
   <style>
-    .admin-hero {
-      padding: 40px 0 28px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 28px;
-    }
-    .admin-hero h1 {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 4px;
-    }
+    .admin-hero { padding:40px 0 28px; border-bottom:1px solid var(--border); margin-bottom:28px; }
+    .admin-hero h1 { font-size:32px; font-weight:800; letter-spacing:-0.03em; margin-bottom:4px; }
 
-    /* ADMIN TABS */
     .admin-tabs {
-      display: flex;
-      gap: 2px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 32px;
-      overflow-x: auto;
+      display:flex; gap:2px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border); border-radius:12px;
+      padding:4px; margin-bottom:32px; overflow-x:auto;
     }
     .admin-tab {
-      padding: 9px 18px;
-      background: transparent;
-      border: none;
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 500;
-      white-space: nowrap;
-      transition: background 0.2s, color 0.2s;
+      padding:9px 18px; background:transparent; border:none;
+      border-radius:8px; color:var(--text-muted); font-size:13px;
+      font-weight:500; white-space:nowrap; transition:background 0.2s,color 0.2s;
     }
-    .admin-tab.active {
-      background: rgba(0,255,135,0.08);
-      color: var(--accent-1);
-    }
+    .admin-tab.active { background:rgba(0,255,135,0.08); color:var(--accent-1); }
 
-    /* METRICS ROW */
+    /* METRICS */
     .admin-metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 28px;
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:14px; margin-bottom:28px;
     }
-    @media (max-width: 900px) { .admin-metrics { grid-template-columns: repeat(2, 1fr); } }
-
+    @media(max-width:900px){ .admin-metrics{ grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:500px){ .admin-metrics{ grid-template-columns:1fr 1fr; } }
     .admin-metric {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:18px 20px;
     }
-    .am-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .am-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
     .am-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 26px;
-      font-weight: 500;
-      background: linear-gradient(90deg,#00FF87,#00D4FF);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:500;
+      background:linear-gradient(90deg,#00FF87,#00D4FF);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
+    .am-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
 
-    /* PIPELINE PANEL */
+    /* PIPELINE */
     .pipeline-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 24px;
-    }
-    .pipeline-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:28px; margin-bottom:24px;
     }
     .pipeline-result {
-      background: #0D0D18;
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent-1);
-      border-radius: var(--radius);
-      padding: 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--text-2);
-      line-height: 1.7;
-      white-space: pre-wrap;
-      word-break: break-all;
-      display: none;
+      background:#0D0D18; border:1px solid var(--border);
+      border-left:3px solid var(--accent-1); border-radius:var(--radius);
+      padding:16px; font-family:'JetBrains Mono',monospace; font-size:12px;
+      color:var(--text-2); line-height:1.7; white-space:pre-wrap; word-break:break-all;
+      display:none; margin-top:16px;
     }
-    .pipeline-result.show { display: block; }
+    .pipeline-result.show { display:block; }
+
+    /* TABLE */
+    .admin-table-wrap {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); overflow:hidden;
+    }
+    .table-actions { display:flex; gap:8px; align-items:center; }
+    .btn-icon {
+      padding:4px 10px; border-radius:6px; font-size:12px; border:none;
+      background:rgba(255,255,255,0.05); color:var(--text-2);
+      transition:background 0.15s,color 0.15s;
+    }
+    .btn-icon:hover { background:rgba(0,255,135,0.1); color:var(--accent-1); }
+    .btn-icon.danger:hover { background:rgba(255,77,77,0.12); color:#FF4D4D; }
+    .btn-icon.active-toggle { color:var(--accent-1); }
+
+    /* CHALLENGE FORM */
+    .form-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:28px; margin-bottom:24px;
+    }
+    .form-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:20px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:700px){ .form-grid{ grid-template-columns:1fr; } }
+    .form-full { grid-column:1/-1; }
+
+    .field-hint {
+      font-size:11px; color:var(--text-muted); margin-top:4px;
+      font-family:'JetBrains Mono',monospace;
+    }
+    .condition-preview {
+      font-size:12px; padding:8px 12px; border-radius:8px;
+      background:rgba(255,255,255,0.03); border:1px solid var(--border);
+      font-family:'JetBrains Mono',monospace; color:var(--text-2);
+      margin-top:8px; display:none;
+    }
+    .condition-preview.valid   { border-color:rgba(0,255,135,0.4); color:var(--accent-1); display:block; }
+    .condition-preview.invalid { border-color:rgba(255,77,77,0.4); color:#FF4D4D; display:block; }
+
+    .form-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:20px; }
+    .edit-mode-badge {
+      font-size:11px; color:var(--accent-2);
+      background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2);
+      border-radius:100px; padding:3px 10px; display:none;
+    }
+    .edit-mode-badge.show { display:inline-block; }
 
     /* UPLOAD */
     .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: var(--radius);
-      padding: 40px;
-      text-align: center;
-      transition: border-color 0.2s, background 0.2s;
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:40px; text-align:center;
+      transition:border-color 0.2s,background 0.2s;
     }
-    .upload-zone.drag-over {
-      border-color: var(--accent-1);
-      background: rgba(0,255,135,0.04);
-    }
-    .upload-icon { font-size: 36px; margin-bottom: 12px; }
-    .upload-label { font-size: 14px; color: var(--text-2); margin-bottom: 8px; }
-    .upload-sub   { font-size: 12px; color: var(--text-muted); }
-
-    /* USERS TABLE */
-    .admin-table-wrap {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    /* CHALLENGE FORM */
-    .challenge-form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 700px) { .challenge-form-grid { grid-template-columns: 1fr; } }
-    .form-full { grid-column: 1 / -1; }
-
-    .form-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .form-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-
-    .success-msg {
-      font-size: 13px;
-      color: var(--accent-1);
-      background: rgba(0,255,135,0.08);
-      border: 1px solid rgba(0,255,135,0.25);
-      border-radius: 8px;
-      padding: 10px 14px;
-      display: none;
-      margin-top: 10px;
-    }
-    .success-msg.show { display: block; }
+    .upload-zone.drag-over { border-color:var(--accent-1); background:rgba(0,255,135,0.04); }
+    .upload-icon { font-size:36px; margin-bottom:12px; }
   </style>
-  <!-- GSAP + Lenis CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
@@ -175,7 +122,6 @@
   <div class="cursor-dot"></div>
   <div class="cursor-halo"></div>
 
-  <!-- NAVBAR -->
   <nav class="navbar">
     <a href="catalog.html" class="nav-logo">GE Engine</a>
     <ul class="nav-links">
@@ -196,38 +142,30 @@
 
       <div class="admin-hero will-animate">
         <h1>⚙️ Admin <span class="text-gradient">Paneli</span></h1>
-        <p class="text-2">Pipeline yönetimi, kullanıcılar ve görev konfigürasyonu</p>
+        <p class="text-2">Canlı metrikler, challenge yönetimi, pipeline ve kullanıcılar</p>
       </div>
 
-      <!-- METRICS -->
-      <div class="admin-metrics will-animate">
-        <div class="admin-metric">
-          <div class="am-label">Toplam Kullanıcı</div>
-          <div class="am-value" id="am-users">—</div>
-        </div>
-        <div class="admin-metric">
-          <div class="am-label">Aktif Görev</div>
-          <div class="am-value" id="am-challenges">—</div>
-        </div>
-        <div class="admin-metric">
-          <div class="am-label">AI Durumu</div>
-          <div class="am-value" id="am-ai" style="font-size:16px">—</div>
-        </div>
-        <div class="admin-metric">
-          <div class="am-label">Pipeline Çalışma</div>
-          <div class="am-value" id="am-runs">—</div>
-        </div>
+      <!-- LIVE METRICS (8 kart) -->
+      <div class="admin-metrics will-animate" id="metrics-grid">
+        <div class="admin-metric"><div class="am-label">Toplam Kullanıcı</div><div class="am-value" id="am-users">—</div></div>
+        <div class="admin-metric"><div class="am-label">Aktif Görev</div><div class="am-value" id="am-challenges">—</div></div>
+        <div class="admin-metric"><div class="am-label">Toplam Puan</div><div class="am-value" id="am-total-pts">—</div></div>
+        <div class="admin-metric"><div class="am-label">Pipeline Çalışma</div><div class="am-value" id="am-runs">—</div></div>
+        <div class="admin-metric"><div class="am-label">Bugün Aktif</div><div class="am-value" id="am-today-users">—</div><div class="am-sub">kullanıcı</div></div>
+        <div class="admin-metric"><div class="am-label">Bugün İzleme</div><div class="am-value" id="am-today-watch">—</div><div class="am-sub">dakika</div></div>
+        <div class="admin-metric"><div class="am-label">Bugün Puan</div><div class="am-value" id="am-today-pts">—</div></div>
+        <div class="admin-metric"><div class="am-label">AI Durumu</div><div class="am-value" id="am-ai" style="font-size:16px">—</div></div>
       </div>
 
       <!-- TABS -->
       <div class="admin-tabs will-animate">
         <button class="admin-tab active" data-tab="pipeline">🚀 Pipeline</button>
-        <button class="admin-tab" data-tab="upload">📥 Veri Yükle</button>
         <button class="admin-tab" data-tab="challenges">🎯 Görevler</button>
         <button class="admin-tab" data-tab="users">👥 Kullanıcılar</button>
+        <button class="admin-tab" data-tab="upload">📥 Veri Yükle</button>
       </div>
 
-      <!-- PIPELINE TAB -->
+      <!-- ── PIPELINE TAB ──────────────────────────────── -->
       <div id="tab-pipeline">
         <div class="pipeline-card">
           <div class="section-header">
@@ -235,45 +173,115 @@
               <div class="section-title">Pipeline Çalıştır</div>
               <div class="section-subtitle">Tüm kullanıcılar için deterministik puanlama motoru</div>
             </div>
-            <div class="pipeline-status">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
               <div class="spinner" id="pipeline-spinner" style="display:none"></div>
               <span id="pipeline-status-txt">Hazır</span>
             </div>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn-primary" id="btn-run-pipeline">▶ Pipeline'ı Çalıştır</button>
-            <button class="btn-ghost" id="btn-refresh-history">Geçmişi Yenile</button>
+            <button class="btn-ghost" id="btn-refresh-runs">↺ Geçmişi Yenile</button>
           </div>
           <div id="pipeline-result" class="pipeline-result"></div>
         </div>
 
-        <!-- RUN HISTORY -->
+        <div class="section-header" style="margin-bottom:12px">
+          <div class="section-title">Son Çalışmalar</div>
+        </div>
         <div class="admin-table-wrap will-animate">
           <table class="data-table">
-            <thead>
-              <tr>
-                <th>Tarih</th>
-                <th>Kullanıcılar</th>
-                <th>Görevler</th>
-                <th>Toplam Puan</th>
-                <th>Durum</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Tarih</th><th>Kullanıcı</th><th>Görev</th><th>Puan</th><th>Süre (ms)</th><th>Zaman</th></tr></thead>
             <tbody id="run-history-body">
+              <tr><td colspan="6" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CHALLENGES TAB ────────────────────────────── -->
+      <div id="tab-challenges" style="display:none">
+
+        <!-- CREATE / EDIT FORM -->
+        <div class="form-card">
+          <div class="form-title" id="ch-form-title">➕ Yeni Görev Oluştur</div>
+          <div class="form-grid">
+            <div>
+              <label class="form-label">Görev Adı</label>
+              <input type="text" id="ch-name" class="form-input" placeholder="örn. Günün İzleyicisi" />
+            </div>
+            <div>
+              <label class="form-label">Ödül Puanı</label>
+              <input type="number" id="ch-points" class="form-input" placeholder="80" min="1" max="10000" />
+            </div>
+            <div>
+              <label class="form-label">Öncelik <span style="font-size:11px;color:var(--text-muted)">(1-20)</span></label>
+              <input type="number" id="ch-priority" class="form-input" value="5" min="1" max="20" />
+            </div>
+            <div>
+              <label class="form-label">Aktif</label>
+              <select id="ch-active" class="form-input">
+                <option value="1">Aktif</option>
+                <option value="0">Pasif</option>
+              </select>
+            </div>
+            <div class="form-full">
+              <label class="form-label">Koşul</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px" id="condition-builder">
+                <select id="cb-field" class="form-input" style="flex:2;min-width:180px"></select>
+                <select id="cb-op" class="form-input" style="flex:1;min-width:80px">
+                  <option value=">=">&gt;=</option>
+                  <option value=">">&gt;</option>
+                  <option value="<=">&lt;=</option>
+                  <option value="<">&lt;</option>
+                  <option value="==">==</option>
+                </select>
+                <input type="number" id="cb-val" class="form-input" style="flex:1;min-width:80px" placeholder="60" min="0" />
+                <button class="btn-ghost" id="btn-build-cond" style="white-space:nowrap">Oluştur →</button>
+              </div>
+              <input type="text" id="ch-condition" class="form-input" placeholder="watch_minutes_today >= 60" />
+              <div class="field-hint" id="cond-hint">Alan adlarına göre otomatik koşul oluşturabilirsiniz.</div>
+              <div class="condition-preview" id="cond-preview"></div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-primary" id="btn-save-challenge">💾 Kaydet</button>
+            <button class="btn-ghost" id="btn-cancel-edit" style="display:none">✕ İptal</button>
+            <span class="edit-mode-badge" id="edit-badge">✏️ Düzenleme modu</span>
+          </div>
+          <div id="ch-form-error" style="margin-top:10px;font-size:13px;color:#FF4D4D;display:none"></div>
+        </div>
+
+        <!-- CHALLENGES TABLE -->
+        <div class="admin-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Adı</th><th>Koşul</th><th>Puan</th><th>Öncelik</th><th>Durum</th><th>İşlemler</th></tr></thead>
+            <tbody id="challenges-admin-body">
+              <tr><td colspan="6" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── USERS TAB ─────────────────────────────────── -->
+      <div id="tab-users" style="display:none">
+        <div class="admin-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Kullanıcı</th><th>Rol</th><th>Toplam Puan</th><th>Sıralama</th><th>Toplam İzleme</th></tr></thead>
+            <tbody id="users-admin-body">
               <tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- UPLOAD TAB -->
+      <!-- ── UPLOAD TAB ────────────────────────────────── -->
       <div id="tab-upload" style="display:none">
         <div class="form-card">
           <div class="form-title">CSV Veri Yükleme</div>
           <div class="upload-zone" id="upload-zone">
             <div class="upload-icon">📁</div>
             <div class="upload-label">CSV dosyasını sürükle bırak veya tıkla</div>
-            <div class="upload-sub">user_activities.csv formatı · Max 10MB</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">user_activities.csv formatı</div>
             <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
           </div>
           <div style="margin-top:16px;display:flex;gap:10px">
@@ -281,47 +289,6 @@
             <button class="btn-ghost" id="btn-browse">Dosya Seç</button>
           </div>
           <div id="upload-result" class="pipeline-result" style="margin-top:16px"></div>
-          <div id="upload-success" class="success-msg"></div>
-        </div>
-      </div>
-
-      <!-- CHALLENGES TAB -->
-      <div id="tab-challenges" style="display:none">
-        <div class="admin-table-wrap will-animate">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Görev Adı</th>
-                <th>Koşul</th>
-                <th>Puan</th>
-                <th>Aktif</th>
-              </tr>
-            </thead>
-            <tbody id="challenges-admin-body">
-              <tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- USERS TAB -->
-      <div id="tab-users" style="display:none">
-        <div class="admin-table-wrap will-animate">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Kullanıcı</th>
-                <th>Rol</th>
-                <th>Toplam Puan</th>
-                <th>Sıralama</th>
-              </tr>
-            </thead>
-            <tbody id="users-admin-body">
-              <tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -338,113 +305,323 @@
     initNotifications();
     Auth.requireAdmin();
 
-    // LOAD METRICS
+    // ── METRICS ───────────────────────────────────────
     async function loadMetrics() {
       try {
-        const [challengesData, leaderboardData, aiStatus] = await Promise.allSettled([
-          API.getChallenges(),
-          API.getLeaderboard(),
-          API.getAIStatus(),
+        const [metrics, aiSt] = await Promise.allSettled([
+          API.getAdminMetrics(), API.getAIStatus(),
         ]);
-
-        if (challengesData.status === 'fulfilled') {
-          const cList = challengesData.value.challenges || challengesData.value || [];
-          document.getElementById('am-challenges').textContent = cList.length;
+        if (metrics.status === 'fulfilled') {
+          const m = metrics.value;
+          document.getElementById('am-users').textContent       = fmtNum(m.total_users);
+          document.getElementById('am-challenges').textContent  = m.active_challenges;
+          document.getElementById('am-total-pts').textContent   = fmtNum(m.total_points);
+          document.getElementById('am-runs').textContent        = m.pipeline_runs;
+          document.getElementById('am-today-users').textContent = m.active_users_today;
+          document.getElementById('am-today-watch').textContent = Math.round(m.watch_minutes_today);
+          document.getElementById('am-today-pts').textContent   = fmtNum(m.points_today);
         }
-        if (leaderboardData.status === 'fulfilled') {
-          const lData = leaderboardData.value.leaderboard || leaderboardData.value || [];
-          document.getElementById('am-users').textContent = lData.length;
-        }
-        if (aiStatus.status === 'fulfilled') {
-          const s = aiStatus.value;
+        if (aiSt.status === 'fulfilled') {
+          const s = aiSt.value;
           document.getElementById('am-ai').textContent = s.llm_enabled ? '✅ GPT-4o' : '⚡ Template';
         }
       } catch (_) {}
-
-      // Pipeline run count — show placeholder since no history endpoint
-      document.getElementById('am-runs').textContent = '—';
     }
 
-    // TABS
-    const tabPanels = {
-      pipeline:   'tab-pipeline',
-      upload:     'tab-upload',
-      challenges: 'tab-challenges',
-      users:      'tab-users',
-    };
-    const loaders = {
-      challenges: loadChallengesAdmin,
-      users:      loadUsersAdmin,
-    };
+    // ── TABS ──────────────────────────────────────────
+    const TAB_PANELS = { pipeline:'tab-pipeline', challenges:'tab-challenges', users:'tab-users', upload:'tab-upload' };
+    const TAB_LOADERS = { challenges: loadChallengesAdmin, users: loadUsersAdmin, pipeline: loadRunHistory };
 
     document.querySelectorAll('.admin-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
-        Object.values(tabPanels).forEach(p => document.getElementById(p).style.display = 'none');
-        document.getElementById(tabPanels[btn.dataset.tab]).style.display = '';
-        if (loaders[btn.dataset.tab]) loaders[btn.dataset.tab]();
+        Object.values(TAB_PANELS).forEach(p => document.getElementById(p).style.display = 'none');
+        document.getElementById(TAB_PANELS[btn.dataset.tab]).style.display = '';
+        if (TAB_LOADERS[btn.dataset.tab]) TAB_LOADERS[btn.dataset.tab]();
       });
     });
 
-    // PIPELINE RUN
+    // ── PIPELINE ──────────────────────────────────────
     document.getElementById('btn-run-pipeline').addEventListener('click', async () => {
       const btn    = document.getElementById('btn-run-pipeline');
       const resEl  = document.getElementById('pipeline-result');
       const spinEl = document.getElementById('pipeline-spinner');
       const statEl = document.getElementById('pipeline-status-txt');
-      btn.disabled = true;
-      btn.textContent = 'Çalışıyor…';
-      spinEl.style.display = '';
-      statEl.textContent   = 'Pipeline çalıştırılıyor…';
+      btn.disabled = true; btn.textContent = 'Çalışıyor…';
+      spinEl.style.display = ''; statEl.textContent = 'Çalışıyor…';
       resEl.classList.remove('show');
-
       try {
         const d = await API.runPipeline();
-        const out = typeof d === 'object' ? JSON.stringify(d, null, 2) : String(d);
-        resEl.textContent = out;
+        resEl.textContent = JSON.stringify(d, null, 2);
         resEl.classList.add('show');
         statEl.textContent = '✅ Tamamlandı';
         showToast({ title: 'Pipeline Tamamlandı', icon: '✅',
-          msg: `${d.users_processed} kullanıcı · ${d.points_distributed} puan dağıtıldı` });
+          msg: `${d.users_processed} kullanıcı · ${d.points_distributed} puan` });
         loadMetrics();
-        renderRunHistory([{ run_date: d.run_date, status: 'success',
-          users_processed: d.users_processed,
-          challenges_evaluated: d.challenges_evaluated,
-          total_points_awarded: d.points_distributed }]);
+        loadRunHistory();
       } catch (e) {
         resEl.textContent = `❌ Hata: ${e.message}`;
         resEl.classList.add('show');
         statEl.textContent = '❌ Hata';
         showToast({ title: 'Pipeline Hatası', msg: e.message, icon: '⚠️' });
       } finally {
-        btn.disabled   = false;
-        btn.textContent = '▶ Pipeline\'ı Çalıştır';
+        btn.disabled = false; btn.textContent = '▶ Pipeline\'ı Çalıştır';
         spinEl.style.display = 'none';
       }
     });
 
-    document.getElementById('btn-refresh-history').addEventListener('click', () => {
-      showToast({ title: 'Pipeline geçmişi bu sürümde mevcut değil', icon: 'ℹ️' });
-    });
+    document.getElementById('btn-refresh-runs').addEventListener('click', loadRunHistory);
 
-    function renderRunHistory(runs) {
+    async function loadRunHistory() {
       const tbody = document.getElementById('run-history-body');
-      if (!runs.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text-muted)">Henüz pipeline çalıştırılmadı</td></tr>';
-        return;
+      try {
+        const runs = await API.getPipelineRuns();
+        if (!runs.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">Henüz çalışma yok</td></tr>';
+          return;
+        }
+        tbody.innerHTML = runs.map(r => `
+          <tr>
+            <td class="mono">${(r.run_date || '—').slice(0,10)}</td>
+            <td class="accent">${r.users_processed ?? '—'}</td>
+            <td>${r.badges_awarded ?? '—'}</td>
+            <td class="accent">${fmtNum(r.points_distributed ?? 0)}</td>
+            <td class="mono">${r.duration_ms ?? '—'}</td>
+            <td style="font-size:11px;color:var(--text-muted)">${(r.ran_at || '').slice(0,16).replace('T',' ')}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
       }
-      tbody.innerHTML = runs.slice(-20).reverse().map(r => `
-        <tr>
-          <td class="mono">${(r.run_date || r.date || '—').slice(0,10)}</td>
-          <td class="accent">${r.users_processed ?? '—'}</td>
-          <td>${r.challenges_evaluated ?? '—'}</td>
-          <td class="accent">${fmtNum(r.total_points_awarded ?? 0)}</td>
-          <td><span class="badge-chip sm ${r.status === 'success' ? 'badge-gold' : 'badge-bronze'}">${r.status || 'ok'}</span></td>
-        </tr>`).join('');
     }
 
-    // UPLOAD
+    // ── CHALLENGE FORM ────────────────────────────────
+    let editingId   = null;
+    let validFields = [];
+
+    async function loadFieldsIntoBuilder() {
+      try {
+        const d = await API.getChallengeFields();
+        validFields = d.fields || [];
+        const sel = document.getElementById('cb-field');
+        sel.innerHTML = validFields.map(f => `<option value="${f}">${f}</option>`).join('');
+      } catch (_) {}
+    }
+
+    // Condition builder
+    document.getElementById('btn-build-cond').addEventListener('click', () => {
+      const field = document.getElementById('cb-field').value;
+      const op    = document.getElementById('cb-op').value;
+      const val   = document.getElementById('cb-val').value;
+      if (field && op && val !== '') {
+        document.getElementById('ch-condition').value = `${field} ${op} ${val}`;
+        validateConditionPreview();
+      }
+    });
+
+    // Live condition preview
+    document.getElementById('ch-condition').addEventListener('input', validateConditionPreview);
+
+    function validateConditionPreview() {
+      const cond    = document.getElementById('ch-condition').value.trim();
+      const preview = document.getElementById('cond-preview');
+      if (!cond) { preview.className = 'condition-preview'; return; }
+      const parts = cond.split(/\s+/);
+      if (parts.length !== 3) {
+        preview.textContent = `❌ Format: "alan operatör sayı" (örn: watch_minutes_today >= 60)`;
+        preview.className = 'condition-preview invalid';
+        return;
+      }
+      const [field, op, val] = parts;
+      if (validFields.length && !validFields.includes(field)) {
+        preview.textContent = `❌ Bilinmeyen alan: ${field}`;
+        preview.className = 'condition-preview invalid';
+        return;
+      }
+      if (!['>=','>','<=','<','==','!='].includes(op)) {
+        preview.textContent = `❌ Geçersiz operatör: ${op}`;
+        preview.className = 'condition-preview invalid';
+        return;
+      }
+      if (isNaN(Number(val))) {
+        preview.textContent = `❌ Sayı bekleniyor: ${val}`;
+        preview.className = 'condition-preview invalid';
+        return;
+      }
+      preview.textContent = `✓ Geçerli koşul: ${field} ${op} ${val}`;
+      preview.className = 'condition-preview valid';
+    }
+
+    document.getElementById('btn-save-challenge').addEventListener('click', saveChallenge);
+
+    async function saveChallenge() {
+      const name     = document.getElementById('ch-name').value.trim();
+      const cond     = document.getElementById('ch-condition').value.trim();
+      const points   = parseInt(document.getElementById('ch-points').value);
+      const priority = parseInt(document.getElementById('ch-priority').value);
+      const active   = document.getElementById('ch-active').value === '1';
+      const errEl    = document.getElementById('ch-form-error');
+      errEl.style.display = 'none';
+
+      if (!name || !cond || isNaN(points) || isNaN(priority)) {
+        errEl.textContent = '❌ Tüm alanları doldurun.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      const body = { name, condition: cond, reward_points: points, priority, is_active: active };
+      try {
+        if (editingId) {
+          await API.updateChallenge(editingId, body);
+          showToast({ title: 'Görev Güncellendi', icon: '✅', msg: name });
+        } else {
+          await API.createChallenge(body);
+          showToast({ title: 'Görev Oluşturuldu', icon: '✅', msg: name });
+        }
+        resetForm();
+        loadChallengesAdmin();
+        loadMetrics();
+      } catch (e) {
+        errEl.textContent = `❌ ${e.message}`;
+        errEl.style.display = 'block';
+      }
+    }
+
+    function resetForm() {
+      editingId = null;
+      document.getElementById('ch-name').value      = '';
+      document.getElementById('ch-condition').value = '';
+      document.getElementById('ch-points').value    = '';
+      document.getElementById('ch-priority').value  = '5';
+      document.getElementById('ch-active').value    = '1';
+      document.getElementById('cond-preview').className = 'condition-preview';
+      document.getElementById('ch-form-title').textContent = '➕ Yeni Görev Oluştur';
+      document.getElementById('btn-cancel-edit').style.display = 'none';
+      document.getElementById('edit-badge').classList.remove('show');
+      document.getElementById('ch-form-error').style.display = 'none';
+    }
+
+    document.getElementById('btn-cancel-edit').addEventListener('click', resetForm);
+
+    function fillEditForm(c) {
+      editingId = c.id;
+      document.getElementById('ch-name').value      = c.name;
+      document.getElementById('ch-condition').value = c.condition;
+      document.getElementById('ch-points').value    = c.reward_points;
+      document.getElementById('ch-priority').value  = c.priority;
+      document.getElementById('ch-active').value    = c.is_active ? '1' : '0';
+      document.getElementById('ch-form-title').textContent = `✏️ Düzenle: ${c.name}`;
+      document.getElementById('btn-cancel-edit').style.display = '';
+      document.getElementById('edit-badge').classList.add('show');
+      validateConditionPreview();
+      // Scroll to form
+      document.querySelector('.form-card').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    // ── CHALLENGES TABLE ──────────────────────────────
+    let challengeCache = {};   // id → challenge object
+
+    async function loadChallengesAdmin() {
+      const tbody = document.getElementById('challenges-admin-body');
+      tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const list = await API.getAllChallenges();
+        challengeCache = {};
+        list.forEach(c => { challengeCache[c.id] = c; });
+
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">Görev bulunamadı</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(c => `
+          <tr id="ch-row-${c.id}">
+            <td style="color:var(--text-1);font-weight:600">${c.name}</td>
+            <td class="mono" style="color:var(--accent-2);font-size:11px">${c.condition}</td>
+            <td class="accent">${fmtNum(c.reward_points)}</td>
+            <td class="mono">${c.priority}</td>
+            <td>
+              <span class="badge-chip sm ${c.is_active ? 'badge-gold' : 'badge-bronze'}">
+                ${c.is_active ? 'Aktif' : 'Pasif'}
+              </span>
+            </td>
+            <td>
+              <div class="table-actions">
+                <button class="btn-icon" data-action="edit"   data-id="${c.id}">✏️ Düzenle</button>
+                <button class="btn-icon ${c.is_active ? 'active-toggle' : ''}"
+                        data-action="toggle" data-id="${c.id}">
+                  ${c.is_active ? '⏸ Durdur' : '▶ Aktifleştir'}
+                </button>
+                <button class="btn-icon danger" data-action="delete" data-id="${c.id}">🗑 Sil</button>
+              </div>
+            </td>
+          </tr>`).join('');
+
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // Single delegated listener on the table body parent
+    document.getElementById('challenges-admin-body').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id } = btn.dataset;
+      if (action === 'edit')   fillEditForm(challengeCache[id]);
+      if (action === 'toggle') toggleChallenge(id);
+      if (action === 'delete') deleteChallenge(id, challengeCache[id]?.name || id);
+    });
+
+    async function toggleChallenge(id, btn) {
+      try {
+        const d = await API.toggleChallenge(id);
+        showToast({ title: d.is_active ? 'Görev Aktifleştirildi' : 'Görev Durduruldu', icon: d.is_active ? '▶' : '⏸' });
+        loadChallengesAdmin();
+        loadMetrics();
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+      }
+    }
+
+    async function deleteChallenge(id, name) {
+      if (!confirm(`"${name}" görevini silmek istediğinizden emin misiniz?`)) return;
+      try {
+        await API.deleteChallenge(id);
+        showToast({ title: 'Görev Silindi', icon: '🗑', msg: name });
+        loadChallengesAdmin();
+        loadMetrics();
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+      }
+    }
+
+    // ── USERS TABLE ────────────────────────────────────
+    async function loadUsersAdmin() {
+      const tbody = document.getElementById('users-admin-body');
+      tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const board = await API.getLeaderboard();
+        const list  = board.leaderboard || board || [];
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">Kullanıcı bulunamadı</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map((u, i) => `
+          <tr>
+            <td style="color:var(--text-1)">
+              ${u.username || '—'}
+              ${u.is_current_user ? ' <span class="badge-chip sm badge-bronze">Sen</span>' : ''}
+            </td>
+            <td><span class="badge-chip sm ${u.role === 'admin' ? 'badge-gold' : 'badge-bronze'}">${u.role || 'user'}</span></td>
+            <td class="accent">${fmtNum(u.total_points || u.points || 0)}</td>
+            <td class="mono">#${i + 1}</td>
+            <td class="mono" style="font-size:12px;color:var(--text-muted)">—</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // ── UPLOAD ─────────────────────────────────────────
     const zone      = document.getElementById('upload-zone');
     const fileInput = document.getElementById('csv-file-input');
     let selectedFile = null;
@@ -452,43 +629,32 @@
     zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
     zone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
+      e.preventDefault(); zone.classList.remove('drag-over');
       selectedFile = e.dataTransfer.files[0];
       zone.querySelector('.upload-label').textContent = `📄 ${selectedFile.name}`;
     });
     zone.addEventListener('click', () => fileInput.click());
-    document.getElementById('btn-browse').addEventListener('click', () => fileInput.click());
+    document.getElementById('btn-browse').addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
     fileInput.addEventListener('change', (e) => {
       selectedFile = e.target.files[0];
       if (selectedFile) zone.querySelector('.upload-label').textContent = `📄 ${selectedFile.name}`;
     });
-
     document.getElementById('btn-upload-csv').addEventListener('click', async () => {
       if (!selectedFile) { showToast({ title: 'Dosya seçin', icon: '⚠️' }); return; }
-      const resEl  = document.getElementById('upload-result');
-      const succEl = document.getElementById('upload-success');
+      const resEl = document.getElementById('upload-result');
       resEl.classList.remove('show');
-      succEl.classList.remove('show');
-
       const formData = new FormData();
       formData.append('file', selectedFile);
-
       try {
         const token = Auth.getToken();
         const res   = await fetch('/api/ingestion/upload', {
-          method:  'POST',
-          headers: token ? { Authorization: 'Bearer ' + token } : {},
-          body:    formData,
+          method:'POST', headers: token ? { Authorization:'Bearer '+token } : {}, body: formData,
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.detail || 'Yükleme hatası');
-        const out = JSON.stringify(d, null, 2);
-        resEl.textContent = out;
+        resEl.textContent = JSON.stringify(d, null, 2);
         resEl.classList.add('show');
-        succEl.textContent = `✅ ${d.inserted || 0} kayıt eklendi, ${d.skipped || 0} atlandı`;
-        succEl.classList.add('show');
-        showToast({ title: 'CSV Yüklendi', msg: `${d.inserted} kayıt`, icon: '📥' });
+        showToast({ title: 'CSV Yüklendi', msg: `${d.inserted||0} kayıt`, icon: '📥' });
       } catch (e) {
         resEl.textContent = `❌ ${e.message}`;
         resEl.classList.add('show');
@@ -496,51 +662,10 @@
       }
     });
 
-    // CHALLENGES ADMIN
-    async function loadChallengesAdmin() {
-      const tbody = document.getElementById('challenges-admin-body');
-      tbody.innerHTML = '<tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
-      try {
-        const data = await API.getChallenges();
-        const list = data.challenges || data || [];
-        if (!list.length) {
-          tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">Görev bulunamadı</td></tr>';
-          return;
-        }
-        tbody.innerHTML = list.map(c => `
-          <tr>
-            <td class="mono">${c.id || '—'}</td>
-            <td style="color:var(--text-1)">${c.name || c.challenge_name || '—'}</td>
-            <td class="mono" style="color:var(--accent-2);font-size:11px">${c.condition || '—'}</td>
-            <td class="accent">${c.points || c.reward_points || 0}</td>
-            <td><span class="badge-chip sm ${c.active !== false ? 'badge-gold' : 'badge-bronze'}">${c.active !== false ? 'Aktif' : 'Pasif'}</span></td>
-          </tr>`).join('');
-      } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
-      }
-    }
-
-    // USERS ADMIN
-    async function loadUsersAdmin() {
-      const tbody = document.getElementById('users-admin-body');
-      tbody.innerHTML = '<tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
-      try {
-        const data  = await API.getLeaderboard();
-        const board = data.leaderboard || data || [];
-        tbody.innerHTML = board.map((u, i) => `
-          <tr>
-            <td class="mono">${u.user_id || u.id || '—'}</td>
-            <td style="color:var(--text-1)">${u.username || '—'}${u.is_current_user ? ' <span class="me-chip">Sen</span>' : ''}</td>
-            <td><span class="badge-chip sm ${u.role === 'admin' ? 'badge-gold' : 'badge-bronze'}">${u.role || 'user'}</span></td>
-            <td class="accent">${fmtNum(u.total_points || u.points || 0)}</td>
-            <td class="mono">#${i + 1}</td>
-          </tr>`).join('');
-      } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
-      }
-    }
-
+    // ── INIT ──────────────────────────────────────────
     loadMetrics();
+    loadRunHistory();
+    loadFieldsIntoBuilder();
   </script>
 </body>
 </html>
