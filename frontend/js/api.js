@@ -122,6 +122,16 @@ const API = {
   getContentStats: (content_id) => apiFetch(`/social/content-stats/${encodeURIComponent(content_id)}`),
   getSocialFeed:   ()           => apiFetch("/social/feed"),
   getTrending:     ()           => apiFetch("/social/trending"),
+  createParty:     (content_id) =>
+    apiFetch("/party/create", { method:"POST", body: JSON.stringify({content_id}) }),
+  joinParty:       (room_code)  =>
+    apiFetch("/party/join",   { method:"POST", body: JSON.stringify({room_code}) }),
+  leaveParty:      (room_code)  =>
+    apiFetch("/party/leave",  { method:"POST", body: JSON.stringify({room_code}) }),
+  endParty:        (room_code)  =>
+    apiFetch("/party/end",    { method:"POST", body: JSON.stringify({room_code}) }),
+  getPartyRoom:    (room_code)  => apiFetch(`/party/room/${encodeURIComponent(room_code)}`),
+  getMyParty:      ()           => apiFetch("/party/mine"),
   runPipeline:          ()       => apiFetch("/pipeline/run", { method:"POST" }),
   getPipelineRuns:      ()       => apiFetch("/pipeline/runs"),
   getAdminMetrics:      ()       => apiFetch("/pipeline/metrics"),

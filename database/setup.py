@@ -115,6 +115,26 @@ def init_db():
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS watch_parties (
+        id TEXT PRIMARY KEY,
+        room_code TEXT UNIQUE NOT NULL,
+        host_user_id TEXT NOT NULL,
+        content_id TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT NOT NULL,
+        ended_at TEXT,
+        FOREIGN KEY (host_user_id) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS watch_party_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        party_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        joined_at TEXT NOT NULL,
+        left_at TEXT,
+        UNIQUE(party_id, user_id),
+        FOREIGN KEY (party_id) REFERENCES watch_parties(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

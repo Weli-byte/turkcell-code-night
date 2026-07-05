@@ -173,6 +173,60 @@
       animation: live-pulse 2s ease-in-out infinite;
     }
 
+    /* WATCH PARTY */
+    .party-hint { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+    .party-join-row { display: flex; gap: 8px; margin-top: 10px; }
+    .party-join-row input {
+      flex: 1; min-width: 0;
+      background: #0D0D18; border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px;
+      color: var(--text-1); font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .party-join-row input:focus { outline: none; border-color: var(--border-acc); }
+    .party-code-display {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,255,135,0.06);
+      border: 1px dashed var(--border-acc);
+      border-radius: 8px; padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .party-code-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px; font-weight: 600;
+      letter-spacing: 0.25em; color: var(--accent-1);
+    }
+    .party-member-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .party-member-row:last-child { border-bottom: none; }
+    .party-member-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(0,212,255,0.12); border: 1px solid rgba(0,212,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--accent-2);
+      flex-shrink: 0; font-family: 'Syne', sans-serif;
+    }
+    .party-member-name { flex: 1; font-size: 13px; color: var(--text-1); }
+    .party-member-name .host-chip {
+      font-size: 10px; color: var(--accent-1);
+      border: 1px solid rgba(0,255,135,0.25); border-radius: 100px;
+      padding: 1px 7px; margin-left: 6px;
+    }
+    .party-member-mins {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .party-member-row.left { opacity: 0.4; }
+    .party-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .party-progress-note {
+      font-size: 11px; color: var(--text-muted); margin-top: 10px;
+      padding: 8px 10px; background: rgba(255,193,7,0.05);
+      border: 1px solid rgba(255,193,7,0.15); border-radius: 8px;
+    }
+
     /* RATING MODAL */
     .rating-modal-overlay {
       position: fixed; inset: 0; z-index: 9000;
@@ -288,6 +342,32 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
+          <!-- WATCH PARTY -->
+          <div class="sidebar-card">
+            <div class="sidebar-title">🎉 Watch Party</div>
+            <div id="party-off">
+              <p class="party-hint">Arkadaşlarınla aynı anda izle — parti dakikaları
+                <strong style="color:var(--accent-1)">Parti Kurdu</strong> görevine sayılır.</p>
+              <button class="btn-primary" id="btn-create-party" style="width:100%">🎉 Parti Kur</button>
+              <div class="party-join-row">
+                <input id="party-code-input" placeholder="KOD" maxlength="6" />
+                <button class="btn-ghost" id="btn-join-party">Katıl</button>
+              </div>
+            </div>
+            <div id="party-on" style="display:none">
+              <div class="party-code-display">
+                <span class="party-code-text" id="party-code-text">——————</span>
+                <button class="btn-ghost" id="btn-copy-party" style="font-size:12px">🔗 Kopyala</button>
+              </div>
+              <div id="party-members"></div>
+              <div class="party-progress-note" id="party-note" style="display:none"></div>
+              <div class="party-actions">
+                <button class="btn-ghost" id="btn-leave-party" style="flex:1">👋 Ayrıl</button>
+                <button class="btn-ghost" id="btn-end-party" style="flex:1;display:none">⏹ Partiyi Bitir</button>
+              </div>
+            </div>
+          </div>
+
           <!-- CHALLENGES -->
           <div class="sidebar-card">
             <div class="sidebar-title">🎯 Aktif Görevler</div>
@@ -592,6 +672,15 @@
           });
         }
 
+        if (d.in_party && d.party_minutes > 0) {
+          showToast({
+            title: '🎉 Parti dakikası işlendi',
+            msg:   `+${d.party_minutes} dk parti izleme — Parti Kurdu görevine sayıldı`,
+            icon:  '🎉',
+            duration: 5000,
+          });
+        }
+
         baseWatchMins += d.watch_minutes || 0;
         loadChallenges();
 
@@ -692,9 +781,148 @@
       if (e.target === e.currentTarget) closeRatingModal();
     });
 
+    /* ── WATCH PARTY ──────────────────────────────────── */
+    let partyCode    = null;
+    let partyIsHost  = false;
+    let partyPollInt = null;
+
+    function renderPartyMembers(room) {
+      const el = document.getElementById('party-members');
+      el.innerHTML = room.members.map(m => `
+        <div class="party-member-row ${m.left ? 'left' : ''}">
+          <div class="party-member-avatar">${(m.username||'?')[0].toUpperCase()}</div>
+          <div class="party-member-name">${m.username}${m.is_host ? '<span class="host-chip">HOST</span>' : ''}</div>
+          <div class="party-member-mins">${m.party_minutes_today} dk</div>
+        </div>`).join('');
+    }
+
+    function showPartyUI(room) {
+      partyCode   = room.room_code;
+      partyIsHost = room.host_user_id === Auth.getUserId();
+      document.getElementById('party-off').style.display = 'none';
+      document.getElementById('party-on').style.display  = '';
+      document.getElementById('party-code-text').textContent = room.room_code;
+      document.getElementById('btn-end-party').style.display  = partyIsHost ? '' : 'none';
+      document.getElementById('btn-leave-party').style.display = partyIsHost ? 'none' : '';
+      renderPartyMembers(room);
+      const note = document.getElementById('party-note');
+      note.style.display = '';
+      note.textContent = '⏱ Parti dakikaların seansı bitirdiğinde işlenir.';
+      startPartyPolling();
+    }
+
+    function hidePartyUI() {
+      stopPartyPolling();
+      partyCode = null; partyIsHost = false;
+      document.getElementById('party-on').style.display  = 'none';
+      document.getElementById('party-off').style.display = '';
+    }
+
+    function startPartyPolling() {
+      stopPartyPolling();
+      partyPollInt = setInterval(async () => {
+        if (!partyCode) return;
+        try {
+          const room = await API.getPartyRoom(partyCode);
+          if (!room.is_active) {
+            showToast({ title: '🎉 Watch Party', msg: 'Parti sona erdi', icon: '👋' });
+            hidePartyUI();
+            return;
+          }
+          renderPartyMembers(room);
+        } catch (_) {}
+      }, 10000);
+    }
+
+    function stopPartyPolling() {
+      if (partyPollInt) { clearInterval(partyPollInt); partyPollInt = null; }
+    }
+
+    async function joinPartyByCode(code) {
+      try {
+        const room = await API.joinParty(code);
+        if (room.content_id && room.content_id !== videoId) {
+          window.location.href =
+            `watch.html?id=${encodeURIComponent(room.content_id)}&party=${encodeURIComponent(room.room_code)}`;
+          return;
+        }
+        showPartyUI(room);
+        showToast({ title: '🎉 Partiye katıldın!', msg: room.content_title, icon: '🎉' });
+      } catch (e) {
+        showToast({ title: 'Parti hatası', msg: e.message, icon: '⚠️' });
+      }
+    }
+
+    document.getElementById('btn-create-party').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-create-party');
+      btn.disabled = true;
+      try {
+        const room = await API.createParty(videoId);
+        showPartyUI(room);
+        showToast({ title: '🎉 Parti kuruldu!', msg: `Kod: ${room.room_code} — linki kopyalayıp arkadaşlarına gönder`, icon: '🎉', duration: 6000 });
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+      } finally { btn.disabled = false; }
+    });
+
+    document.getElementById('btn-join-party').addEventListener('click', () => {
+      const code = document.getElementById('party-code-input').value.trim().toUpperCase();
+      if (code.length >= 4) joinPartyByCode(code);
+    });
+    document.getElementById('party-code-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const code = e.target.value.trim().toUpperCase();
+        if (code.length >= 4) joinPartyByCode(code);
+      }
+    });
+
+    document.getElementById('btn-copy-party').addEventListener('click', () => {
+      if (!partyCode) return;
+      const url = `${location.origin}/watch.html?id=${encodeURIComponent(videoId)}&party=${encodeURIComponent(partyCode)}`;
+      navigator.clipboard.writeText(url).then(() =>
+        showToast({ title: 'Davet linki kopyalandı!', icon: '🔗' }));
+    });
+
+    document.getElementById('btn-leave-party').addEventListener('click', async () => {
+      if (!partyCode) return;
+      try {
+        await API.leaveParty(partyCode);
+        hidePartyUI();
+        showToast({ title: 'Partiden ayrıldın', icon: '👋' });
+      } catch (e) { showToast({ title: 'Hata', msg: e.message, icon: '⚠️' }); }
+    });
+
+    document.getElementById('btn-end-party').addEventListener('click', async () => {
+      if (!partyCode) return;
+      try {
+        await API.endParty(partyCode);
+        hidePartyUI();
+        showToast({ title: 'Parti sonlandırıldı', icon: '⏹' });
+      } catch (e) { showToast({ title: 'Hata', msg: e.message, icon: '⚠️' }); }
+    });
+
+    // SSE party eventi (katılım/bitiş) → üye listesini hemen tazele
+    window.addEventListener('sse-party', async () => {
+      if (!partyCode) return;
+      try {
+        const room = await API.getPartyRoom(partyCode);
+        if (room.is_active) renderPartyMembers(room); else hidePartyUI();
+      } catch (_) {}
+    });
+
+    async function initParty() {
+      const codeParam = params.get('party');
+      if (codeParam) { await joinPartyByCode(codeParam.toUpperCase()); return; }
+      try {
+        const mine = await API.getMyParty();
+        if (mine.active && mine.party.content_id === videoId) showPartyUI(mine.party);
+      } catch (_) {}
+    }
+
     // INIT
     loadVideo();
     loadChallenges();
+    initParty();
   </script>
 </body>
 </html>

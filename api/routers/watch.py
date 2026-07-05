@@ -104,16 +104,26 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
 
     effective_minutes = min(watch_min, max_allowed - already_min)
 
+    # Watch Party kontrolü: bu içerik için aktif parti üyeliği varsa
+    # dakikalar watch_party_minutes olarak da sayılır ("Parti Kurdu" görevi)
+    active_party = db.execute("""
+        SELECT wp.id FROM watch_parties wp
+        JOIN watch_party_members wpm ON wpm.party_id = wp.id
+        WHERE wpm.user_id = ? AND wpm.left_at IS NULL
+          AND wp.is_active = 1 AND wp.content_id = ?
+    """, (token["sub"], session["content_id"])).fetchone()
+    party_minutes = effective_minutes if active_party else 0
+
     db.execute("""
         INSERT INTO user_activities
         (user_id, activity_date, watch_minutes,
          episodes_completed, genres_watched,
          watch_party_minutes, ratings_given,
          session_id, created_at)
-        VALUES (?, ?, ?, ?, 1, 0, 0, ?, ?)
+        VALUES (?, ?, ?, ?, 1, ?, 0, ?, ?)
     """, (
         token["sub"], today,
-        effective_minutes, completed,
+        effective_minutes, completed, party_minutes,
         body.session_id, ended.isoformat()
     ))
     db.commit()
@@ -139,6 +149,8 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
     return {
         "session_id":    body.session_id,
         "watch_minutes": round(effective_minutes, 1),
+        "party_minutes": round(party_minutes, 1),
+        "in_party":      active_party is not None,
         "completed":     bool(completed),
         "activity_date": today,
         "points_earned": result["points_earned"],

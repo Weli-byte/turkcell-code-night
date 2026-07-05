@@ -104,6 +104,14 @@
         msg:   data.message || '',
         icon:  '⚡',
       });
+    } else if (data.type === 'party') {
+      showToast({
+        title: '🎉 Watch Party',
+        msg:   data.message || '',
+        icon:  '🎉',
+        duration: 5000,
+      });
+      window.dispatchEvent(new CustomEvent('sse-party', { detail: data }));
     }
   }
 

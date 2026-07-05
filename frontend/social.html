@@ -192,6 +192,22 @@
 
         <!-- SIDEBAR: Top Raters + Comment Explorer -->
         <aside>
+          <!-- PARTY JOIN -->
+          <div class="card will-animate" style="margin-bottom:20px">
+            <div class="section-header">
+              <div class="section-title">🎉 Watch Party'ye Katıl</div>
+            </div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+              Arkadaşının paylaştığı oda koduyla ortak izlemeye katıl.
+            </p>
+            <div style="display:flex;gap:8px">
+              <input class="form-input" id="party-join-input" placeholder="KOD"
+                maxlength="6"
+                style="flex:1;min-width:0;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.1em;font-size:14px" />
+              <button class="btn-primary" id="btn-party-join" style="font-size:13px">Katıl</button>
+            </div>
+          </div>
+
           <!-- TOP RATERS -->
           <div class="card will-animate" style="margin-bottom:20px">
             <div class="section-header">
@@ -422,6 +438,24 @@
       } finally {
         btn.disabled = false; btn.textContent = 'Yorum Ekle';
       }
+    });
+
+    // ── PARTY JOIN ───────────────────────────────────────
+    async function joinPartyFromSocial() {
+      const code = document.getElementById('party-join-input').value.trim().toUpperCase();
+      if (code.length < 4) { showToast({ title: 'Geçerli bir kod gir', icon: '⚠️' }); return; }
+      try {
+        const room = await API.joinParty(code);
+        showToast({ title: '🎉 Partiye katıldın!', msg: room.content_title, icon: '🎉' });
+        window.location.href =
+          `watch.html?id=${encodeURIComponent(room.content_id)}&party=${encodeURIComponent(room.room_code)}`;
+      } catch (e) {
+        showToast({ title: 'Parti hatası', msg: e.message, icon: '⚠️' });
+      }
+    }
+    document.getElementById('btn-party-join').addEventListener('click', joinPartyFromSocial);
+    document.getElementById('party-join-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') joinPartyFromSocial();
     });
 
     // ── INIT ─────────────────────────────────────────────
