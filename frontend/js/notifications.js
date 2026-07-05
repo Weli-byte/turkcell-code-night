@@ -89,6 +89,8 @@
         icon:  '⚡',
       });
       refreshPointsPill(data.total_points);
+      // Leaderboard sayfası dinliyorsa otomatik yenile
+      window.dispatchEvent(new CustomEvent('sse-points', { detail: data }));
     } else if (data.type === 'badge') {
       showToast({
         title: '🏅 Yeni Rozet!',

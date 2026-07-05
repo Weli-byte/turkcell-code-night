@@ -8,162 +8,145 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="css/main.css" />
   <style>
-    .lb-hero {
-      padding: 48px 0 32px;
-    }
-    .lb-hero h1 {
-      font-size: 42px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      margin-bottom: 8px;
-    }
-    .lb-hero p { color: var(--text-muted); font-size: 14px; }
+    .lb-hero { padding:48px 0 28px; }
+    .lb-hero h1 { font-size:42px; font-weight:800; letter-spacing:-0.04em; margin-bottom:8px; }
 
+    /* STATUS BAR */
+    .lb-status-bar {
+      display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+      margin-bottom:28px; font-size:13px;
+    }
+    .lb-my-rank {
+      display:flex; align-items:center; gap:8px;
+      background:rgba(0,255,135,0.07); border:1px solid rgba(0,255,135,0.2);
+      border-radius:100px; padding:6px 16px;
+    }
+    .lb-my-rank .rank-num {
+      font-family:'JetBrains Mono',monospace; font-size:16px;
+      font-weight:700; color:var(--accent-1);
+    }
+    .lb-percentile {
+      font-size:11px; color:var(--accent-2);
+      background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2);
+      border-radius:100px; padding:3px 10px;
+    }
+    .lb-countdown {
+      display:flex; align-items:center; gap:6px;
+      font-family:'JetBrains Mono',monospace; font-size:12px;
+      color:var(--text-muted);
+    }
+    .lb-countdown .clock { color:var(--text-2); font-size:13px; }
+    .live-dot {
+      width:5px; height:5px; background:var(--accent-1);
+      border-radius:50%; animation:live-pulse 2s ease-in-out infinite;
+    }
+
+    /* TABS */
     .lb-tabs {
-      display: flex;
-      gap: 4px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 3px;
-      width: fit-content;
-      margin-bottom: 28px;
+      display:flex; gap:4px; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border); border-radius:10px;
+      padding:3px; width:fit-content; margin-bottom:20px;
     }
     .lb-tab {
-      padding: 8px 18px;
-      background: transparent;
-      border: none;
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 500;
-      transition: background 0.2s, color 0.2s;
+      padding:8px 18px; background:transparent; border:none;
+      border-radius:8px; color:var(--text-muted); font-size:13px;
+      font-weight:500; transition:background 0.2s,color 0.2s;
     }
-    .lb-tab.active {
-      background: rgba(0,255,135,0.1);
-      color: var(--accent-1);
+    .lb-tab.active { background:rgba(0,255,135,0.1); color:var(--accent-1); }
+
+    /* SEARCH */
+    .lb-search-wrap {
+      display:flex; gap:10px; align-items:center; margin-bottom:20px;
     }
+    .lb-search {
+      flex:1; max-width:280px;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius-sm); padding:9px 14px;
+      color:var(--text-1); font-size:13px; outline:none;
+      transition:border-color 0.2s;
+    }
+    .lb-search:focus { border-color:var(--border-acc); }
+    .lb-search::placeholder { color:var(--text-muted); }
 
     /* PODIUM */
     .podium {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 40px;
-      padding-top: 20px;
+      display:flex; align-items:flex-end; justify-content:center;
+      gap:12px; margin-bottom:36px; padding-top:16px;
     }
     .podium-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-      max-width: 160px;
+      display:flex; flex-direction:column; align-items:center;
+      gap:8px; flex:1; max-width:160px;
     }
     .podium-avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: rgba(0,255,135,0.1);
-      border: 2px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      transition: transform 0.3s ease;
+      width:52px; height:52px; border-radius:50%;
+      background:rgba(0,255,135,0.1); border:2px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Syne',sans-serif; font-size:20px; font-weight:800;
+      transition:transform 0.3s;
     }
     .podium-item.rank-1 .podium-avatar {
-      border-color: var(--gold);
-      color: var(--gold);
-      background: rgba(255,184,0,0.1);
-      width: 64px;
-      height: 64px;
-      font-size: 26px;
+      border-color:var(--gold); color:var(--gold);
+      background:rgba(255,184,0,0.1); width:64px; height:64px; font-size:26px;
     }
-    .podium-item.rank-2 .podium-avatar { border-color: var(--silver); color: var(--silver); }
-    .podium-item.rank-3 .podium-avatar { border-color: var(--bronze); color: var(--bronze); }
+    .podium-item.rank-2 .podium-avatar { border-color:var(--silver); color:var(--silver); }
+    .podium-item.rank-3 .podium-avatar { border-color:var(--bronze); color:var(--bronze); }
+    .podium-name { font-size:13px; font-weight:500; text-align:center; }
+    .podium-pts  { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent-1); }
+    .podium-bar  { width:100%; border-radius:6px 6px 0 0; border-bottom:none; }
+    .podium-item.rank-1 .podium-bar { height:90px; background:rgba(255,184,0,0.1); border:1px solid rgba(255,184,0,0.3); }
+    .podium-item.rank-2 .podium-bar { height:65px; background:rgba(168,178,193,0.08); border:1px solid rgba(168,178,193,0.25); }
+    .podium-item.rank-3 .podium-bar { height:48px; background:rgba(205,127,50,0.08); border:1px solid rgba(205,127,50,0.25); }
 
-    .podium-name { font-size: 13px; font-weight: 500; text-align: center; }
-    .podium-pts  {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--accent-1);
-    }
-    .podium-bar {
-      width: 100%;
-      border-radius: 6px 6px 0 0;
-      background: rgba(0,255,135,0.08);
-      border: 1px solid var(--border-acc);
-      border-bottom: none;
-    }
-    .podium-item.rank-1 .podium-bar { height: 90px; background: rgba(255,184,0,0.1); border-color: rgba(255,184,0,0.3); }
-    .podium-item.rank-2 .podium-bar { height: 65px; background: rgba(168,178,193,0.08); border-color: rgba(168,178,193,0.25); }
-    .podium-item.rank-3 .podium-bar { height: 48px; background: rgba(205,127,50,0.08); border-color: rgba(205,127,50,0.25); }
-
+    /* TABLE */
     .lb-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); overflow:hidden; position:relative;
     }
 
-    .rank-medal-1 { font-size: 18px; }
-    .rank-medal-2 { font-size: 18px; }
-    .rank-medal-3 { font-size: 18px; }
-
-    .weekly-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
+    /* RANK DELTA */
+    .rank-delta {
+      font-family:'JetBrains Mono',monospace; font-size:11px;
+      font-weight:700; padding:1px 5px; border-radius:4px;
+      display:inline-block; min-width:28px; text-align:center;
     }
+    .rank-delta.up   { color:#00FF87; background:rgba(0,255,135,0.1); }
+    .rank-delta.down { color:#FF4D4D; background:rgba(255,77,77,0.1); }
+    .rank-delta.same { color:var(--text-muted); background:transparent; }
 
-    /* MY HISTORY */
-    .history-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
+    /* STICKY MY ROW */
+    .sticky-me-bar {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:rgba(13,13,24,0.95); border:1px solid var(--border-acc);
+      border-radius:100px; padding:10px 24px;
+      display:flex; align-items:center; gap:16px;
+      font-size:13px; backdrop-filter:blur(12px);
+      box-shadow:0 8px 32px rgba(0,0,0,0.4);
+      z-index:200; opacity:0; pointer-events:none;
+      transition:opacity 0.25s;
     }
+    .sticky-me-bar.show { opacity:1; pointer-events:auto; }
+    .sticky-rank { font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--accent-1); }
+
+    /* HISTORY */
+    .history-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
     .history-day {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 6px;
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius-sm); padding:10px 6px;
     }
-    .history-day-date { font-size: 10px; color: var(--text-muted); text-align: center; }
-    .history-day-rank {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 18px;
-      font-weight: 500;
-      color: var(--accent-1);
-    }
-    .history-day-label { font-size: 9px; color: var(--text-muted); }
+    .history-day-date  { font-size:10px; color:var(--text-muted); text-align:center; }
+    .history-day-rank  { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:500; color:var(--accent-1); }
+    .history-day-label { font-size:9px; color:var(--text-muted); }
 
-    .auto-refresh {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
+    /* STREAK TABLE extras */
+    .streak-flame { font-size:15px; margin-right:4px; }
+
+    @keyframes row-flash {
+      0%   { background:rgba(0,255,135,0.18); }
+      100% { background:transparent; }
     }
-    .auto-refresh .dot {
-      width: 5px; height: 5px;
-      background: var(--accent-1);
-      border-radius: 50%;
-      animation: live-pulse 2s ease-in-out infinite;
-    }
+    .lb-row.changed { animation:row-flash 1.2s ease-out; }
   </style>
-  <!-- GSAP + Lenis CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
@@ -174,7 +157,6 @@
   <div class="cursor-dot"></div>
   <div class="cursor-halo"></div>
 
-  <!-- NAVBAR -->
   <nav class="navbar">
     <a href="catalog.html" class="nav-logo">GE Engine</a>
     <ul class="nav-links">
@@ -195,35 +177,48 @@
 
       <div class="lb-hero will-animate">
         <h1>Skor <span class="text-gradient">Tablosu</span></h1>
-        <div class="lb-hero p" style="display:flex;align-items:center;gap:12px;margin-top:8px">
-          <p>Tüm zamanların en iyileri · Otomatik güncellenir</p>
-          <div class="auto-refresh"><div class="dot"></div> Canlı</div>
+        <!-- STATUS BAR -->
+        <div class="lb-status-bar">
+          <div class="lb-my-rank">
+            <span style="color:var(--text-muted)">Sıran:</span>
+            <span class="rank-num" id="my-rank-display">—</span>
+          </div>
+          <span class="lb-percentile" id="my-percentile">Top —%</span>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)">
+            <div class="live-dot"></div> Canlı
+          </div>
+          <div class="lb-countdown" id="weekly-countdown" style="display:none">
+            📅 Hafta bitiyor: <span class="clock" id="countdown-clock">—</span>
+          </div>
         </div>
       </div>
 
-      <!-- TABS -->
-      <div class="lb-tabs will-animate">
-        <button class="lb-tab active" id="tab-all">Tüm Zamanlar</button>
-        <button class="lb-tab" id="tab-weekly">Bu Hafta</button>
-        <button class="lb-tab" id="tab-history">Geçmişim</button>
+      <!-- TABS + SEARCH -->
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px" class="will-animate">
+        <div class="lb-tabs">
+          <button class="lb-tab active" data-tab="all">Tüm Zamanlar</button>
+          <button class="lb-tab" data-tab="weekly">Bu Hafta</button>
+          <button class="lb-tab" data-tab="streak">Streak</button>
+          <button class="lb-tab" data-tab="history">Geçmişim</button>
+        </div>
+        <div class="lb-search-wrap" id="search-wrap">
+          <input class="lb-search" id="lb-search" placeholder="🔍 Kullanıcı ara…" autocomplete="off" />
+        </div>
       </div>
 
       <!-- ALL TIME VIEW -->
       <div id="view-all">
-        <!-- PODIUM -->
         <div class="podium will-animate" id="podium"></div>
-        <!-- TABLE -->
         <div class="lb-card will-animate">
           <table class="lb-table">
-            <thead>
-              <tr>
-                <th style="width:60px">Sıra</th>
-                <th>Kullanıcı</th>
-                <th style="text-align:right">Puan</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th style="width:64px">Sıra</th>
+              <th>Kullanıcı</th>
+              <th style="width:80px;text-align:center">±</th>
+              <th style="text-align:right">Puan</th>
+            </tr></thead>
             <tbody id="lb-body">
-              <tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+              <tr><td colspan="4" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -231,19 +226,30 @@
 
       <!-- WEEKLY VIEW -->
       <div id="view-weekly" style="display:none">
-        <div class="weekly-info">
-          📅 <span id="week-label">Bu haftanın sıralaması</span>
-        </div>
         <div class="lb-card will-animate">
           <table class="lb-table">
-            <thead>
-              <tr>
-                <th style="width:60px">Sıra</th>
-                <th>Kullanıcı</th>
-                <th style="text-align:right">Haftalık Puan</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th style="width:64px">Sıra</th>
+              <th>Kullanıcı</th>
+              <th style="text-align:right">Haftalık Puan</th>
+            </tr></thead>
             <tbody id="lb-weekly-body">
+              <tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STREAK VIEW -->
+      <div id="view-streak" style="display:none">
+        <div class="lb-card will-animate">
+          <table class="lb-table">
+            <thead><tr>
+              <th style="width:64px">Sıra</th>
+              <th>Kullanıcı</th>
+              <th style="text-align:right">Streak</th>
+            </tr></thead>
+            <tbody id="lb-streak-body">
               <tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
             </tbody>
           </table>
@@ -252,13 +258,22 @@
 
       <!-- HISTORY VIEW -->
       <div id="view-history" style="display:none">
-        <p class="text-2" style="margin-bottom:20px;font-size:14px">Son 7 gün boyunca sıralama pozisyonun</p>
+        <p class="text-2" style="margin-bottom:20px;font-size:14px">Son 7 gün sıralama pozisyonun</p>
         <div class="history-grid will-animate" id="rank-history-grid">
           <div class="spinner"></div>
         </div>
       </div>
 
     </div>
+  </div>
+
+  <!-- STICKY MY ROW -->
+  <div class="sticky-me-bar" id="sticky-me">
+    <span style="color:var(--text-muted);font-size:12px">Sıran</span>
+    <span class="sticky-rank" id="sticky-rank">—</span>
+    <span style="color:var(--text-muted)">·</span>
+    <span id="sticky-username" style="font-weight:600"></span>
+    <span class="sticky-rank" id="sticky-pts" style="color:var(--accent-2)">— puan</span>
   </div>
 
   <div id="toast-container"></div>
@@ -269,108 +284,141 @@
   <script>
     initPage();
     initNotifications();
+    if (Auth.getRole() === 'admin') document.getElementById('nav-admin-link').style.display = '';
 
-    if (Auth.getRole() === 'admin') {
-      document.getElementById('nav-admin-link').style.display = '';
-    }
+    const myUsername = Auth.getUsername();
+    let activeTab    = 'all';
+    let prevRanks    = {};   // username → rank for delta calculation
+    let searchQ      = '';
+    let allBoard     = [];
+    let refreshTimer = null;
 
-    const myId = Auth.getUserId();
-    let activeTab = 'all';
+    // ── TABS ──────────────────────────────────────────
+    const TAB_VIEWS = { all:'view-all', weekly:'view-weekly', streak:'view-streak', history:'view-history' };
 
-    // TAB SWITCH
-    const tabs = { all: 'tab-all', weekly: 'tab-weekly', history: 'tab-history' };
-    const views = { all: 'view-all', weekly: 'view-weekly', history: 'view-history' };
-
-    Object.keys(tabs).forEach(key => {
-      document.getElementById(tabs[key]).addEventListener('click', () => {
+    document.querySelectorAll('.lb-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
         document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(tabs[key]).classList.add('active');
-        Object.values(views).forEach(v => document.getElementById(v).style.display = 'none');
-        document.getElementById(views[key]).style.display = '';
-        activeTab = key;
-        if (key === 'weekly') loadWeekly();
-        if (key === 'history') loadHistory();
+        btn.classList.add('active');
+        activeTab = btn.dataset.tab;
+        Object.values(TAB_VIEWS).forEach(v => document.getElementById(v).style.display = 'none');
+        document.getElementById(TAB_VIEWS[activeTab]).style.display = '';
+        document.getElementById('search-wrap').style.display =
+          ['all','weekly','streak'].includes(activeTab) ? '' : 'none';
+        document.getElementById('lb-search').value = '';
+        searchQ = '';
+        if (activeTab === 'all')     loadAllTime();
+        if (activeTab === 'weekly')  loadWeekly();
+        if (activeTab === 'streak')  loadStreaks();
+        if (activeTab === 'history') loadHistory();
       });
     });
 
-    // RANK MEDAL
-    function rankDisplay(rank) {
-      if (rank === 1) return '🥇';
-      if (rank === 2) return '🥈';
-      if (rank === 3) return '🥉';
-      return `<span class="lb-rank">#${rank}</span>`;
+    // ── SEARCH ────────────────────────────────────────
+    let searchTimer;
+    document.getElementById('lb-search').addEventListener('input', (e) => {
+      searchQ = e.target.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        if (activeTab === 'all')    loadAllTime(searchQ);
+        if (activeTab === 'weekly') loadWeekly();
+        if (activeTab === 'streak') loadStreaks();
+      }, 280);
+    });
+
+    // ── WEEKLY COUNTDOWN ─────────────────────────────
+    let countdownSecs = 0;
+    function startCountdown(secs) {
+      countdownSecs = secs;
+      document.getElementById('weekly-countdown').style.display = '';
+      clearInterval(window._cdInterval);
+      window._cdInterval = setInterval(() => {
+        if (countdownSecs <= 0) { clearInterval(window._cdInterval); return; }
+        countdownSecs--;
+        const d   = Math.floor(countdownSecs / 86400);
+        const h   = Math.floor((countdownSecs % 86400) / 3600);
+        const m   = Math.floor((countdownSecs % 3600) / 60);
+        const s   = countdownSecs % 60;
+        document.getElementById('countdown-clock').textContent =
+          (d > 0 ? `${d}g ` : '') + `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }, 1000);
     }
 
-    // ALL TIME
-    async function loadAllTime() {
+    // ── STICKY MY ROW ─────────────────────────────────
+    let myRowVisible = true;
+    function updateStickyBar(board) {
+      const me = board.find(u => u.is_current_user);
+      if (!me) return;
+      const bar = document.getElementById('sticky-me');
+      document.getElementById('sticky-rank').textContent    = `#${me.rank}`;
+      document.getElementById('sticky-username').textContent = me.username;
+      document.getElementById('sticky-pts').textContent     = `${fmtNum(me.total_points || me.points || 0)} puan`;
+
+      const myRow = document.getElementById(`lb-row-${me.rank}`);
+      const observer = new IntersectionObserver(([entry]) => {
+        myRowVisible = entry.isIntersecting;
+        bar.classList.toggle('show', !myRowVisible);
+      }, { threshold: 0.5 });
+      if (myRow) observer.observe(myRow);
+    }
+
+    // ── RANK DELTA ────────────────────────────────────
+    function deltaChip(username, currentRank) {
+      const prev = prevRanks[username];
+      if (prev === undefined) return '<span class="rank-delta same">—</span>';
+      const diff = prev - currentRank;   // positive = improved
+      if (diff > 0) return `<span class="rank-delta up">▲${diff}</span>`;
+      if (diff < 0) return `<span class="rank-delta down">▼${Math.abs(diff)}</span>`;
+      return '<span class="rank-delta same">—</span>';
+    }
+
+    function savePrevRanks(board) {
+      board.forEach(u => { prevRanks[u.username] = u.rank; });
+    }
+
+    // ── ALL TIME ──────────────────────────────────────
+    async function loadAllTime(q = searchQ) {
       try {
-        const data = await API.getLeaderboard();
-        const board = data.leaderboard || data || [];
+        const data  = await API.getLeaderboard(q || '');
+        const board = data.leaderboard || [];
+        allBoard    = board;
 
-        // PODIUM
-        const top3   = board.slice(0, 3);
-        const order  = [1, 0, 2]; // silver, gold, bronze visual order
-        const podium = document.getElementById('podium');
-        podium.innerHTML = order.filter(i => top3[i]).map(i => {
-          const u = top3[i];
-          return `
-            <div class="podium-item rank-${u.rank}">
-              <div class="podium-avatar">${(u.username || '?')[0].toUpperCase()}</div>
-              <div class="podium-name">${u.username}${u.is_current_user ? ' 👈' : ''}</div>
-              <div class="podium-pts">${fmtNum(u.total_points || u.points)}</div>
-              <div class="podium-bar"></div>
-            </div>`;
-        }).join('');
+        // Status bar
+        document.getElementById('my-rank-display').textContent = `#${data.my_rank ?? '—'}`;
+        document.getElementById('my-percentile').textContent   = `Top ${data.percentile ?? '—'}%`;
+        document.getElementById('nav-points').textContent =
+          `⚡ ${fmtNum((board.find(u => u.is_current_user) || {}).total_points || 0)} puan`;
 
-        // TABLE (from #4 on)
-        const rest = board.slice(3);
+        // Podium (only when not searching)
+        if (!q) {
+          const top3  = board.slice(0, 3);
+          const order = [1, 0, 2];
+          document.getElementById('podium').innerHTML = order.filter(i => top3[i]).map(i => {
+            const u = top3[i];
+            return `
+              <div class="podium-item rank-${u.rank}">
+                <div class="podium-avatar">${(u.username||'?')[0].toUpperCase()}</div>
+                <div class="podium-name">${u.username}${u.is_current_user ? ' 👈' : ''}</div>
+                <div class="podium-pts">${fmtNum(u.total_points||u.points)}</div>
+                <div class="podium-bar"></div>
+              </div>`;
+          }).join('');
+        }
+
         const tbody = document.getElementById('lb-body');
-        tbody.innerHTML = board.map(u => {
-          const isMe = u.is_current_user;
-          return `
-            <tr class="lb-row ${isMe ? 'me' : ''}">
-              <td class="lb-rank ${u.rank === 1 ? 'gold' : u.rank === 2 ? 'silver' : u.rank === 3 ? 'bronze' : ''}"
-                >${u.rank <= 3 ? ['🥇','🥈','🥉'][u.rank-1] : '#' + u.rank}</td>
-              <td>
-                <div class="lb-user">
-                  <div class="lb-avatar">${(u.username || '?')[0].toUpperCase()}</div>
-                  <div class="lb-username">${u.username}</div>
-                  ${isMe ? '<span class="me-chip">Sen</span>' : ''}
-                </div>
-              </td>
-              <td class="lb-points">${fmtNum(u.total_points || u.points)}</td>
-            </tr>`;
-        }).join('');
-
-        // Nav points from board
-        const me = board.find(u => u.is_current_user);
-        if (me) {
-          document.getElementById('nav-points').textContent =
-            `⚡ ${me.total_points || me.points} puan`;
+        if (!board.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-muted)">Sonuç yok</td></tr>';
+          return;
         }
-      } catch (e) {
-        document.getElementById('lb-body').innerHTML =
-          `<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
-      }
-    }
 
-    // WEEKLY
-    async function loadWeekly() {
-      const tbody = document.getElementById('lb-weekly-body');
-      tbody.innerHTML = '<tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
-      try {
-        const data   = await API.getWeeklyLeaderboard();
-        const board  = data || [];
-        if (board.length) {
-          document.getElementById('week-label').textContent =
-            `Bu hafta · ${board[0].week_start} başlangıcı`;
-        }
+        const prevSnapshot = {...prevRanks};
         tbody.innerHTML = board.map(u => {
-          const isMe = u.is_current_user;
+          const isMe  = u.is_current_user;
+          const medal = u.rank === 1 ? '🥇' : u.rank === 2 ? '🥈' : u.rank === 3 ? '🥉' : `#${u.rank}`;
+          const changed = prevSnapshot[u.username] !== undefined && prevSnapshot[u.username] !== u.rank;
           return `
-            <tr class="lb-row ${isMe ? 'me' : ''}">
-              <td class="lb-rank ${u.rank<=3?['gold','silver','bronze'][u.rank-1]:''}"
-                >${u.rank <= 3 ? ['🥇','🥈','🥉'][u.rank-1] : '#' + u.rank}</td>
+            <tr class="lb-row ${isMe ? 'me' : ''} ${changed ? 'changed' : ''}" id="lb-row-${u.rank}">
+              <td class="lb-rank ${u.rank===1?'gold':u.rank===2?'silver':u.rank===3?'bronze':''}">${medal}</td>
               <td>
                 <div class="lb-user">
                   <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
@@ -378,21 +426,86 @@
                   ${isMe ? '<span class="me-chip">Sen</span>' : ''}
                 </div>
               </td>
-              <td class="lb-points">${fmtNum(u.weekly_points)}</td>
+              <td style="text-align:center">${deltaChip(u.username, u.rank)}</td>
+              <td class="lb-points">${fmtNum(u.total_points||u.points)}</td>
             </tr>`;
-        }).join('') || '<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--text-muted)">Bu hafta veri yok</td></tr>';
+        }).join('');
+
+        savePrevRanks(board);
+        if (!q) updateStickyBar(board);
+
+      } catch (e) {
+        document.getElementById('lb-body').innerHTML =
+          `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // ── WEEKLY ────────────────────────────────────────
+    async function loadWeekly() {
+      const tbody = document.getElementById('lb-weekly-body');
+      tbody.innerHTML = '<tr><td colspan="3" style="padding:24px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const data  = await API.getWeeklyLeaderboard();
+        const board = data.leaderboard || data || [];
+        if (data.seconds_left) startCountdown(data.seconds_left);
+
+        const q = searchQ.toLowerCase();
+        const filtered = q ? board.filter(u => u.username.toLowerCase().includes(q)) : board;
+
+        tbody.innerHTML = filtered.map(u => `
+          <tr class="lb-row ${u.is_current_user ? 'me' : ''}">
+            <td class="lb-rank ${u.rank<=3?['gold','silver','bronze'][u.rank-1]:''}">${u.rank<=3?['🥇','🥈','🥉'][u.rank-1]:'#'+u.rank}</td>
+            <td>
+              <div class="lb-user">
+                <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
+                <div class="lb-username">${u.username}</div>
+                ${u.is_current_user ? '<span class="me-chip">Sen</span>' : ''}
+              </div>
+            </td>
+            <td class="lb-points">${fmtNum(u.weekly_points)}</td>
+          </tr>`).join('') ||
+          '<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--text-muted)">Bu hafta veri yok</td></tr>';
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
       }
     }
 
-    // RANK HISTORY
+    // ── STREAK ────────────────────────────────────────
+    async function loadStreaks() {
+      const tbody = document.getElementById('lb-streak-body');
+      tbody.innerHTML = '<tr><td colspan="3" style="padding:24px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const board = await API.getStreakLeaderboard();
+        const q     = searchQ.toLowerCase();
+        const filtered = q ? board.filter(u => u.username.toLowerCase().includes(q)) : board;
+
+        tbody.innerHTML = filtered.map(u => {
+          const flames = u.streak_days >= 7 ? '🔥🔥' : u.streak_days >= 3 ? '🔥' : '';
+          return `
+            <tr class="lb-row ${u.is_current_user ? 'me' : ''}">
+              <td class="lb-rank ${u.rank<=3?['gold','silver','bronze'][u.rank-1]:''}">${u.rank<=3?['🥇','🥈','🥉'][u.rank-1]:'#'+u.rank}</td>
+              <td>
+                <div class="lb-user">
+                  <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
+                  <div class="lb-username">${u.username}</div>
+                  ${u.is_current_user ? '<span class="me-chip">Sen</span>' : ''}
+                </div>
+              </td>
+              <td class="lb-points">${flames} ${u.streak_days} gün</td>
+            </tr>`;
+        }).join('') ||
+          '<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--text-muted)">Veri yok</td></tr>';
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // ── RANK HISTORY ──────────────────────────────────
     async function loadHistory() {
       const el = document.getElementById('rank-history-grid');
       el.innerHTML = '<div class="spinner"></div>';
       try {
-        const data = await API.getMyRankHistory();
-        const days = data || [];
+        const days = await API.getMyRankHistory();
         el.innerHTML = days.map(d => `
           <div class="history-day">
             <div class="history-day-date">${d.date.slice(5)}</div>
@@ -404,9 +517,21 @@
       }
     }
 
-    // AUTO REFRESH every 30s
+    // ── SSE: auto-refresh on points event ────────────
+    // notifications.js zaten SSE bağlantısını kuruyor.
+    // `points` eventi geldiğinde aktif sekme yenilenir.
+    window.addEventListener('sse-points', () => {
+      if (activeTab === 'all')    loadAllTime();
+      if (activeTab === 'weekly') loadWeekly();
+      if (activeTab === 'streak') loadStreaks();
+    });
+
+    // ── AUTO REFRESH (30s fallback) ───────────────────
     loadAllTime();
-    setInterval(() => { if (activeTab === 'all') loadAllTime(); }, 30000);
+    setInterval(() => {
+      if (activeTab === 'all')    loadAllTime();
+      if (activeTab === 'weekly') loadWeekly();
+    }, 30000);
   </script>
 </body>
 </html>

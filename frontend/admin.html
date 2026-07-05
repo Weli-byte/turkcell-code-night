@@ -599,8 +599,8 @@
       const tbody = document.getElementById('users-admin-body');
       tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
       try {
-        const board = await API.getLeaderboard();
-        const list  = board.leaderboard || board || [];
+        const data  = await API.getLeaderboard();
+        const list  = data.leaderboard || data || [];
         if (!list.length) {
           tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">Kullanıcı bulunamadı</td></tr>';
           return;

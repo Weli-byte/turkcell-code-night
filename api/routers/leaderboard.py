@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from typing import Optional
 from api.auth_utils import verify_token
 from engine.leaderboard_engine import get_leaderboard
 from database.setup import get_db
@@ -9,14 +10,29 @@ router = APIRouter(tags=["Leaderboard"])
 
 @router.get("")
 def leaderboard(
-    limit: int = 50,
+    limit: int = 100,
+    q: Optional[str] = Query(None, description="Username arama"),
     token: dict = Depends(verify_token),
 ):
     board   = get_leaderboard(limit)
     user_id = token["sub"]
+    total   = len(board)
+
+    my_rank = next((e["rank"] for e in board if e["user_id"] == user_id), total + 1)
+    percentile = round((1 - (my_rank - 1) / max(total, 1)) * 100) if total else 100
+
     for entry in board:
         entry["is_current_user"] = (entry["user_id"] == user_id)
-    return board
+
+    if q:
+        board = [e for e in board if q.lower() in (e.get("username") or "").lower()]
+
+    return {
+        "leaderboard": board,
+        "total_users": total,
+        "my_rank":     my_rank,
+        "percentile":  percentile,
+    }
 
 
 @router.get("/weekly")
@@ -36,7 +52,7 @@ def weekly_leaderboard(token: dict = Depends(verify_token)):
     """, (wstart,)).fetchall()
     db.close()
     uid = token["sub"]
-    return [
+    result = [
         {
             "rank":            i + 1,
             "user_id":         r["id"],
@@ -44,6 +60,57 @@ def weekly_leaderboard(token: dict = Depends(verify_token)):
             "weekly_points":   int(r["weekly_points"]),
             "week_start":      wstart,
             "is_current_user": r["id"] == uid,
+        }
+        for i, r in enumerate(rows)
+    ]
+    total      = len(result)
+    my_rank    = next((e["rank"] for e in result if e["is_current_user"]), total + 1)
+    percentile = round((1 - (my_rank - 1) / max(total, 1)) * 100) if total else 100
+
+    # Haftanın bitiş zamanı (Pazar 23:59:59 UTC)
+    days_left  = 6 - datetime.now().weekday()
+    week_end   = (datetime.now() + timedelta(days=days_left)).replace(
+        hour=23, minute=59, second=59
+    )
+    seconds_left = max(0, int((week_end - datetime.now()).total_seconds()))
+
+    return {
+        "leaderboard":   result,
+        "total_users":   total,
+        "my_rank":       my_rank,
+        "percentile":    percentile,
+        "week_start":    wstart,
+        "seconds_left":  seconds_left,
+    }
+
+
+@router.get("/streaks")
+def streak_leaderboard(token: dict = Depends(verify_token)):
+    """Streak sıralaması — en uzun ard arda izleme serisi."""
+    from engine.state_builder import build_user_state
+    db    = get_db()
+    today = datetime.now().strftime("%Y-%m-%d")
+    users = db.execute("SELECT id, username FROM users ORDER BY id").fetchall()
+    db.close()
+    uid   = token["sub"]
+
+    rows = []
+    for u in users:
+        state = build_user_state(u["id"], today)
+        rows.append({
+            "user_id":  u["id"],
+            "username": u["username"],
+            "streak":   state["streak_days"],
+        })
+
+    rows.sort(key=lambda r: (-r["streak"], r["username"]))
+    return [
+        {
+            "rank":            i + 1,
+            "user_id":         r["user_id"],
+            "username":        r["username"],
+            "streak_days":     r["streak"],
+            "is_current_user": r["user_id"] == uid,
         }
         for i, r in enumerate(rows)
     ]
