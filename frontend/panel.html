@@ -259,6 +259,19 @@
         </div>
       </div>
 
+      <!-- WEEKLY ACTIVITY CHART -->
+      <div class="card will-animate" style="margin-bottom:32px">
+        <div class="section-header">
+          <div>
+            <div class="section-title">📊 Haftalık Aktivite</div>
+            <div class="section-subtitle">Son 7 günün izleme süresi</div>
+          </div>
+        </div>
+        <div class="weekly-chart" id="weekly-chart">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
       <!-- AI BOX -->
       <div class="ai-box will-animate">
         <div class="ai-box-title">🤖 AI Asistan</div>
@@ -488,10 +501,21 @@
       }
     });
 
+    // WEEKLY CHART
+    async function loadWeeklyChart() {
+      try {
+        const d = await API.getMyWeekly();
+        renderWeeklyChart('weekly-chart', d.days || []);
+      } catch (e) {
+        const el = document.getElementById('weekly-chart');
+        if (el) el.innerHTML = `<p style="font-size:13px;color:var(--text-muted)">${e.message}</p>`;
+      }
+    }
+
     // INIT
     (async () => {
       await loadProfile();
-      await Promise.allSettled([loadBadges(), loadHistory(), loadChallenges()]);
+      await Promise.allSettled([loadBadges(), loadHistory(), loadChallenges(), loadWeeklyChart()]);
     })();
   </script>
 </body>

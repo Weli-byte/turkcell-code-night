@@ -88,6 +88,7 @@ const API = {
   getMe:              ()     => apiFetch("/users/me"),
   getHistory:         ()     => apiFetch("/users/me/points-history"),
   getMyStats:         ()     => apiFetch("/users/me/stats"),
+  getMyWeekly:        ()     => apiFetch("/users/me/weekly"),
   getCatalog:         (q)    => apiFetch("/content/catalog" + (q||"")),
   getContent:         (id)   => apiFetch("/content/" + id),
   startSession:       (cid)  => apiFetch("/watch/session/start",

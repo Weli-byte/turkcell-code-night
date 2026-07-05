@@ -223,3 +223,99 @@ function fmtDate(iso) {
 function fmtNum(n) {
   return Number(n || 0).toLocaleString('tr-TR');
 }
+
+/* ============================================================
+   CELEBRATE — GSAP konfeti patlaması
+   ============================================================ */
+function celebratePoints(points, { x = window.innerWidth / 2, y = window.innerHeight / 2 } = {}) {
+  if (!window.gsap) {
+    showToast({ title: `+${points} puan!`, icon: '🎉', duration: 3000 });
+    return;
+  }
+
+  const COLORS  = ['#00FF87', '#00D4FF', '#FFB800', '#6C00FF', '#FF4D4D', '#fff'];
+  const COUNT   = 40;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9995;overflow:hidden';
+  document.body.appendChild(overlay);
+
+  for (let i = 0; i < COUNT; i++) {
+    const p   = document.createElement('div');
+    const clr = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const sz  = 6 + Math.random() * 8;
+    p.style.cssText = `position:absolute;width:${sz}px;height:${sz}px;
+      background:${clr};border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      left:${x}px;top:${y}px;opacity:1`;
+    overlay.appendChild(p);
+
+    const angle  = (Math.random() * Math.PI * 2);
+    const dist   = 120 + Math.random() * 200;
+    const tx     = Math.cos(angle) * dist;
+    const ty     = Math.sin(angle) * dist - 60;
+
+    gsap.to(p, {
+      x: tx, y: ty,
+      rotation:  Math.random() * 720 - 360,
+      opacity:   0,
+      duration:  0.9 + Math.random() * 0.6,
+      ease:      'power2.out',
+      delay:     Math.random() * 0.15,
+      onComplete: () => p.remove(),
+    });
+  }
+
+  // Büyük puan metni
+  const label = document.createElement('div');
+  label.textContent = `+${points}`;
+  label.style.cssText = `position:fixed;left:${x}px;top:${y - 40}px;
+    font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;
+    color:#00FF87;text-shadow:0 0 20px rgba(0,255,135,0.6);
+    pointer-events:none;z-index:9996;transform:translate(-50%,-50%);opacity:0`;
+  document.body.appendChild(label);
+
+  gsap.timeline()
+    .to(label, { opacity: 1, y: -20, duration: 0.3, ease: 'back.out(1.7)' })
+    .to(label, { opacity: 0, y: -60, duration: 0.5, ease: 'power2.in', delay: 0.8,
+      onComplete: () => { label.remove(); overlay.remove(); } });
+}
+
+/* ============================================================
+   WEEKLY ACTIVITY CHART — pure CSS bar chart
+   ============================================================ */
+function renderWeeklyChart(containerId, days) {
+  const el = document.getElementById(containerId);
+  if (!el || !days?.length) return;
+
+  const maxMin = Math.max(...days.map(d => d.minutes), 1);
+  const dayNames = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+
+  el.innerHTML = days.map((d) => {
+    const pct   = Math.round((d.minutes / maxMin) * 100);
+    const dt    = new Date(d.date);
+    const label = dayNames[dt.getDay() === 0 ? 6 : dt.getDay() - 1];
+    const isToday = d.date === new Date().toISOString().slice(0, 10);
+
+    return `
+      <div class="chart-bar-wrap ${isToday ? 'today' : ''}">
+        <div class="chart-bar-val">${d.minutes > 0 ? Math.round(d.minutes) + 'dk' : ''}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill" data-pct="${pct}" style="height:0%"></div>
+        </div>
+        <div class="chart-bar-label">${label}</div>
+        ${d.points > 0 ? `<div class="chart-bar-pts">+${d.points}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Animate bars with GSAP or CSS
+  setTimeout(() => {
+    el.querySelectorAll('.chart-bar-fill').forEach((bar) => {
+      const pct = bar.dataset.pct;
+      if (window.gsap) {
+        gsap.to(bar, { height: pct + '%', duration: 0.8, ease: 'power2.out',
+          delay: 0.05 * Array.from(el.querySelectorAll('.chart-bar-fill')).indexOf(bar) });
+      } else {
+        bar.style.height = pct + '%';
+      }
+    });
+  }, 100);
+}

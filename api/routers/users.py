@@ -111,3 +111,42 @@ def my_stats(token: dict = Depends(verify_token)):
         "last_week_minutes":  round(lw, 1),
         "improvement_pct":    imp,
     }
+
+
+@router.get("/me/weekly")
+def weekly_activity(token: dict = Depends(verify_token)):
+    """Son 7 günün günlük izleme + puan verisi — panel grafiği için."""
+    user_id = token["sub"]
+    now     = datetime.now()
+    db      = get_db()
+    days    = []
+
+    for i in range(6, -1, -1):
+        d = (now - timedelta(days=i)).strftime("%Y-%m-%d")
+
+        act = db.execute("""
+            SELECT COALESCE(SUM(watch_minutes), 0)      AS minutes,
+                   COALESCE(SUM(episodes_completed), 0) AS episodes
+            FROM user_activities
+            WHERE user_id = ? AND activity_date = ?
+        """, (user_id, d)).fetchone()
+
+        pts = db.execute("""
+            SELECT COALESCE(SUM(points), 0) AS total
+            FROM points_ledger
+            WHERE user_id = ? AND activity_date = ?
+        """, (user_id, d)).fetchone()
+
+        days.append({
+            "date":     d,
+            "minutes":  round(float(act["minutes"]), 1),
+            "episodes": int(act["episodes"]),
+            "points":   int(pts["total"]),
+        })
+
+    db.close()
+    max_min = max((d["minutes"] for d in days), default=1) or 1
+    for d in days:
+        d["pct"] = round(d["minutes"] / max_min * 100, 1)
+
+    return {"days": days, "max_minutes": max_min}

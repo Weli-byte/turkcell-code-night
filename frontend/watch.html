@@ -281,37 +281,102 @@
       document.getElementById('nav-admin-link').style.display = '';
     }
 
-    const params    = new URLSearchParams(window.location.search);
-    const videoId   = params.get('id');
-    let sessionId   = null;
-    let sessionSecs = 0;
-    let timerInterval = null;
-    let heartbeatInt  = null;
-    const HEARTBEAT_INTERVAL = 30; // seconds
-
+    const params  = new URLSearchParams(window.location.search);
+    const videoId = params.get('id');
     if (!videoId) window.location.href = 'catalog.html';
 
-    // LOAD VIDEO INFO
+    // State
+    let sessionId        = null;
+    let realWatchSecs    = 0;   // Only real play time (timeupdate based)
+    let lastTimestamp    = null;
+    let isPlaying        = false;
+    let heartbeatInt     = null;
+    let displayInterval  = null;
+    let challengeData    = [];
+    let baseWatchMins    = 0;   // today's minutes BEFORE this session
+
+    const HEARTBEAT_SEC  = 30;
+
+    /* ── Video timeupdate tracking ─────────────────────── */
+    function attachVideoTracking(videoEl) {
+      if (!videoEl) return;
+
+      videoEl.addEventListener('play', () => {
+        isPlaying     = true;
+        lastTimestamp = videoEl.currentTime;
+      });
+      videoEl.addEventListener('pause', () => { isPlaying = false; });
+      videoEl.addEventListener('ended', () => { isPlaying = false; });
+
+      videoEl.addEventListener('timeupdate', () => {
+        if (!isPlaying || !sessionId) return;
+        const ct   = videoEl.currentTime;
+        const diff = ct - (lastTimestamp ?? ct);
+        // Only count forward deltas < 2s (ignores seeks)
+        if (diff > 0 && diff < 2) {
+          realWatchSecs += diff;
+          updateDisplay();
+          updateLiveChallenges();
+        }
+        lastTimestamp = ct;
+      });
+    }
+
+    /* ── Display update ────────────────────────────────── */
+    function updateDisplay() {
+      const min = Math.floor(realWatchSecs / 60);
+      const sec = Math.floor(realWatchSecs % 60);
+      document.getElementById('session-minutes').textContent = min;
+      document.getElementById('session-secs').textContent    = String(sec).padStart(2, '0');
+      const pct = Math.min(100, (realWatchSecs / 3600) * 100);
+      document.getElementById('session-bar').style.width = pct + '%';
+    }
+
+    /* ── Live challenge progress ───────────────────────── */
+    function updateLiveChallenges() {
+      if (!challengeData.length) return;
+      const sessionMins  = realWatchSecs / 60;
+      const totalToday   = baseWatchMins + sessionMins;
+
+      challengeData.forEach(c => {
+        const bar    = document.getElementById(`lcp-bar-${c.id}`);
+        const valEl  = document.getElementById(`lcp-val-${c.id}`);
+        if (!bar) return;
+        const target = c.target_value || 60;
+        const pct    = Math.min(100, (totalToday / target) * 100);
+        bar.style.width = pct + '%';
+        if (pct >= 100) bar.classList.add('complete');
+        if (valEl) valEl.textContent = `${Math.round(totalToday)} / ${Math.round(target)} dk`;
+      });
+    }
+
+    /* ── Load video ────────────────────────────────────── */
     async function loadVideo() {
       const wrap = document.getElementById('player-wrap');
       try {
         const v = await API.getContent(videoId);
-        document.getElementById('video-title').textContent = v.title || '—';
-        document.getElementById('video-genre').textContent = v.genre || v.genres || '';
-        document.getElementById('video-duration').textContent = v.duration_minutes
-          ? `${Math.round(v.duration_minutes)} dk` : '';
+        document.getElementById('video-title').textContent   = v.title || '—';
+        document.getElementById('video-genre').textContent   = v.genre || v.genres || '';
+        document.getElementById('video-duration').textContent =
+          v.duration_minutes ? `${Math.round(v.duration_minutes)} dk` : '';
 
-        // Embed real video if stream_url provided
         if (v.stream_url) {
           wrap.innerHTML = `
             <video id="video-el" controls preload="metadata"
-              style="width:100%;height:100%;object-fit:contain;border-radius:var(--radius)">
+              style="width:100%;height:100%;object-fit:contain;background:#000">
               <source src="${v.stream_url}" />
-            </video>`;
+              Tarayıcınız video elementini desteklemiyor.
+            </video>
+            <div class="video-overlay-msg">
+              <div class="video-reward-flash" id="reward-flash">
+                <div class="video-reward-pts" id="reward-pts"></div>
+                <div class="video-reward-label">PUAN KAZANILDI!</div>
+              </div>
+            </div>`;
+          attachVideoTracking(document.getElementById('video-el'));
         } else {
           wrap.innerHTML = `<div class="player-placeholder">
-            <div class="player-icon">🎬</div>
-            <div>${v.title || 'Video'}</div>
+            <div class="player-icon">🎬</div><div>${v.title || 'Video'}</div>
           </div>`;
         }
       } catch (e) {
@@ -322,142 +387,156 @@
       }
     }
 
-    // LOAD CHALLENGES
+    /* ── Load challenges (sidebar) ─────────────────────── */
     async function loadChallenges() {
       const el = document.getElementById('challenge-list');
       try {
-        const data = await API.getChallenges();
-        const challenges = data.challenges || data || [];
-        if (!challenges.length) {
-          el.innerHTML = '<p class="text-muted" style="font-size:13px">Aktif görev yok.</p>';
+        const [chData, meData] = await Promise.all([API.getChallenges(), API.getMe()]);
+        challengeData = chData.challenges || chData || [];
+        baseWatchMins = meData.watch_minutes_today || 0;
+
+        if (!challengeData.length) {
+          el.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">Aktif görev yok.</p>';
           return;
         }
-        const state = await API.getMe();
-        const todayMin = state.watch_minutes_today || 0;
 
-        el.innerHTML = challenges.slice(0, 5).map(c => {
-          const pct = Math.min(100, (todayMin / (c.threshold || 60)) * 100);
-          return `
-            <div class="challenge-progress-item">
-              <div class="cp-header">
-                <span class="cp-name">${c.name || c.challenge_name}</span>
-                <span class="cp-pts">+${c.points || c.reward_points} puan</span>
-              </div>
-              <div class="cp-cond">${c.condition || ''}</div>
-              <div class="progress-wrap">
-                <div class="progress-fill" style="width:${pct}%"></div>
-              </div>
-            </div>`;
-        }).join('');
+        el.innerHTML = `<div class="live-challenge-progress">` +
+          challengeData.slice(0, 5).map(c => {
+            const target = c.target_value || 60;
+            const pct    = Math.min(100, (baseWatchMins / target) * 100);
+            return `
+              <div class="lcp-item">
+                <div class="lcp-header">
+                  <span class="lcp-name">${c.name}</span>
+                  <span class="lcp-val" id="lcp-val-${c.id}">${Math.round(baseWatchMins)} / ${Math.round(target)} dk</span>
+                </div>
+                <div class="lcp-bar-track">
+                  <div class="lcp-bar-fill ${pct >= 100 ? 'complete' : ''}"
+                       id="lcp-bar-${c.id}" style="width:${pct}%"></div>
+                </div>
+              </div>`;
+          }).join('') + `</div>`;
       } catch (e) {
-        el.innerHTML = `<p class="text-muted" style="font-size:13px">${e.message}</p>`;
+        el.innerHTML = `<p style="font-size:13px;color:var(--text-muted)">${e.message}</p>`;
       }
     }
 
-    // SESSION TIMER
-    function startTimer() {
-      sessionSecs = 0;
-      timerInterval = setInterval(() => {
-        sessionSecs++;
-        const min = Math.floor(sessionSecs / 60);
-        const sec = String(sessionSecs % 60).padStart(2, '0');
-        document.getElementById('session-minutes').textContent = min;
-        document.getElementById('session-secs').textContent   = sec;
-        const pct = Math.min(100, (sessionSecs / (60 * 60)) * 100);
-        document.getElementById('session-bar').style.width = pct + '%';
-      }, 1000);
+    /* ── GSAP reward flash on player ───────────────────── */
+    function flashRewardOnPlayer(points) {
+      const flash = document.getElementById('reward-flash');
+      const ptsEl = document.getElementById('reward-pts');
+      if (!flash || !ptsEl) return;
+      ptsEl.textContent = `+${points}`;
+      if (window.gsap) {
+        gsap.timeline()
+          .to(flash, { opacity: 1, scale: 1.1, duration: 0.4, ease: 'back.out(1.5)' })
+          .to(flash, { opacity: 0, scale: 0.9, duration: 0.6, ease: 'power2.in', delay: 1.2,
+            onComplete: () => gsap.set(flash, { opacity: 0, scale: 1 }) });
+      } else {
+        flash.style.opacity = '1';
+        setTimeout(() => { flash.style.opacity = '0'; }, 2000);
+      }
     }
 
-    function stopTimer() {
-      clearInterval(timerInterval);
-      clearInterval(heartbeatInt);
-    }
-
-    // START SESSION
+    /* ── START SESSION ─────────────────────────────────── */
     document.getElementById('btn-start').addEventListener('click', async () => {
       const btn = document.getElementById('btn-start');
-      btn.disabled = true;
-      btn.textContent = 'Başlatılıyor…';
+      btn.disabled = true; btn.textContent = 'Başlatılıyor…';
       try {
         const d = await API.startSession(videoId);
-        sessionId = d.session_id;
+        sessionId       = d.session_id;
+        realWatchSecs   = 0;
+        isPlaying       = false;
+        lastTimestamp   = null;
 
-        document.getElementById('session-status').textContent = 'Oturum aktif — süre sayılıyor';
-        document.getElementById('live-badge').style.display  = '';
-        document.getElementById('btn-stop').style.display    = '';
+        document.getElementById('session-status').textContent = 'Oturum aktif — videoyu oynat';
+        document.getElementById('live-badge').style.display   = '';
+        document.getElementById('btn-stop').style.display     = '';
         btn.style.display = 'none';
 
-        startTimer();
+        // Re-attach tracking if video already loaded
+        const vid = document.getElementById('video-el');
+        if (vid) attachVideoTracking(vid);
 
-        // Heartbeat every 30s
+        // Heartbeat
         heartbeatInt = setInterval(async () => {
           try { await API.heartbeat(sessionId); } catch(_) {}
-        }, HEARTBEAT_INTERVAL * 1000);
-
-        // Refresh points pill
-        API.getMe().then(d => {
-          document.getElementById('nav-points').textContent = `⚡ ${d.total_points} puan`;
-        }).catch(() => {});
+        }, HEARTBEAT_SEC * 1000);
 
       } catch (e) {
         showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
-        btn.disabled   = false;
-        btn.textContent = '▶ Seansı Başlat';
+        btn.disabled = false; btn.textContent = '▶ Seansı Başlat';
       }
     });
 
-    // STOP SESSION
+    /* ── STOP SESSION ──────────────────────────────────── */
     document.getElementById('btn-stop').addEventListener('click', async () => {
       const btn = document.getElementById('btn-stop');
-      btn.disabled   = true;
-      btn.textContent = 'Durduruluyor…';
-      stopTimer();
+      btn.disabled = true; btn.textContent = 'Durduruluyor…';
+
+      clearInterval(heartbeatInt);
+      isPlaying = false;
+
+      // Pause the video
+      const vid = document.getElementById('video-el');
+      if (vid && !vid.paused) vid.pause();
 
       try {
-        const d = await API.endSession(sessionId);
-        const mins = (sessionSecs / 60).toFixed(1);
+        const d    = await API.endSession(sessionId);
+        const mins = (realWatchSecs / 60).toFixed(1);
+        const sid  = sessionId;
+        sessionId  = null;
 
         document.getElementById('session-status').textContent =
-          `Oturum tamamlandı — ${mins} dakika izlendi`;
+          `Oturum tamamlandı — ${mins} dk gerçek izleme süresi`;
         document.getElementById('live-badge').style.display = 'none';
         btn.style.display = 'none';
-        document.getElementById('btn-start').style.display  = '';
-        document.getElementById('btn-start').disabled       = false;
-        document.getElementById('btn-start').textContent    = '▶ Yeni Seans';
+        const startBtn = document.getElementById('btn-start');
+        startBtn.style.display = '';
+        startBtn.disabled      = false;
+        startBtn.textContent   = '▶ Yeni Seans';
 
-        sessionId = null;
-
-        // Check rewards
-        if (d.points_earned) {
-          showToast({ title: 'Puan Kazandın! 🎉', msg: d.challenge_name || '', points: d.points_earned, icon: '⚡' });
-          document.getElementById('nav-points').classList.add('pulse');
-          setTimeout(() => document.getElementById('nav-points').classList.remove('pulse'), 600);
+        // REWARDS
+        if (d.points_earned > 0) {
+          flashRewardOnPlayer(d.points_earned);
+          celebratePoints(d.points_earned);
+          showToast({
+            title: '🎯 Görev Tamamlandı!',
+            msg:   d.reward_name || '',
+            points: d.points_earned,
+            icon:  '⚡',
+            duration: 5000,
+          });
+          const pill = document.getElementById('nav-points');
+          if (pill) {
+            pill.textContent = `⚡ ${d.total_points} puan`;
+            pill.classList.add('pulse');
+            setTimeout(() => pill.classList.remove('pulse'), 700);
+          }
         }
-        if (d.new_badge) {
-          showToast({ title: 'Yeni Rozet! 🏅', msg: d.new_badge, icon: '🏅', duration: 5000 });
+
+        if (d.new_badges?.length) {
+          d.new_badges.forEach(badge => {
+            showToast({ title: '🏅 Yeni Rozet!', msg: badge, icon: '🏆', duration: 6000 });
+          });
         }
 
-        // Refresh
-        API.getMe().then(s => {
-          document.getElementById('nav-points').textContent = `⚡ ${s.total_points} puan`;
-        }).catch(() => {});
+        baseWatchMins += d.watch_minutes || 0;
         loadChallenges();
 
       } catch (e) {
         showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
-        btn.disabled   = false;
-        btn.textContent = '⏹ Seansı Bitir';
+        btn.disabled = false; btn.textContent = '⏹ Seansı Bitir';
       }
     });
 
-    // AI
+    /* ── AI ────────────────────────────────────────────── */
     async function askAI(question) {
-      const ansEl     = document.getElementById('ai-answer');
-      const loadEl    = document.getElementById('ai-loading');
-      const inputEl   = document.getElementById('ai-input');
+      const ansEl   = document.getElementById('ai-answer');
+      const loadEl  = document.getElementById('ai-loading');
+      const inputEl = document.getElementById('ai-input');
       ansEl.classList.remove('show');
       loadEl.classList.add('show');
-
       try {
         const d = await API.askAI(question);
         ansEl.textContent = d.answer || d.response || JSON.stringify(d);
@@ -471,20 +550,14 @@
       }
     }
 
-    document.querySelectorAll('.quick-chip').forEach(btn => {
-      btn.addEventListener('click', () => askAI(btn.dataset.q));
-    });
-
+    document.querySelectorAll('.quick-chip').forEach(b =>
+      b.addEventListener('click', () => askAI(b.dataset.q)));
     document.getElementById('ai-ask-btn').addEventListener('click', () => {
       const q = document.getElementById('ai-input').value.trim();
       if (q.length >= 2) askAI(q);
     });
-
     document.getElementById('ai-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const q = e.target.value.trim();
-        if (q.length >= 2) askAI(q);
-      }
+      if (e.key === 'Enter') { const q = e.target.value.trim(); if (q.length >= 2) askAI(q); }
     });
 
     // INIT
