@@ -1,5 +1,0 @@
-event_id,user_id,date,shows_watched,unique_genres,watch_minutes,episodes_completed,watch_party_minutes,ratings
-AE-2,U1,2026-03-09,S3,1,133,3,0,0
-AE-1,U1,2026-03-08,S2,1,142,2,60,2
-AE-3,U2,2026-03-08,S4|S2,2,33,3,60,2
-

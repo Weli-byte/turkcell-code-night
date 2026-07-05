@@ -1,4 +1,0 @@
-challenge_id,challenge_name,challenge_type,condition,reward_points,priority,is_active
-C-01,Daily Watcher,DAILY,watch_minutes_today >= 60,80,5,true
-C-01,Duplicate Daily Watcher,DAILY,watch_minutes_today >= 90,100,4,true
-

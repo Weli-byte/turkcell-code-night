@@ -1,5 +1,0 @@
-challenge_id,challenge_name,challenge_type,condition,reward_points,priority,is_active
-C-02,Episode Finisher,DAILY,episodes_completed_today >= 2,140,3,true
-C-01,Daily Watcher,DAILY,watch_minutes_today >= 60,80,5,true
-C-03,Weekly Binge,WEEKLY,watch_minutes_7d >= 600,380,6,false
-
