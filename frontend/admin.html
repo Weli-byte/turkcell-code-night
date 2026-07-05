@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>DGE &mdash; Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-logo" href="/catalog.html">DGE</a>
+  <div class="nav-links">
+    <a href="/catalog.html">Katalog</a>
+    <a href="/admin.html" class="active">Admin</a>
+  </div>
+  <div class="flex gap-8">
+    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
+    <button class="btn-logout" onclick="logout()">Cikis</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container" style="max-width:800px">
+
+    <h1 class="section-title" style="font-size:28px;margin-bottom:24px;margin-top:16px">
+      Admin Paneli
+    </h1>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="section-title" style="font-size:16px;margin-bottom:8px">
+        Pipeline Calistir
+      </div>
+      <p class="text-muted" style="font-size:13px;margin-bottom:16px">
+        Tum kullanicilarin aktivitelerini degerlendirir,
+        puanlari ledgera yazar, rozetleri atar, leaderboard'u gunceller.
+      </p>
+      <button class="btn btn-primary" id="run-btn" onclick="runPipeline()">
+        &#9654; Pipeline Calistir
+      </button>
+      <div id="pipeline-result" style="display:none;margin-top:20px">
+        <div class="ai-evidence" id="pipeline-output"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="font-size:16px;margin-bottom:16px">
+        Sistem Durumu
+      </div>
+      <div id="sys-stats">
+        <div class="spinner" style="margin:20px auto"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.requireAuth();
+Auth.requireAdmin();
+function logout() { Auth.clear(); window.location.href = "/index.html"; }
+
+async function loadNav() {
+  try {
+    const me = await API.getMe();
+    document.getElementById("nav-pts").textContent = me.total_points;
+  } catch(e) {}
+}
+
+async function loadStats() {
+  try {
+    const [board, me] = await Promise.all([
+      API.getLeaderboard(1000),
+      API.getMe(),
+    ]);
+    document.getElementById("sys-stats").innerHTML = `
+      <div class="grid-3">
+        <div style="text-align:center">
+          <div class="stat-num">${board.length}</div>
+          <div class="stat-label">Toplam Kullanici</div>
+        </div>
+        <div style="text-align:center">
+          <div class="stat-num">${board.reduce((s,e)=>s+e.total_points,0)}</div>
+          <div class="stat-label">Dagitilan Puan</div>
+        </div>
+        <div style="text-align:center">
+          <div class="stat-num">
+            ${board.reduce((s,e)=>s+e.badges.length,0)}
+          </div>
+          <div class="stat-label">Atanan Rozet</div>
+        </div>
+      </div>
+    `;
+  } catch(e) { console.error(e); }
+}
+
+async function runPipeline() {
+  const btn = document.getElementById("run-btn");
+  btn.disabled = true;
+  btn.textContent = "Calisiyor...";
+  try {
+    const res = await API.runPipeline();
+    document.getElementById("pipeline-output").textContent =
+      JSON.stringify(res, null, 2);
+    document.getElementById("pipeline-result").style.display = "";
+    loadStats();
+  } catch(e) {
+    document.getElementById("pipeline-output").textContent =
+      "Hata: " + e.message;
+    document.getElementById("pipeline-result").style.display = "";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "▶ Pipeline Calistir";
+  }
+}
+
+loadNav();
+loadStats();
+</script>
+</body>
+</html>

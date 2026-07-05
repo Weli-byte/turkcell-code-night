@@ -1,0 +1,36 @@
+# Python caches
+.coverage
+.coverage.*
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local environment
+.env
+.env.*
+
+# Temporary outputs
+output_temp/
+
+# Local SQLite databases (backend service)
+*.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Local extracted archive copy
+turkcell-code-night-main/

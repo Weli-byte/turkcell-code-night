@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DGE — Giriş</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="form-wrap">
+  <div class="form-box">
+    <div class="form-title">DGE</div>
+    <p class="text-2" style="margin-bottom:28px;font-size:14px">
+      Deterministik Oyunlastirma Motoru
+    </p>
+
+    <div class="flex gap-8" style="margin-bottom:24px">
+      <button class="btn btn-primary btn-sm" id="tab-login"
+              onclick="showTab('login')">Giris Yap</button>
+      <button class="btn btn-ghost btn-sm" id="tab-register"
+              onclick="showTab('register')">Kayit Ol</button>
+    </div>
+
+    <div id="form-error" class="form-error"></div>
+
+    <div id="panel-login">
+      <input class="form-input" id="login-user"
+             type="text" placeholder="Kullanici adi">
+      <input class="form-input" id="login-pass"
+             type="password" placeholder="Sifre">
+      <button class="btn btn-primary" style="width:100%"
+              onclick="doLogin()">Giris Yap &rarr;</button>
+    </div>
+
+    <div id="panel-register" style="display:none">
+      <input class="form-input" id="reg-user"
+             type="text" placeholder="Kullanici adi (min 3 karakter)">
+      <input class="form-input" id="reg-pass"
+             type="password" placeholder="Sifre (min 4 karakter)">
+      <button class="btn btn-primary" style="width:100%"
+              onclick="doRegister()">Kayit Ol &rarr;</button>
+    </div>
+
+    <p class="text-muted mt-16" style="font-size:12px">
+      Demo: admin / admin123
+    </p>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  if (Auth.isLoggedIn()) window.location.href = "/catalog.html";
+
+  function showTab(tab) {
+    const isLogin = tab === "login";
+    document.getElementById("panel-login").style.display    = isLogin ? "" : "none";
+    document.getElementById("panel-register").style.display = isLogin ? "none" : "";
+    document.getElementById("tab-login").className    = isLogin ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm";
+    document.getElementById("tab-register").className = isLogin ? "btn btn-ghost btn-sm" : "btn btn-primary btn-sm";
+    document.getElementById("form-error").style.display = "none";
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("form-error");
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+
+  async function doLogin() {
+    const u = document.getElementById("login-user").value.trim();
+    const p = document.getElementById("login-pass").value;
+    if (!u || !p) return showError("Tum alanlari doldur");
+    try {
+      const res = await API.login(u, p);
+      Auth.save(res.token, res.username, res.user_id, res.role);
+      window.location.href = "/catalog.html";
+    } catch(e) {
+      showError(e.message);
+    }
+  }
+
+  async function doRegister() {
+    const u = document.getElementById("reg-user").value.trim();
+    const p = document.getElementById("reg-pass").value;
+    if (!u || !p) return showError("Tum alanlari doldur");
+    try {
+      const res = await API.register(u, p);
+      Auth.save(res.token, res.username, res.user_id, res.role);
+      window.location.href = "/catalog.html";
+    } catch(e) {
+      showError(e.message);
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const isLogin = document.getElementById("panel-login").style.display !== "none";
+      isLogin ? doLogin() : doRegister();
+    }
+  });
+</script>
+</body>
+</html>

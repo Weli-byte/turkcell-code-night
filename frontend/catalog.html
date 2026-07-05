@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DGE &mdash; Katalog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-logo" href="/catalog.html">DGE</a>
+  <div class="nav-links">
+    <a href="/catalog.html" class="active">Katalog</a>
+    <a href="/panel.html">Panelim</a>
+    <a href="/leaderboard.html">Liderlik</a>
+    <span id="nav-admin-link" style="display:none">
+      <a href="/admin.html">Admin</a>
+    </span>
+  </div>
+  <div class="flex gap-8" style="align-items:center">
+    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
+    <span class="nav-user" id="nav-user">&ndash;</span>
+    <button class="btn-logout" onclick="logout()">Cikis</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+
+    <div class="grid-2 mt-16" style="margin-bottom:32px">
+
+      <div class="card">
+        <div style="font-size:22px;font-weight:700;margin-bottom:8px">
+          Video Izle,<br>
+          <span style="background:var(--accent-grad);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            background-clip:text">Odul Kazan</span>
+        </div>
+        <p class="text-2" style="font-size:14px;margin-bottom:16px"
+           id="challenge-summary">Yukleniyor...</p>
+        <div id="my-badges-row" class="flex gap-8" style="flex-wrap:wrap"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="font-size:16px;margin-bottom:12px">
+          Bugunku Challengelar
+        </div>
+        <div id="challenge-list-mini">
+          <div class="spinner" style="margin:20px auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="video-sections">
+      <div class="spinner" style="margin:40px auto"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.requireAuth();
+
+async function loadNavbar() {
+  try {
+    const me = await API.getMe();
+    document.getElementById("nav-pts").textContent  = me.total_points;
+    document.getElementById("nav-user").textContent = me.username;
+    if (me.role === "admin") {
+      document.getElementById("nav-admin-link").style.display = "";
+    }
+    const badgeRow = document.getElementById("my-badges-row");
+    if (me.badges.length === 0) {
+      badgeRow.innerHTML = '<span class="badge-chip badge-none">Rozet yok &mdash; 500 puana Bronze bekliyor</span>';
+    } else {
+      badgeRow.innerHTML = me.badges.map(b =>
+        `<span class="badge-chip badge-${b}">${b}</span>`
+      ).join("");
+    }
+  } catch(e) { console.error("Navbar:", e); }
+}
+
+async function loadChallenges() {
+  try {
+    const chs = await API.getChallenges();
+    const completed = chs.filter(c => c.passed || c.rewarded_today).length;
+    document.getElementById("challenge-summary").textContent =
+      `Bugun ${chs.length} challenge aktif — ${completed} tamamlandi.`;
+
+    const list = document.getElementById("challenge-list-mini");
+    if (chs.length === 0) {
+      list.innerHTML = '<p class="text-muted">Aktif challenge yok.</p>';
+      return;
+    }
+    list.innerHTML = chs.slice(0,4).map(ch => `
+      <div class="challenge-card ${ch.passed||ch.rewarded_today?'passed':''}"
+           style="margin-bottom:8px">
+        <div class="flex-between">
+          <span class="challenge-name" style="font-size:14px">${ch.name}</span>
+          <span class="challenge-pts">+${ch.reward_points}p</span>
+        </div>
+        <div class="progress-wrap mt-8">
+          <div class="progress-fill" style="width:${ch.percentage}%"></div>
+        </div>
+        <div class="flex-between mt-8">
+          <span class="text-muted" style="font-size:11px">
+            ${ch.current_value.toFixed(0)} / ${ch.target_value}
+          </span>
+          <span style="font-size:11px;color:${ch.rewarded_today?'var(--accent-1)':'var(--text-muted)'}">
+            ${ch.rewarded_today ? '&#10003; Odullendi' : ch.percentage + '%'}
+          </span>
+        </div>
+      </div>
+    `).join("");
+    if (chs.length > 4) {
+      list.innerHTML += `<p class="text-muted mt-8" style="font-size:13px">
+        +${chs.length-4} daha &rarr;
+        <a href="/panel.html" style="color:var(--accent-1)">panelde gor</a></p>`;
+    }
+  } catch(e) { console.error("Challenges:", e); }
+}
+
+async function loadVideos() {
+  try {
+    const videos = await API.getCatalog();
+    const sections = document.getElementById("video-sections");
+
+    const groups = {};
+    videos.forEach(v => {
+      if (!groups[v.content_type]) groups[v.content_type] = [];
+      groups[v.content_type].push(v);
+    });
+
+    const typeLabels = {
+      film:"Filmler", belgesel:"Belgeseller",
+      kisa:"Kisa Filmler", dizi:"Diziler"
+    };
+
+    sections.innerHTML = Object.entries(groups).map(([type, vids]) => `
+      <div style="margin-bottom:40px">
+        <h2 class="section-title">${typeLabels[type] || type}</h2>
+        <div class="video-grid">
+          ${vids.map(v => `
+            <div class="video-card" onclick="goWatch('${v.id}')">
+              <div class="video-thumb"
+                   style="background:${v.thumbnail_color}">
+                <div class="video-play-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24"
+                       fill="white"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+              <div class="video-info">
+                <div class="video-title">${v.title}</div>
+                <div class="video-meta">
+                  <span class="video-tag">${v.genre}</span>
+                  ${v.duration_minutes} dk
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+  } catch(e) {
+    document.getElementById("video-sections").innerHTML =
+      '<p class="text-muted">Videolar yuklenemedi.</p>';
+  }
+}
+
+function goWatch(id) {
+  window.location.href = `/watch.html?id=${id}`;
+}
+
+function logout() {
+  Auth.clear();
+  window.location.href = "/index.html";
+}
+
+loadNavbar();
+loadChallenges();
+loadVideos();
+</script>
+</body>
+</html>

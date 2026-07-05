@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DGE &mdash; Liderlik</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-logo" href="/catalog.html">DGE</a>
+  <div class="nav-links">
+    <a href="/catalog.html">Katalog</a>
+    <a href="/panel.html">Panelim</a>
+    <a href="/leaderboard.html" class="active">Liderlik</a>
+  </div>
+  <div class="flex gap-8">
+    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
+    <button class="btn-logout" onclick="logout()">Cikis</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+
+    <div class="flex-between mt-16" style="margin-bottom:24px">
+      <div>
+        <h1 class="section-title" style="font-size:28px;margin-bottom:4px">
+          Liderlik Tablosu
+        </h1>
+        <span style="display:inline-flex;align-items:center;gap:6px;
+          font-size:13px;color:var(--accent-1)">
+          <span style="width:8px;height:8px;border-radius:50%;
+            background:var(--accent-1);display:inline-block"></span>
+          CANLI
+        </span>
+      </div>
+      <div class="text-muted" style="font-size:12px" id="lb-meta">&ndash;</div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="lb-body">
+        <div class="spinner" style="margin:40px auto"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.requireAuth();
+function logout() { Auth.clear(); window.location.href = "/index.html"; }
+
+async function loadLeaderboard() {
+  try {
+    const [board, me] = await Promise.all([
+      API.getLeaderboard(),
+      API.getMe(),
+    ]);
+    document.getElementById("nav-pts").textContent = me.total_points;
+    document.getElementById("lb-meta").textContent =
+      `${board.length} kullanici · Deterministik siralama`;
+
+    const rankClass = r => r===1?"top1":r===2?"top2":r===3?"top3":"";
+    const medals    = ["🥇","🥈","🥉"];
+
+    document.getElementById("lb-body").innerHTML = `
+      <table class="lb-table" style="width:100%">
+        <thead><tr>
+          <th style="width:60px">#</th>
+          <th>Kullanici</th>
+          <th>Rozetler</th>
+          <th style="text-align:right">Puan</th>
+        </tr></thead>
+        <tbody>
+          ${board.map(e => `
+            <tr class="${e.is_current_user?'me':''}">
+              <td>
+                <span class="lb-rank ${rankClass(e.rank)}">
+                  ${e.rank<=3 ? medals[e.rank-1] : "#"+e.rank}
+                </span>
+              </td>
+              <td>
+                <span style="font-weight:${e.is_current_user?'600':'400'}">
+                  ${e.username}
+                </span>
+                ${e.is_current_user
+                  ? '<span class="badge-chip badge-none" style="margin-left:8px;font-size:10px">Sen</span>'
+                  : ''}
+              </td>
+              <td>
+                ${e.badges.map(b =>
+                  `<span class="badge-chip badge-${b}" style="font-size:10px">${b}</span>`
+                ).join(" ") || '<span class="text-muted">&ndash;</span>'}
+              </td>
+              <td style="text-align:right">
+                <span class="lb-pts">${e.total_points}</span>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch(e) { console.error(e); }
+}
+
+loadLeaderboard();
+setInterval(loadLeaderboard, 30000);
+</script>
+</body>
+</html>

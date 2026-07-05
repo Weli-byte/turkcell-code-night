@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DGE &mdash; Panelim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-logo" href="/catalog.html">DGE</a>
+  <div class="nav-links">
+    <a href="/catalog.html">Katalog</a>
+    <a href="/panel.html" class="active">Panelim</a>
+    <a href="/leaderboard.html">Liderlik</a>
+  </div>
+  <div class="flex gap-8">
+    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
+    <span class="nav-user" id="nav-user">&ndash;</span>
+    <button class="btn-logout" onclick="logout()">Cikis</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+
+    <div class="grid-2 mt-16" style="margin-bottom:24px">
+
+      <div class="card" id="user-card">
+        <div class="spinner" style="margin:20px auto"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="font-size:16px;margin-bottom:16px">
+          Bugunun Challengelari
+        </div>
+        <p class="text-muted" style="font-size:12px;margin-bottom:16px">
+          Ilerleme canli hesaplanir; esigi astiktan sonra odul duser.
+        </p>
+        <div id="challenge-list">
+          <div class="spinner" style="margin:20px auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="section-title" style="font-size:16px;margin-bottom:16px">
+        Rozet Ilerlemesi
+      </div>
+      <div id="badge-progress">
+        <div class="spinner" style="margin:20px auto"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="section-title" style="font-size:16px;margin-bottom:4px">
+        AI Asistan
+      </div>
+      <p class="text-muted" style="font-size:13px;margin-bottom:16px">
+        Puanin, siran ve rozetlerin hakkinda soru sor —
+        cevap deterministik motordan gelir, kanitiyla birlikte.
+      </p>
+
+      <div id="ai-chips" style="margin-bottom:12px">
+        <span class="ai-chip" onclick="askAI('Kac puanim var?')">
+          Kac puanim var?</span>
+        <span class="ai-chip" onclick="askAI('Liderlik tablosunda neden bu siraday im?')">
+          Liderlik tablosunda neden bu siraday im?</span>
+        <span class="ai-chip" onclick="askAI('Gold rozetine ulasmak icin ne yapmaliyim?')">
+          Gold rozetine nasil ulasabilirim?</span>
+        <span class="ai-chip" onclick="askAI('Neden bu odulu kazandim?')">
+          Neden bu odulu kazandim?</span>
+        <span class="ai-chip" onclick="askAI('Ne yapmaliyim puan artirmak icin?')">
+          Ne yapmaliyim?</span>
+      </div>
+
+      <div class="ai-input-wrap">
+        <input class="ai-input" id="ai-input"
+               placeholder="Sorunu yaz... (ornek: Kac puanim var?)"
+               onkeydown="if(event.key==='Enter') askAIFromInput()">
+        <button class="btn btn-primary btn-sm"
+                onclick="askAIFromInput()">Sor &rarr;</button>
+      </div>
+
+      <div id="ai-result" style="display:none">
+        <div class="ai-answer" id="ai-answer"></div>
+        <details style="margin-top:8px">
+          <summary class="text-muted" style="cursor:pointer;font-size:12px">
+            Kanit verileri &rarr;
+          </summary>
+          <div class="ai-evidence" id="ai-evidence"></div>
+        </details>
+        <div id="ai-llm-badge" style="display:none;margin-top:8px">
+          <span class="badge-chip badge-GOLD" style="font-size:11px">
+            LLM ile zenginlestirildi
+          </span>
+        </div>
+      </div>
+      <div id="ai-loading" style="display:none">
+        <div class="spinner" style="margin:16px auto"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="font-size:16px;margin-bottom:16px">
+        Puan Gecmisi
+        <span class="text-muted" style="font-size:12px;font-weight:400;margin-left:8px">
+          (append-only ledger)
+        </span>
+      </div>
+      <div id="history-table">
+        <div class="spinner" style="margin:20px auto"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.requireAuth();
+function logout() { Auth.clear(); window.location.href = "/index.html"; }
+
+async function loadUserCard() {
+  try {
+    const me = await API.getMe();
+    document.getElementById("nav-pts").textContent  = me.total_points;
+    document.getElementById("nav-user").textContent = me.username;
+
+    const currentBadge = me.badges.length > 0
+      ? me.badges[me.badges.length-1] : null;
+
+    document.getElementById("user-card").innerHTML = `
+      <div style="text-align:center;padding:8px 0">
+        <div style="width:64px;height:64px;border-radius:50%;
+          background:rgba(0,255,135,0.1);border:2px solid var(--border-acc);
+          display:flex;align-items:center;justify-content:center;
+          font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
+          color:var(--accent-1);margin:0 auto 12px">
+          ${me.username[0].toUpperCase()}
+        </div>
+        <div style="font-size:18px;font-weight:600">${me.username}</div>
+        <div class="stat-num mt-8">${me.total_points}</div>
+        <div class="stat-label">toplam puan</div>
+        <div class="flex-between mt-16" style="padding:0 8px">
+          <div style="text-align:center">
+            <div class="mono text-accent" style="font-size:18px">${me.rank}.</div>
+            <div class="stat-label">sira</div>
+          </div>
+          <div style="text-align:center">
+            <div class="mono text-accent" style="font-size:18px">${me.streak_days}</div>
+            <div class="stat-label">gunluk seri</div>
+          </div>
+          <div style="text-align:center">
+            <div class="mono text-accent" style="font-size:18px">
+              ${me.watch_minutes_today.toFixed(0)}
+            </div>
+            <div class="stat-label">dakika (bugun)</div>
+          </div>
+        </div>
+        <div class="mt-16">
+          ${currentBadge
+            ? `<span class="badge-chip badge-${currentBadge}">${currentBadge}</span>`
+            : `<p class="text-muted" style="font-size:13px">
+                Henuz rozet yok &mdash; 500 puanda Bronze seni bekliyor.</p>`}
+        </div>
+      </div>
+    `;
+  } catch(e) { console.error(e); }
+}
+
+async function loadChallenges() {
+  try {
+    const chs = await API.getChallenges();
+    const el  = document.getElementById("challenge-list");
+    if (chs.length === 0) {
+      el.innerHTML = '<p class="text-muted">Aktif challenge yok.</p>';
+      return;
+    }
+    el.innerHTML = chs.map(ch => `
+      <div class="challenge-card ${ch.passed||ch.rewarded_today?'passed':''}"
+           style="margin-bottom:10px">
+        <div class="flex-between">
+          <span class="challenge-name">${ch.name}</span>
+          <span class="challenge-pts">+${ch.reward_points}p</span>
+        </div>
+        <div class="challenge-condition">${ch.condition}</div>
+        <div class="progress-wrap">
+          <div class="progress-fill" style="width:${ch.percentage}%"></div>
+        </div>
+        <div class="flex-between mt-8">
+          <span class="text-muted" style="font-size:12px">
+            ${ch.current_value.toFixed(0)} / ${ch.target_value}
+          </span>
+          <span style="font-size:12px;color:${
+            ch.rewarded_today ? 'var(--accent-1)' : 'var(--text-muted)'
+          }">
+            ${ch.rewarded_today ? '&#10003; Odullendi' : '%' + ch.percentage}
+          </span>
+        </div>
+      </div>
+    `).join("");
+  } catch(e) { console.error(e); }
+}
+
+async function loadBadgeProgress() {
+  try {
+    const p  = await API.getBadgeProgress();
+    const el = document.getElementById("badge-progress");
+    el.innerHTML = `
+      <div style="margin-bottom:20px">
+        <div class="flex-between" style="margin-bottom:6px">
+          <span class="text-2">Toplam Puan</span>
+          <span class="mono text-accent" style="font-size:18px">${p.current_points}</span>
+        </div>
+        ${p.next_badge ? `
+          <div class="flex-between" style="margin-bottom:6px">
+            <span class="text-2">Sonraki: ${p.next_badge}</span>
+            <span class="text-muted">${p.points_needed} puan daha</span>
+          </div>
+          <div class="progress-wrap" style="height:8px">
+            <div class="progress-fill" style="width:${p.percentage}%"></div>
+          </div>
+        ` : '<p class="text-accent">Maksimum rozet: PLATINUM!</p>'}
+      </div>
+      <div class="grid-2" style="gap:10px">
+        ${p.tiers.map(t => `
+          <div class="card card-sm" style="
+            border-color:${t.earned ? 'var(--border-acc)' : 'var(--border)'};
+            opacity:${t.earned ? 1 : 0.6}">
+            <div class="flex-between" style="margin-bottom:8px">
+              <span class="badge-chip badge-${t.tier}">${t.tier}</span>
+              <span class="mono" style="font-size:12px;color:var(--text-muted)">
+                ${t.threshold.toLocaleString()} puan
+              </span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-fill" style="width:${t.percentage}%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">
+              ${t.earned ? '&#10003; Kazanildi' : '%' + t.percentage}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  } catch(e) { console.error(e); }
+}
+
+async function loadHistory() {
+  try {
+    const rows = await API.getHistory();
+    const el   = document.getElementById("history-table");
+    if (rows.length === 0) {
+      el.innerHTML = '<p class="text-muted">Henuz puan hareketi yok.</p>';
+      return;
+    }
+    el.innerHTML = `
+      <table class="lb-table">
+        <thead><tr>
+          <th>Tarih</th><th>Sebep</th><th>Puan</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td class="mono text-muted" style="font-size:12px">${r.activity_date}</td>
+              <td class="text-2" style="font-size:13px">${r.reason}</td>
+              <td class="mono text-accent">+${r.points}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch(e) { console.error(e); }
+}
+
+async function askAI(q) {
+  document.getElementById("ai-input").value = q;
+  document.getElementById("ai-result").style.display  = "none";
+  document.getElementById("ai-loading").style.display = "";
+  try {
+    const res = await API.askAI(q);
+    document.getElementById("ai-answer").textContent  = res.answer;
+    document.getElementById("ai-evidence").textContent =
+      JSON.stringify(res.evidence, null, 2);
+    document.getElementById("ai-llm-badge").style.display =
+      res.llm_enhanced ? "" : "none";
+    document.getElementById("ai-result").style.display  = "";
+    document.getElementById("ai-loading").style.display = "none";
+  } catch(e) {
+    document.getElementById("ai-loading").style.display = "none";
+    document.getElementById("ai-answer").textContent = "Hata: " + e.message;
+    document.getElementById("ai-result").style.display = "";
+  }
+}
+
+function askAIFromInput() {
+  const q = document.getElementById("ai-input").value.trim();
+  if (q) askAI(q);
+}
+
+loadUserCard();
+loadChallenges();
+loadBadgeProgress();
+loadHistory();
+</script>
+</body>
+</html>

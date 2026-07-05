@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DGE &mdash; Izle</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .player-wrap {
+      background:#000; border-radius:var(--radius);
+      overflow:hidden; width:100%;
+      border:1px solid var(--border);
+    }
+    video {
+      width:100%; max-height:500px;
+      display:block; background:#000;
+    }
+    .reward-popup {
+      position:fixed; top:80px; right:24px;
+      background:var(--bg-card-2);
+      border:1px solid var(--border-acc);
+      border-radius:var(--radius); padding:20px 24px;
+      min-width:280px; z-index:200;
+      backdrop-filter:blur(12px);
+      animation: slideUp .4s ease;
+      display:none;
+    }
+    .reward-popup.show { display:block; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-logo" href="/catalog.html">DGE</a>
+  <div class="nav-links">
+    <a href="/catalog.html">Katalog</a>
+    <a href="/panel.html">Panelim</a>
+    <a href="/leaderboard.html">Liderlik</a>
+  </div>
+  <div class="flex gap-8">
+    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
+    <button class="btn-logout" onclick="logout()">Cikis</button>
+  </div>
+</nav>
+
+<div class="reward-popup" id="reward-popup">
+  <div style="font-size:20px;margin-bottom:8px">&#127881;</div>
+  <div style="font-weight:600;margin-bottom:4px" id="popup-title">
+    Odul Kazandin!
+  </div>
+  <div id="popup-body" class="text-2" style="font-size:13px"></div>
+</div>
+
+<div class="page">
+  <div class="container" style="max-width:900px">
+
+    <div id="loading" class="spinner" style="margin:60px auto"></div>
+
+    <div id="player-section" style="display:none">
+      <div class="flex-between" style="margin-bottom:16px">
+        <div>
+          <h1 id="video-title" style="font-size:24px;font-weight:700"></h1>
+          <p id="video-meta" class="text-muted" style="font-size:13px;margin-top:4px"></p>
+        </div>
+        <a href="/catalog.html" class="btn btn-ghost btn-sm">&larr; Katalog</a>
+      </div>
+
+      <div class="player-wrap">
+        <video id="player" controls preload="metadata">
+          Tarayicin video oynatmayi desteklemiyor.
+        </video>
+      </div>
+
+      <div class="grid-2 mt-24" style="gap:16px">
+        <div class="card">
+          <div style="font-size:13px;color:var(--text-muted);
+                      margin-bottom:12px;font-weight:500">
+            IZLEME DURUMU
+          </div>
+          <div class="flex-between">
+            <span class="text-2">Session</span>
+            <span class="mono text-accent" id="status-session">Baslamadi</span>
+          </div>
+          <div class="flex-between mt-8">
+            <span class="text-2">Sure</span>
+            <span class="mono" id="status-duration">&ndash;</span>
+          </div>
+          <div class="flex-between mt-8">
+            <span class="text-2">Durum</span>
+            <span id="status-state" class="text-muted">Bekliyor</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:13px;color:var(--text-muted);
+                      margin-bottom:12px;font-weight:500">
+            PUANIM
+          </div>
+          <div class="stat-num" id="watch-pts">&ndash;</div>
+          <div class="stat-label">toplam puan</div>
+          <div class="mt-16 text-2" style="font-size:13px" id="watch-rank">
+            Sira: &ndash;
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+Auth.requireAuth();
+
+const params    = new URLSearchParams(location.search);
+const contentId = params.get("id");
+if (!contentId) window.location.href = "/catalog.html";
+
+let sessionId    = null;
+let heartbeatTmr = null;
+let sessionEnded = false;
+
+function logout() { Auth.clear(); window.location.href = "/index.html"; }
+
+async function loadNav() {
+  try {
+    const me = await API.getMe();
+    document.getElementById("nav-pts").textContent   = me.total_points;
+    document.getElementById("watch-pts").textContent = me.total_points;
+    document.getElementById("watch-rank").textContent =
+      `Sira: ${me.rank}. / ${me.total_users} kullanici`;
+  } catch(e) {}
+}
+
+async function loadContent() {
+  try {
+    const v = await API.getContent(contentId);
+    document.title = `DGE — ${v.title}`;
+    document.getElementById("video-title").textContent = v.title;
+    document.getElementById("video-meta").textContent =
+      `${v.genre} · ${v.duration_minutes} dakika · ${v.content_type}`;
+
+    const player = document.getElementById("player");
+    player.src = v.stream_url;
+
+    document.getElementById("loading").style.display        = "none";
+    document.getElementById("player-section").style.display = "";
+
+    setupPlayer(player, v);
+  } catch(e) {
+    document.getElementById("loading").innerHTML =
+      '<p class="text-muted">Icerik yuklenemedi.</p>';
+  }
+}
+
+function setupPlayer(player, content) {
+  player.addEventListener("play", async () => {
+    if (sessionId) return;
+    try {
+      const res = await API.startSession(contentId);
+      sessionId = res.session_id;
+      document.getElementById("status-session").textContent =
+        sessionId.substring(0,16) + "...";
+      document.getElementById("status-state").textContent = "Izleniyor ▶";
+      document.getElementById("status-state").style.color = "var(--accent-1)";
+
+      heartbeatTmr = setInterval(async () => {
+        if (sessionId && !sessionEnded) {
+          try { await API.heartbeat(sessionId); } catch(e) {}
+        }
+      }, 30000);
+    } catch(e) { console.error("Session start:", e); }
+  });
+
+  async function endWatch() {
+    if (!sessionId || sessionEnded) return;
+    sessionEnded = true;
+    clearInterval(heartbeatTmr);
+    document.getElementById("status-state").textContent = "Isleniyor...";
+    try {
+      const res = await API.endSession(sessionId);
+      document.getElementById("status-duration").textContent =
+        res.watch_minutes + " dk";
+      document.getElementById("status-state").textContent =
+        res.completed ? "✓ Tamamlandi" : "Kismen izlendi";
+      document.getElementById("status-state").style.color =
+        res.completed ? "var(--accent-1)" : "var(--text-2)";
+
+      setTimeout(async () => {
+        try {
+          const me = await API.getMe();
+          document.getElementById("nav-pts").textContent   = me.total_points;
+          document.getElementById("watch-pts").textContent = me.total_points;
+          document.getElementById("watch-rank").textContent =
+            `Sira: ${me.rank}. / ${me.total_users} kullanici`;
+        } catch(e) {}
+      }, 2000);
+
+      showRewardPopup(res);
+    } catch(e) {
+      console.error("Session end:", e);
+    }
+  }
+
+  player.addEventListener("ended", endWatch);
+  player.addEventListener("pause", endWatch);
+  window.addEventListener("beforeunload", endWatch);
+}
+
+function showRewardPopup(res) {
+  const popup = document.getElementById("reward-popup");
+  document.getElementById("popup-title").textContent = "Izleme Kaydedildi!";
+  document.getElementById("popup-body").innerHTML =
+    `<strong>${res.watch_minutes} dakika</strong> izledin.<br>
+     ${res.completed ? "✓ Tamamlandi" : "Kismen izlendi"}<br>
+     <span style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block">
+       Puanlar hesaplaniyor...</span>`;
+  popup.classList.add("show");
+  setTimeout(() => popup.classList.remove("show"), 5000);
+}
+
+loadNav();
+loadContent();
+</script>
+</body>
+</html>
