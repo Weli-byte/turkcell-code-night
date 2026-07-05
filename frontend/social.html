@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sosyal — Gamification Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* FEED */
+    .feed-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .feed-item:last-child { border-bottom: none; }
+
+    .feed-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; font-family: 'Syne', sans-serif;
+    }
+    .feed-avatar.watch  { background: rgba(0,212,255,0.12); color: var(--accent-2); border: 1px solid rgba(0,212,255,0.2); }
+    .feed-avatar.badge  { background: rgba(0,255,135,0.12); color: var(--accent-1); border: 1px solid rgba(0,255,135,0.2); }
+    .feed-avatar.rating { background: rgba(255,193,7,0.12);  color: #FFC107;         border: 1px solid rgba(255,193,7,0.2); }
+
+    .feed-body { flex: 1; }
+    .feed-text { font-size: 14px; color: var(--text-1); line-height: 1.5; }
+    .feed-text strong { color: var(--accent-1); }
+    .feed-text em { color: var(--text-2); font-style: normal; }
+    .feed-time { font-size: 11px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+    .feed-badge-chip {
+      display: inline-block; margin-left: 6px;
+      background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.2);
+      border-radius: 100px; padding: 1px 10px;
+      font-size: 11px; color: var(--accent-1);
+    }
+
+    /* TRENDING */
+    .trending-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .trending-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+      text-decoration: none;
+    }
+    .trending-card:hover {
+      border-color: var(--border-acc);
+      transform: translateY(-2px);
+    }
+    .trending-thumb {
+      width: 100%; height: 90px;
+      border-radius: 8px; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .trending-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .trending-title {
+      font-size: 13px; font-weight: 600; color: var(--text-1);
+      margin-bottom: 6px; line-height: 1.35;
+    }
+    .trending-meta {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .trending-stars { color: #FFC107; }
+    .trending-watches { color: var(--accent-2); }
+
+    /* TABS */
+    .social-tabs {
+      display: flex; gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+    .social-tab {
+      padding: 7px 18px; border-radius: 6px;
+      font-size: 13px; font-weight: 500;
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .social-tab.active {
+      background: rgba(0,255,135,0.1);
+      color: var(--accent-1);
+    }
+
+    /* COMMENT SECTION */
+    .comment-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(108,0,255,0.15); border: 1px solid rgba(108,0,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #a78bfa;
+      flex-shrink: 0;
+    }
+    .comment-body { flex: 1; }
+    .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+    .comment-user { font-size: 12px; font-weight: 600; color: var(--text-1); }
+    .comment-time { font-size: 10px; color: var(--text-muted); }
+    .comment-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+    .two-col-social {
+      display: grid; grid-template-columns: 1fr 360px; gap: 24px;
+    }
+    @media (max-width: 900px) { .two-col-social { grid-template-columns: 1fr; } }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+</head>
+<body>
+  <div id="scroll-progress"></div>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-halo"></div>
+
+  <nav class="navbar">
+    <a href="catalog.html" class="nav-logo">GE Engine</a>
+    <ul class="nav-links">
+      <li><a href="catalog.html">Katalog</a></li>
+      <li><a href="panel.html">Panelim</a></li>
+      <li><a href="leaderboard.html">Sıralama</a></li>
+      <li><a href="profile.html">Profil</a></li>
+      <li><a href="social.html" class="active-link">Sosyal</a></li>
+      <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="points-pill" id="nav-points">⚡ — puan</div>
+      <span class="nav-username" id="nav-username"></span>
+      <a class="nav-logout" id="nav-logout" href="#">Çıkış</a>
+    </div>
+  </nav>
+
+  <div class="page-content">
+    <div class="container">
+
+      <div class="catalog-hero will-animate" style="padding:40px 0 24px">
+        <h1>Sosyal <span class="text-gradient">Akış</span></h1>
+        <p>Topluluk aktivitesi, trend içerikler ve yorumlar.</p>
+      </div>
+
+      <div class="two-col-social">
+
+        <!-- MAIN: Feed + Trending tabs -->
+        <div>
+          <div class="social-tabs will-animate">
+            <button class="social-tab active" id="tab-feed" data-tab="feed">📡 Aktivite Akışı</button>
+            <button class="social-tab" id="tab-trending" data-tab="trending">🔥 Trend</button>
+          </div>
+
+          <!-- FEED -->
+          <div id="panel-feed">
+            <div class="card will-animate">
+              <div class="section-header">
+                <div class="section-title">📡 Son Aktiviteler</div>
+                <button class="btn-ghost" id="btn-refresh-feed" style="font-size:12px">↻ Yenile</button>
+              </div>
+              <div id="feed-list"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- TRENDING -->
+          <div id="panel-trending" style="display:none">
+            <div class="card will-animate">
+              <div class="section-header">
+                <div class="section-title">🔥 Bu Hafta Trend</div>
+                <span class="badge-chip" id="week-label" style="font-size:11px"></span>
+              </div>
+              <div class="trending-grid" id="trending-grid"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR: Top Raters + Comment Explorer -->
+        <aside>
+          <!-- TOP RATERS -->
+          <div class="card will-animate" style="margin-bottom:20px">
+            <div class="section-header">
+              <div class="section-title">⭐ En Aktif Oylayanlar</div>
+            </div>
+            <div id="top-raters"><div class="spinner"></div></div>
+          </div>
+
+          <!-- COMMENT EXPLORER -->
+          <div class="card will-animate">
+            <div class="section-header">
+              <div class="section-title">💬 Video Yorumları</div>
+            </div>
+            <div style="margin-bottom:12px">
+              <select class="form-input" id="comment-select" style="font-size:13px">
+                <option value="">— Video seç —</option>
+              </select>
+            </div>
+            <div id="comment-list"><p style="font-size:13px;color:var(--text-muted)">Video seç</p></div>
+            <div id="comment-form" style="display:none;margin-top:12px">
+              <textarea class="form-input" id="comment-input" rows="2"
+                placeholder="Yorum yaz…" style="resize:none;font-size:13px;width:100%;box-sizing:border-box"></textarea>
+              <button class="btn-primary" id="btn-add-comment" style="margin-top:8px;font-size:13px">Yorum Ekle</button>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    initPage();
+    initNotifications();
+    if (Auth.getRole() === 'admin') document.getElementById('nav-admin-link').style.display = '';
+
+    const GENRE_ICONS = {
+      animasyon:'🎨', 'bilim-kurgu':'🚀', fantastik:'🧙',
+      macera:'🗺️', belgesel:'🎥', otomobil:'🏎️'
+    };
+    const TYPE_ICONS = { watch:'🎬', badge:'🏅', rating:'⭐' };
+
+    function relTime(ts) {
+      if (!ts) return '';
+      const diff = (Date.now() - new Date(ts)) / 1000;
+      if (diff < 60)        return `${Math.round(diff)}s önce`;
+      if (diff < 3600)      return `${Math.round(diff/60)}dk önce`;
+      if (diff < 86400)     return `${Math.round(diff/3600)}sa önce`;
+      return `${Math.round(diff/86400)}g önce`;
+    }
+
+    function starHTML(n) {
+      if (!n) return '—';
+      return '⭐'.repeat(n);
+    }
+
+    // ── FEED ─────────────────────────────────────────────
+    async function loadFeed() {
+      const el = document.getElementById('feed-list');
+      el.innerHTML = '<div class="spinner"></div>';
+      try {
+        const d = await API.getSocialFeed();
+        if (!d.feed.length) {
+          el.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Henüz aktivite yok. İzlemeye başla!</p></div>';
+          return;
+        }
+        el.innerHTML = d.feed.map(item => {
+          let text = '';
+          const avatarClass = item.type;
+          const avatarIcon  = TYPE_ICONS[item.type] || '❓';
+
+          if (item.type === 'watch') {
+            text = `<strong>${item.username}</strong> <em>${item.content}</em> izledi` +
+                   ` — ${item.minutes} dk` + (item.completed ? ' ✅' : '');
+          } else if (item.type === 'badge') {
+            text = `<strong>${item.username}</strong> <span class="feed-badge-chip">🏅 ${item.badge}</span> rozetini kazandı`;
+          } else if (item.type === 'rating') {
+            text = `<strong>${item.username}</strong> <em>${item.content}</em> için ` +
+                   `<span class="trending-stars">${starHTML(item.rating)}</span> verdi`;
+          }
+
+          return `
+            <div class="feed-item">
+              <div class="feed-avatar ${avatarClass}">${avatarIcon}</div>
+              <div class="feed-body">
+                <div class="feed-text">${text}</div>
+                <div class="feed-time">${relTime(item.ts)}</div>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (e) {
+        el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+      }
+    }
+
+    document.getElementById('btn-refresh-feed').addEventListener('click', loadFeed);
+
+    // ── TRENDING ─────────────────────────────────────────
+    async function loadTrending() {
+      const grid = document.getElementById('trending-grid');
+      grid.innerHTML = '<div class="spinner"></div>';
+      try {
+        const d = await API.getTrending();
+        document.getElementById('week-label').textContent = `${d.week_start} sonrası`;
+        if (!d.trending.length) {
+          grid.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Bu hafta izleme yok.</p>';
+          return;
+        }
+        grid.innerHTML = d.trending.map((v, i) => `
+          <a class="trending-card" href="watch.html?id=${encodeURIComponent(v.id)}">
+            <div class="trending-thumb" style="background:${v.thumbnail_color}20;border:1px solid ${v.thumbnail_color}40">
+              ${GENRE_ICONS[v.genre] || '🎬'}
+            </div>
+            <div class="trending-rank">#${i+1} trend</div>
+            <div class="trending-title">${v.title}</div>
+            <div class="trending-meta">
+              <span class="trending-stars">${v.avg_rating > 0 ? '⭐ ' + v.avg_rating.toFixed(1) : '—'}</span>
+              <span class="trending-watches">👁 ${v.watch_count}</span>
+            </div>
+          </a>`).join('');
+      } catch (e) {
+        grid.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+      }
+    }
+
+    // ── TABS ─────────────────────────────────────────────
+    document.querySelectorAll('.social-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.social-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.getElementById('panel-feed').style.display     = tab === 'feed'     ? '' : 'none';
+        document.getElementById('panel-trending').style.display = tab === 'trending' ? '' : 'none';
+        if (tab === 'trending') loadTrending();
+      });
+    });
+
+    // ── TOP RATERS (from feed data) ───────────────────────
+    async function loadTopRaters() {
+      const el = document.getElementById('top-raters');
+      try {
+        const d = await API.getSocialFeed();
+        const ratingEvents = d.feed.filter(e => e.type === 'rating');
+        const counts = {};
+        ratingEvents.forEach(e => { counts[e.username] = (counts[e.username] || 0) + 1; });
+        const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        if (!sorted.length) {
+          el.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">Henüz oy yok.</p>';
+          return;
+        }
+        el.innerHTML = sorted.map(([u, cnt], i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+            <span style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;width:18px">#${i+1}</span>
+            <a class="lb-username" href="profile.html?u=${encodeURIComponent(u)}" style="flex:1">${u}</a>
+            <span style="font-size:12px;color:#FFC107">⭐ ${cnt}</span>
+          </div>`).join('');
+      } catch (e) {
+        el.innerHTML = `<p style="color:var(--danger);font-size:13px">${e.message}</p>`;
+      }
+    }
+
+    // ── COMMENT EXPLORER ──────────────────────────────────
+    async function loadCatalogSelect() {
+      try {
+        const catalog = await API.getCatalog();
+        const sel = document.getElementById('comment-select');
+        catalog.forEach(v => {
+          const o = document.createElement('option');
+          o.value = v.id; o.textContent = v.title;
+          sel.appendChild(o);
+        });
+      } catch (_) {}
+    }
+
+    let currentCommentContentId = null;
+
+    document.getElementById('comment-select').addEventListener('change', async function() {
+      const cid = this.value;
+      currentCommentContentId = cid || null;
+      const listEl = document.getElementById('comment-list');
+      const formEl = document.getElementById('comment-form');
+      if (!cid) { listEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">Video seç</p>'; formEl.style.display='none'; return; }
+      listEl.innerHTML = '<div class="spinner"></div>';
+      formEl.style.display = '';
+      try {
+        const d = await API.getComments(cid);
+        if (!d.comments.length) {
+          listEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">Henüz yorum yok. İlk yorumu sen yap!</p>';
+        } else {
+          listEl.innerHTML = d.comments.map(c => `
+            <div class="comment-item">
+              <div class="comment-avatar">${(c.username||'?')[0].toUpperCase()}</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <a class="comment-user lb-username" href="profile.html?u=${encodeURIComponent(c.username)}">${c.username}</a>
+                  <span class="comment-time">${relTime(c.created_at)}</span>
+                </div>
+                <div class="comment-text">${c.comment.replace(/</g,'&lt;')}</div>
+              </div>
+            </div>`).join('');
+        }
+      } catch (e) {
+        listEl.innerHTML = `<p style="color:var(--danger);font-size:13px">${e.message}</p>`;
+      }
+    });
+
+    document.getElementById('btn-add-comment').addEventListener('click', async () => {
+      const comment = document.getElementById('comment-input').value.trim();
+      if (!comment || comment.length < 3) {
+        showToast({ title: 'En az 3 karakter yaz', icon: '⚠️' }); return;
+      }
+      if (!currentCommentContentId) return;
+      const btn = document.getElementById('btn-add-comment');
+      btn.disabled = true; btn.textContent = 'Ekleniyor…';
+      try {
+        await API.addComment(currentCommentContentId, comment);
+        document.getElementById('comment-input').value = '';
+        // Reload comments
+        document.getElementById('comment-select').dispatchEvent(new Event('change'));
+        showToast({ title: 'Yorum eklendi!', icon: '💬' });
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+      } finally {
+        btn.disabled = false; btn.textContent = 'Yorum Ekle';
+      }
+    });
+
+    // ── INIT ─────────────────────────────────────────────
+    loadFeed();
+    loadTopRaters();
+    loadCatalogSelect();
+
+    // Auto-refresh feed every 30s
+    setInterval(loadFeed, 30000);
+  </script>
+</body>
+</html>

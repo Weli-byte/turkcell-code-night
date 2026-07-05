@@ -172,6 +172,53 @@
       border-radius: 50%;
       animation: live-pulse 2s ease-in-out infinite;
     }
+
+    /* RATING MODAL */
+    .rating-modal-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .rating-modal-overlay.show { opacity: 1; pointer-events: all; }
+    .rating-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-acc);
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      max-width: 420px; width: 90%;
+      transform: translateY(24px);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .rating-modal-overlay.show .rating-modal { transform: translateY(0); }
+    .rating-modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800; margin-bottom: 6px;
+    }
+    .rating-modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .star-row {
+      display: flex; gap: 10px; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .star-btn {
+      font-size: 32px; background: none; border: none; cursor: pointer;
+      transition: transform 0.15s, filter 0.15s; filter: grayscale(0.7);
+      line-height: 1;
+    }
+    .star-btn:hover, .star-btn.active { filter: grayscale(0); transform: scale(1.25); }
+    .star-label {
+      text-align: center; font-size: 13px; color: var(--text-muted);
+      margin-bottom: 16px; min-height: 18px;
+    }
+    .rating-comment-input {
+      width: 100%; box-sizing: border-box;
+      background: #0D0D18; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      color: var(--text-1); font-size: 13px; resize: none;
+      margin-bottom: 16px; font-family: 'Inter', sans-serif;
+    }
+    .rating-comment-input:focus { outline: none; border-color: var(--border-acc); }
+    .rating-modal-actions { display: flex; gap: 10px; }
   </style>
   <!-- GSAP + Lenis CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -192,6 +239,7 @@
       <li><a href="panel.html">Panelim</a></li>
       <li><a href="leaderboard.html">Sıralama</a></li>
       <li><a href="profile.html">Profil</a></li>
+      <li><a href="social.html">Sosyal</a></li>
       <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
     </ul>
     <div class="nav-right">
@@ -265,6 +313,28 @@
           <!-- BACK -->
           <a href="catalog.html" class="btn-ghost" style="text-align:center">← Kataloğa Dön</a>
         </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATING MODAL -->
+  <div class="rating-modal-overlay" id="rating-overlay">
+    <div class="rating-modal">
+      <div class="rating-modal-title">⭐ Videoyu Oyla</div>
+      <div class="rating-modal-sub" id="rating-modal-sub">Bu içeriği beğendin mi?</div>
+      <div class="star-row" id="star-row">
+        <button class="star-btn" data-val="1">⭐</button>
+        <button class="star-btn" data-val="2">⭐</button>
+        <button class="star-btn" data-val="3">⭐</button>
+        <button class="star-btn" data-val="4">⭐</button>
+        <button class="star-btn" data-val="5">⭐</button>
+      </div>
+      <div class="star-label" id="star-label">Bir yıldız seç</div>
+      <textarea class="rating-comment-input" id="rating-comment"
+        rows="3" placeholder="Yorum ekle (isteğe bağlı)…"></textarea>
+      <div class="rating-modal-actions">
+        <button class="btn-primary" id="btn-submit-rating" disabled>Oyu Gönder</button>
+        <button class="btn-ghost" id="btn-skip-rating">Atla</button>
       </div>
     </div>
   </div>
@@ -525,6 +595,9 @@
         baseWatchMins += d.watch_minutes || 0;
         loadChallenges();
 
+        // Show rating modal if meaningful watch time
+        if ((d.watch_minutes || 0) > 0.5) openRatingModal();
+
       } catch (e) {
         showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
         btn.disabled = false; btn.textContent = '⏹ Seansı Bitir';
@@ -559,6 +632,64 @@
     });
     document.getElementById('ai-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { const q = e.target.value.trim(); if (q.length >= 2) askAI(q); }
+    });
+
+    /* ── RATING MODAL ─────────────────────────────────── */
+    const STAR_LABELS = ['', 'Berbat 😤', 'Kötü 😕', 'Orta 😐', 'İyi 👍', 'Harika! 🤩'];
+    let selectedRating = 0;
+
+    function openRatingModal() {
+      selectedRating = 0;
+      document.getElementById('btn-submit-rating').disabled = true;
+      document.getElementById('star-label').textContent = 'Bir yıldız seç';
+      document.getElementById('rating-comment').value = '';
+      document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('rating-modal-sub').textContent =
+        document.getElementById('video-title').textContent || 'Bu içeriği beğendin mi?';
+      document.getElementById('rating-overlay').classList.add('show');
+    }
+
+    function closeRatingModal() {
+      document.getElementById('rating-overlay').classList.remove('show');
+    }
+
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedRating = parseInt(btn.dataset.val);
+        document.querySelectorAll('.star-btn').forEach((b, i) => {
+          b.classList.toggle('active', i < selectedRating);
+        });
+        document.getElementById('star-label').textContent = STAR_LABELS[selectedRating] || '';
+        document.getElementById('btn-submit-rating').disabled = false;
+      });
+    });
+
+    document.getElementById('btn-submit-rating').addEventListener('click', async () => {
+      if (!selectedRating) return;
+      const btn     = document.getElementById('btn-submit-rating');
+      const comment = document.getElementById('rating-comment').value.trim() || null;
+      btn.disabled  = true; btn.textContent = 'Gönderiliyor…';
+      try {
+        const d = await API.rateContent(videoId, selectedRating, comment);
+        closeRatingModal();
+        showToast({
+          title: `⭐ Oy Verildi! ${d.bonus_points > 0 ? '+' + d.bonus_points + ' puan' : ''}`,
+          msg:   `Ortalama: ${d.avg_rating} (${d.rating_count} oy)`,
+          icon:  '⭐',
+        });
+        if (d.bonus_points > 0) {
+          const pill = document.getElementById('nav-points');
+          if (pill) { pill.textContent = `⚡ ${d.total_points} puan`; }
+        }
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+        btn.disabled = false; btn.textContent = 'Oyu Gönder';
+      }
+    });
+
+    document.getElementById('btn-skip-rating').addEventListener('click', closeRatingModal);
+    document.getElementById('rating-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeRatingModal();
     });
 
     // INIT

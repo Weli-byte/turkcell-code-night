@@ -179,6 +179,7 @@
       <li><a href="panel.html">Panelim</a></li>
       <li><a href="leaderboard.html">Sıralama</a></li>
       <li><a href="profile.html">Profil</a></li>
+      <li><a href="social.html">Sosyal</a></li>
       <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
     </ul>
     <div class="nav-right">
@@ -327,6 +328,9 @@
       const genre = v.genre || v.genres || '';
       const colors = ['#6C00FF','#00FF87','#00D4FF','#FF4D4D','#FFB800'];
       const color  = colors[v.id % colors.length] || '#6C00FF';
+      const ratingHTML = v.avg_rating > 0
+        ? `<span style="font-size:11px;color:#FFC107">⭐ ${v.avg_rating.toFixed(1)}</span>`
+        : '';
       return `
         <div class="video-card card-hover" onclick="window.location.href='watch.html?id=${v.id}'">
           <div class="video-thumb" style="background: linear-gradient(135deg, ${color}22 0%, #0D0D1800 100%);">
@@ -339,6 +343,7 @@
             <div class="video-meta">
               ${genre ? `<span class="genre-chip">${genre}</span>` : ''}
               ${v.episode_number ? `<span class="duration-chip">Bölüm ${v.episode_number}</span>` : ''}
+              ${ratingHTML}
             </div>
           </div>
         </div>`;

@@ -97,6 +97,24 @@ def init_db():
         duration_ms INTEGER DEFAULT 0,
         ran_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS content_ratings (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        content_id TEXT NOT NULL,
+        rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(user_id, content_id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS content_comments (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        content_id TEXT NOT NULL,
+        comment TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

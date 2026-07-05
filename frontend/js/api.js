@@ -114,6 +114,14 @@ const API = {
   getAIChallengeTips:   ()  => apiFetch("/ai/challenge-tips"),
   getAIDigest:          ()  => apiFetch("/ai/digest", { method:"POST" }),
   getAIStatus:          ()  => apiFetch("/ai/status"),
+  rateContent:     (content_id, rating, comment) =>
+    apiFetch("/social/rate", { method:"POST", body: JSON.stringify({content_id, rating, comment}) }),
+  addComment:      (content_id, comment) =>
+    apiFetch("/social/comment", { method:"POST", body: JSON.stringify({content_id, comment}) }),
+  getComments:     (content_id) => apiFetch(`/social/comments/${encodeURIComponent(content_id)}`),
+  getContentStats: (content_id) => apiFetch(`/social/content-stats/${encodeURIComponent(content_id)}`),
+  getSocialFeed:   ()           => apiFetch("/social/feed"),
+  getTrending:     ()           => apiFetch("/social/trending"),
   runPipeline:          ()       => apiFetch("/pipeline/run", { method:"POST" }),
   getPipelineRuns:      ()       => apiFetch("/pipeline/runs"),
   getAdminMetrics:      ()       => apiFetch("/pipeline/metrics"),

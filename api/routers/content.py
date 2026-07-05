@@ -13,18 +13,31 @@ def catalog(
     token: dict = Depends(verify_token),
 ):
     db    = get_db()
-    query = "SELECT * FROM content_catalog WHERE 1=1"
+    query = """
+        SELECT cc.*,
+               COALESCE(AVG(cr.rating), 0) AS avg_rating,
+               COUNT(cr.id)               AS rating_count
+        FROM content_catalog cc
+        LEFT JOIN content_ratings cr ON cr.content_id = cc.id
+        WHERE 1=1
+    """
     args  = []
     if genre:
-        query += " AND genre = ?"
+        query += " AND cc.genre = ?"
         args.append(genre)
     if content_type:
-        query += " AND content_type = ?"
+        query += " AND cc.content_type = ?"
         args.append(content_type)
-    query += " ORDER BY title ASC"
+    query += " GROUP BY cc.id ORDER BY cc.title ASC"
     rows  = db.execute(query, args).fetchall()
     db.close()
-    return [dict(r) for r in rows]
+    return [
+        dict(r) | {
+            "avg_rating":   round(float(r["avg_rating"]), 1),
+            "rating_count": int(r["rating_count"]),
+        }
+        for r in rows
+    ]
 
 
 @router.get("/{content_id}")
