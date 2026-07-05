@@ -176,6 +176,77 @@
     }
     .ai-answer-evidence.open { display: block; }
 
+    /* CHAT THREAD (Sprint 14) */
+    .chat-thread {
+      display: flex; flex-direction: column; gap: 10px;
+      max-height: 420px; overflow-y: auto;
+      padding: 4px 2px; margin-top: 16px;
+      scroll-behavior: smooth;
+    }
+    .chat-thread:empty { display: none; }
+    .chat-bubble {
+      max-width: 78%;
+      padding: 11px 16px;
+      border-radius: 14px;
+      font-size: 14px; line-height: 1.65;
+      animation: fadeInUp 0.3s ease;
+      word-wrap: break-word;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: rgba(0,255,135,0.1);
+      border: 1px solid rgba(0,255,135,0.22);
+      color: var(--text-1);
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      background: #0D0D18;
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble .bubble-meta {
+      display: flex; gap: 6px; align-items: center;
+      margin-top: 6px; font-size: 10px; color: var(--text-muted);
+    }
+    .chat-bubble .bubble-badge {
+      color: var(--accent-2);
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 100px; padding: 1px 7px;
+    }
+    .chat-typing {
+      align-self: flex-start;
+      display: none; gap: 5px; align-items: center;
+      padding: 12px 18px;
+      background: #0D0D18; border: 1px solid var(--border);
+      border-radius: 14px; border-bottom-left-radius: 4px;
+    }
+    .chat-typing.show { display: flex; }
+    .chat-typing .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-1); opacity: 0.4;
+      animation: typing-pulse 1.2s ease-in-out infinite;
+    }
+    .chat-typing .dot:nth-child(2) { animation-delay: 0.2s; }
+    .chat-typing .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing-pulse {
+      0%, 100% { opacity: 0.3; transform: translateY(0); }
+      50%      { opacity: 1;   transform: translateY(-3px); }
+    }
+    .chat-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 10px;
+    }
+    .chat-clear-btn {
+      font-size: 11px; color: var(--text-muted);
+      background: none; border: none; cursor: pointer;
+      transition: color 0.15s;
+    }
+    .chat-clear-btn:hover { color: #FF4D4D; }
+    .chat-count { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
     /* CHALLENGES FULL LIST */
     .challenges-grid {
       display: grid;
@@ -309,32 +380,41 @@
         </div>
       </div>
 
-      <!-- AI BOX -->
+      <!-- AI KOÇ (Sprint 14: konuşma hafızalı sohbet) -->
       <div class="ai-box will-animate">
-        <div class="ai-box-title">🤖 AI Asistan</div>
-        <div class="ai-box-sub">Performansın hakkında her şeyi sor — GPT-4o ile güçlendirildi</div>
+        <div class="ai-box-title">🤖 AI Koç</div>
+        <div class="ai-box-sub">Sohbet et — önceki mesajlarını hatırlar, gerçek verilerinle cevaplar (GPT-4o)</div>
         <div class="quick-chips">
           <button class="quick-chip" data-q="Bugün ne yaptım?">📊 Bugünkü özet</button>
           <button class="quick-chip" data-q="Streakım kaç gün?">🔥 Streak durumum</button>
           <button class="quick-chip" data-q="Geçen haftaya göre ne kadar fark var?">📈 Haftalık karşılaştırma</button>
           <button class="quick-chip" data-q="En yakın olduğum görev hangisi?">🎯 En yakın görev</button>
         </div>
-        <div class="ai-input-row">
-          <input type="text" id="ai-input" placeholder="Bir şey sor… örn. 'Bu ay ne kadar izledim?'" />
-          <button class="btn-primary" id="ai-ask">Sor</button>
-        </div>
-        <div id="ai-loading" style="display:none;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--text-muted)">
-          <div class="spinner"></div> GPT-4o yanıt hazırlıyor…
-        </div>
-        <div class="ai-answers-stack" id="ai-stack"></div>
 
-        <!-- GÜNLÜK DIGEST -->
+        <div class="chat-thread" id="chat-thread"></div>
+        <div class="chat-typing" id="chat-typing">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+
+        <div class="ai-input-row" style="margin-top:12px">
+          <input type="text" id="ai-input" placeholder="Bir şey sor… önceki sorularını hatırlarım" />
+          <button class="btn-primary" id="ai-ask">Gönder</button>
+        </div>
+        <div class="chat-toolbar">
+          <span class="chat-count" id="chat-count"></span>
+          <button class="chat-clear-btn" id="chat-clear">🗑 Sohbeti temizle</button>
+        </div>
+
+        <!-- RAPORLAR -->
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button class="btn-ghost" id="digest-btn" style="font-size:13px">
-            📋 Günlük Raporumu Al
+            📋 Günlük Raporum
+          </button>
+          <button class="btn-ghost" id="weekly-report-btn" style="font-size:13px">
+            📅 Haftalık AI Raporum
           </button>
           <span id="digest-loading" style="display:none;font-size:13px;color:var(--text-muted)">
-            <span class="spinner" style="width:14px;height:14px"></span> GPT-4o özet hazırlıyor…
+            <span class="spinner" style="width:14px;height:14px"></span> GPT-4o hazırlıyor…
           </span>
         </div>
         <div class="digest-box" id="digest-box">
@@ -565,50 +645,130 @@
       }
     });
 
-    // AI ASISTAN
-    const aiStack = document.getElementById('ai-stack');
+    // AI KOÇ — konuşma hafızalı sohbet (Sprint 14)
+    const chatThread = document.getElementById('chat-thread');
+    const chatTyping = document.getElementById('chat-typing');
+    const chatCount  = document.getElementById('chat-count');
+    let chatBusy = false;
 
-    async function askAI(question) {
-      const loadEl = document.getElementById('ai-loading');
-      loadEl.style.display = 'flex';
+    function esc(s) { return String(s).replace(/</g, '&lt;'); }
+
+    function addBubble(role, content, meta = null) {
+      const b = document.createElement('div');
+      b.className = `chat-bubble ${role}`;
+      b.innerHTML = esc(content) + (
+        meta ? `<div class="bubble-meta">
+                  ${meta.llm_enhanced ? '<span class="bubble-badge">⚡ GPT-4o</span>' : ''}
+                  ${meta.intent ? `<span>${esc(meta.intent)}${meta.intent_source === 'llm' ? ' (AI sınıflandırdı)' : ''}</span>` : ''}
+                </div>` : ''
+      );
+      chatThread.appendChild(b);
+      chatThread.scrollTop = chatThread.scrollHeight;
+      return b;
+    }
+
+    function updateChatCount(n) {
+      chatCount.textContent = n > 0 ? `${n} mesaj hafızada` : '';
+    }
+
+    async function loadChatHistory() {
       try {
-        const d = await API.askAI(question);
-        const item = document.createElement('div');
-        item.className = 'ai-answer-item';
-        const hasEvidence = d.evidence && Object.keys(d.evidence).length > 0;
-        const evidenceStr = hasEvidence ? JSON.stringify(d.evidence, null, 2) : '';
-        item.innerHTML = `
-          <div class="ai-answer-q">❓ ${question}</div>
-          <div class="ai-answer-a">${d.answer || d.response || JSON.stringify(d)}</div>
-          ${d.llm_enhanced ? '<span class="ai-answer-badge">⚡ GPT-4o</span>' : ''}
-          ${hasEvidence ? `
-            <button class="evidence-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.textContent.startsWith('▶')?'▼ Kanıtları gizle':'▶ Kanıtları göster'">
-              ▶ Kanıtları göster
-            </button>
-            <pre class="ai-answer-evidence">${evidenceStr}</pre>` : ''}
-        `;
-        aiStack.prepend(item);
+        const d = await API.getChatHistory();
+        chatThread.innerHTML = '';
+        (d.messages || []).forEach(m => {
+          addBubble(m.role, m.content,
+            m.role === 'assistant'
+              ? { llm_enhanced: m.model && m.model !== 'template', intent: m.intent }
+              : null);
+        });
+        updateChatCount((d.messages || []).length);
+      } catch (_) {}
+    }
+
+    async function sendChat(question) {
+      if (chatBusy) return;
+      chatBusy = true;
+      addBubble('user', question);
+      chatTyping.classList.add('show');
+      chatThread.parentNode.insertBefore(chatTyping, chatThread.nextSibling);
+      document.getElementById('ai-input').value = '';
+      try {
+        const d = await API.aiChat(question);
+        addBubble('assistant', d.answer, {
+          llm_enhanced: d.llm_enhanced,
+          intent: d.intent,
+          intent_source: d.intent_source,
+        });
+        updateChatCount(d.total_messages);
       } catch (e) {
         showToast({ title: 'AI Hatası', msg: e.message, icon: '⚠️' });
       } finally {
-        loadEl.style.display = 'none';
-        document.getElementById('ai-input').value = '';
+        chatTyping.classList.remove('show');
+        chatBusy = false;
       }
     }
 
+    document.getElementById('chat-clear').addEventListener('click', async () => {
+      try {
+        const d = await API.clearChatHistory();
+        chatThread.innerHTML = '';
+        updateChatCount(0);
+        showToast({ title: 'Sohbet temizlendi', msg: `${d.deleted} mesaj silindi`, icon: '🗑' });
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+      }
+    });
+
     document.querySelectorAll('.quick-chip').forEach(btn => {
-      btn.addEventListener('click', () => askAI(btn.dataset.q));
+      btn.addEventListener('click', () => sendChat(btn.dataset.q));
     });
 
     document.getElementById('ai-ask').addEventListener('click', () => {
       const q = document.getElementById('ai-input').value.trim();
-      if (q.length >= 2) askAI(q);
+      if (q.length >= 2) sendChat(q);
     });
 
     document.getElementById('ai-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         const q = e.target.value.trim();
-        if (q.length >= 2) askAI(q);
+        if (q.length >= 2) sendChat(q);
+      }
+    });
+
+    // HAFTALIK AI RAPORU
+    document.getElementById('weekly-report-btn').addEventListener('click', async () => {
+      const btn     = document.getElementById('weekly-report-btn');
+      const loadEl  = document.getElementById('digest-loading');
+      const box     = document.getElementById('digest-box');
+      const textEl  = document.getElementById('digest-text');
+      const metaEl  = document.getElementById('digest-meta');
+
+      btn.disabled = true;
+      loadEl.style.display = 'inline-flex';
+      box.classList.remove('show');
+
+      try {
+        const d  = await API.getWeeklyReport();
+        const ev = d.evidence || {};
+        textEl.textContent = d.answer || '';
+        const chips = [
+          `📅 ${ev.week_start} – ${ev.week_end}`,
+          `⏱ ${Math.round(ev.this_week_minutes || 0)} dk`,
+          `⚡ ${ev.this_week_points || 0} puan`,
+          `🎯 ${(ev.challenges_completed || []).length} görev`,
+          ev.change_pct != null ? `${ev.change_pct >= 0 ? '📈 +' : '📉 '}${ev.change_pct}%` : null,
+          d.llm_enhanced ? `⚡ GPT-4o` : '📋 Template',
+        ].filter(Boolean);
+        metaEl.textContent = chips.join(' · ');
+        box.classList.add('show');
+        if (window.gsap) {
+          gsap.from(box, { opacity: 0, y: 10, duration: 0.4, ease: 'power3.out' });
+        }
+      } catch (e) {
+        showToast({ title: 'Rapor Hatası', msg: e.message, icon: '⚠️' });
+      } finally {
+        loadEl.style.display = 'none';
+        btn.disabled = false;
       }
     });
 
@@ -626,7 +786,7 @@
     // INIT
     (async () => {
       await loadProfile();
-      await Promise.allSettled([loadBadges(), loadHistory(), loadChallenges(), loadWeeklyChart()]);
+      await Promise.allSettled([loadBadges(), loadHistory(), loadChallenges(), loadWeeklyChart(), loadChatHistory()]);
     })();
   </script>
 </body>

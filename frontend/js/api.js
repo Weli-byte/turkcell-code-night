@@ -114,6 +114,11 @@ const API = {
   getAIChallengeTips:   ()  => apiFetch("/ai/challenge-tips"),
   getAIDigest:          ()  => apiFetch("/ai/digest", { method:"POST" }),
   getAIStatus:          ()  => apiFetch("/ai/status"),
+  aiChat:               (q)  => apiFetch("/ai/chat",
+    { method:"POST", body: JSON.stringify({question:q}) }),
+  getChatHistory:       ()  => apiFetch("/ai/chat/history"),
+  clearChatHistory:     ()  => apiFetch("/ai/chat/history", { method:"DELETE" }),
+  getWeeklyReport:      ()  => apiFetch("/ai/weekly-report"),
   rateContent:     (content_id, rating, comment) =>
     apiFetch("/social/rate", { method:"POST", body: JSON.stringify({content_id, rating, comment}) }),
   addComment:      (content_id, comment) =>

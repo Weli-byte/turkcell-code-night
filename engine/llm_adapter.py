@@ -44,24 +44,29 @@ def llm_call(
     user: str,
     max_tokens: int | None = None,
     temperature: float | None = None,
+    history: list[dict] | None = None,
 ) -> str | None:
     """
     Merkezi GPT-4o çağrısı. Tüm engine'ler bunu kullanır.
+    history: çok turlu sohbet için önceki mesajlar
+             [{"role": "user"|"assistant", "content": "..."}].
     LLM kapalı/hatalı → None döner; çağıran deterministik fallback uygular.
     """
     if not is_llm_available():
         return None
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client   = OpenAI(api_key=OPENAI_API_KEY)
+        messages = [{"role": "system", "content": system}]
+        for m in (history or []):
+            if m.get("role") in ("user", "assistant") and m.get("content"):
+                messages.append({"role": m["role"], "content": m["content"]})
+        messages.append({"role": "user", "content": user})
         resp = client.chat.completions.create(
             model       = LLM_MODEL,
             max_tokens  = max_tokens or LLM_MAX_TOKENS,
             temperature = LLM_TEMPERATURE if temperature is None else temperature,
-            messages    = [
-                {"role": "system", "content": system},
-                {"role": "user",   "content": user},
-            ],
+            messages    = messages,
         )
         answer = (resp.choices[0].message.content or "").strip()
         return answer if answer else None

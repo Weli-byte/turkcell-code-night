@@ -5,6 +5,8 @@ from engine.explanation_engine import explain
 from engine.recommendation_engine import get_recommendations
 from engine.challenge_tips_engine import get_challenge_tips
 from engine.digest_engine import build_digest
+from engine.chat_engine import chat, get_chat_history, clear_chat_history
+from engine.weekly_report_engine import build_weekly_report
 from engine.llm_adapter import get_llm_status
 
 router = APIRouter(tags=["AI"])
@@ -17,6 +19,28 @@ class ExplainBody(BaseModel):
 @router.post("/explain")
 def ai_explain(body: ExplainBody, token: dict = Depends(verify_token)):
     return explain(body.question, token["sub"])
+
+
+@router.post("/chat")
+def ai_chat(body: ExplainBody, token: dict = Depends(verify_token)):
+    """Konuşma hafızalı AI koç — geçmiş DB'den, evidence deterministik."""
+    return chat(token["sub"], body.question)
+
+
+@router.get("/chat/history")
+def ai_chat_history(token: dict = Depends(verify_token)):
+    return get_chat_history(token["sub"])
+
+
+@router.delete("/chat/history")
+def ai_chat_clear(token: dict = Depends(verify_token)):
+    return clear_chat_history(token["sub"])
+
+
+@router.get("/weekly-report")
+def ai_weekly_report(token: dict = Depends(verify_token)):
+    """Son 7 günün gerçek verilerinden GPT-4o haftalık koç raporu."""
+    return build_weekly_report(token["sub"])
 
 
 @router.get("/recommendations")

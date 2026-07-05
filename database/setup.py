@@ -135,6 +135,16 @@ def init_db():
         FOREIGN KEY (party_id) REFERENCES watch_parties(id),
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('user','assistant')),
+        content TEXT NOT NULL,
+        intent TEXT,
+        model TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users
