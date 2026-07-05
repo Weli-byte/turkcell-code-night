@@ -163,6 +163,7 @@
       <li><a href="catalog.html">Katalog</a></li>
       <li><a href="panel.html">Panelim</a></li>
       <li><a href="leaderboard.html">Sıralama</a></li>
+      <li><a href="profile.html">Profil</a></li>
       <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
     </ul>
     <div class="nav-right">
@@ -422,7 +423,7 @@
               <td>
                 <div class="lb-user">
                   <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
-                  <div class="lb-username">${u.username}</div>
+                  <a class="lb-username" href="profile.html?u=${encodeURIComponent(u.username)}">${u.username}</a>
                   ${isMe ? '<span class="me-chip">Sen</span>' : ''}
                 </div>
               </td>
@@ -458,7 +459,7 @@
             <td>
               <div class="lb-user">
                 <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
-                <div class="lb-username">${u.username}</div>
+                <a class="lb-username" href="profile.html?u=${encodeURIComponent(u.username)}">${u.username}</a>
                 ${u.is_current_user ? '<span class="me-chip">Sen</span>' : ''}
               </div>
             </td>
@@ -487,7 +488,7 @@
               <td>
                 <div class="lb-user">
                   <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
-                  <div class="lb-username">${u.username}</div>
+                  <a class="lb-username" href="profile.html?u=${encodeURIComponent(u.username)}">${u.username}</a>
                   ${u.is_current_user ? '<span class="me-chip">Sen</span>' : ''}
                 </div>
               </td>

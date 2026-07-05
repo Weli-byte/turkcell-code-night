@@ -89,6 +89,10 @@ const API = {
   getHistory:         ()     => apiFetch("/users/me/points-history"),
   getMyStats:         ()     => apiFetch("/users/me/stats"),
   getMyWeekly:        ()     => apiFetch("/users/me/weekly"),
+  getMyProfile:       ()     => apiFetch("/users/me/profile"),
+  changePassword:     (old_password, new_password) =>
+    apiFetch("/users/me/password", { method:"PUT", body: JSON.stringify({old_password, new_password}) }),
+  getPublicProfile:   (username) => apiFetch(`/users/public/${encodeURIComponent(username)}`),
   getCatalog:         (q)    => apiFetch("/content/catalog" + (q||"")),
   getContent:         (id)   => apiFetch("/content/" + id),
   startSession:       (cid)  => apiFetch("/watch/session/start",

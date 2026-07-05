@@ -924,7 +924,11 @@ textarea::placeholder { color: var(--text-muted); }
   flex-shrink: 0;
 }
 
-.lb-username { font-size: 14px; font-weight: 500; color: var(--text-1); }
+.lb-username {
+  font-size: 14px; font-weight: 500; color: var(--text-1);
+  text-decoration: none; transition: color 0.15s;
+}
+a.lb-username:hover { color: var(--accent-1); text-decoration: underline; }
 
 .lb-points {
   font-family: 'JetBrains Mono', monospace;
