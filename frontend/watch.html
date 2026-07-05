@@ -1,227 +1,489 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>DGE &mdash; Izle</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>İzle — Gamification Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/main.css" />
   <style>
-    .player-wrap {
-      background:#000; border-radius:var(--radius);
-      overflow:hidden; width:100%;
-      border:1px solid var(--border);
+    .watch-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      padding: 32px 0 48px;
     }
-    video {
-      width:100%; max-height:500px;
-      display:block; background:#000;
+    @media (max-width: 900px) {
+      .watch-layout { grid-template-columns: 1fr; }
     }
-    .reward-popup {
-      position:fixed; top:80px; right:24px;
-      background:var(--bg-card-2);
-      border:1px solid var(--border-acc);
-      border-radius:var(--radius); padding:20px 24px;
-      min-width:280px; z-index:200;
-      backdrop-filter:blur(12px);
-      animation: slideUp .4s ease;
-      display:none;
+
+    .player-area {}
+
+    .video-player-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #0A0A14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .reward-popup.show { display:block; }
+
+    .video-player-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .player-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--text-muted);
+    }
+    .player-icon { font-size: 48px; opacity: 0.5; }
+
+    .player-info {
+      margin-top: 20px;
+    }
+    .player-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .player-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .watch-progress-wrap {
+      margin-top: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .watch-progress-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+    .watch-time-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      background: linear-gradient(90deg, #00FF87, #00D4FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .watch-time-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .session-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    /* SIDEBAR */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .sidebar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .challenge-progress-item {
+      margin-bottom: 14px;
+    }
+    .challenge-progress-item:last-child { margin-bottom: 0; }
+
+    .cp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .cp-name { font-size: 13px; color: var(--text-1); }
+    .cp-pts  {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-1);
+    }
+    .cp-cond {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .ai-sidebar .quick-chips { margin-bottom: 12px; }
+    .ai-answer-preview {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.6;
+      padding: 12px;
+      background: #0D0D18;
+      border-radius: 8px;
+      border-left: 2px solid var(--accent-1);
+      display: none;
+    }
+    .ai-answer-preview.show { display: block; }
+    .ai-loading { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--text-muted); display: none; }
+    .ai-loading.show { display: flex; }
+
+    .live-session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent-1);
+      background: rgba(0,255,135,0.08);
+      border: 1px solid rgba(0,255,135,0.2);
+      border-radius: 100px;
+      padding: 3px 10px;
+    }
+    .live-session-badge .dot {
+      width: 5px; height: 5px;
+      background: var(--accent-1);
+      border-radius: 50%;
+      animation: live-pulse 2s ease-in-out infinite;
+    }
   </style>
 </head>
 <body>
+  <div id="scroll-progress"></div>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-halo"></div>
 
-<nav class="navbar">
-  <a class="nav-logo" href="/catalog.html">DGE</a>
-  <div class="nav-links">
-    <a href="/catalog.html">Katalog</a>
-    <a href="/panel.html">Panelim</a>
-    <a href="/leaderboard.html">Liderlik</a>
-  </div>
-  <div class="flex gap-8">
-    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
-    <button class="btn-logout" onclick="logout()">Cikis</button>
-  </div>
-</nav>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="catalog.html" class="nav-logo">GE Engine</a>
+    <ul class="nav-links">
+      <li><a href="catalog.html">Katalog</a></li>
+      <li><a href="panel.html">Panelim</a></li>
+      <li><a href="leaderboard.html">Sıralama</a></li>
+      <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="points-pill" id="nav-points">⚡ — puan</div>
+      <span class="nav-username" id="nav-username"></span>
+      <a class="nav-logout" id="nav-logout" href="#">Çıkış</a>
+    </div>
+  </nav>
 
-<div class="reward-popup" id="reward-popup">
-  <div style="font-size:20px;margin-bottom:8px">&#127881;</div>
-  <div style="font-weight:600;margin-bottom:4px" id="popup-title">
-    Odul Kazandin!
-  </div>
-  <div id="popup-body" class="text-2" style="font-size:13px"></div>
-</div>
-
-<div class="page">
-  <div class="container" style="max-width:900px">
-
-    <div id="loading" class="spinner" style="margin:60px auto"></div>
-
-    <div id="player-section" style="display:none">
-      <div class="flex-between" style="margin-bottom:16px">
-        <div>
-          <h1 id="video-title" style="font-size:24px;font-weight:700"></h1>
-          <p id="video-meta" class="text-muted" style="font-size:13px;margin-top:4px"></p>
-        </div>
-        <a href="/catalog.html" class="btn btn-ghost btn-sm">&larr; Katalog</a>
-      </div>
-
-      <div class="player-wrap">
-        <video id="player" controls preload="metadata">
-          Tarayicin video oynatmayi desteklemiyor.
-        </video>
-      </div>
-
-      <div class="grid-2 mt-24" style="gap:16px">
-        <div class="card">
-          <div style="font-size:13px;color:var(--text-muted);
-                      margin-bottom:12px;font-weight:500">
-            IZLEME DURUMU
+  <div class="page-content">
+    <div class="container">
+      <div class="watch-layout">
+        <!-- PLAYER COLUMN -->
+        <div class="player-area">
+          <div class="video-player-wrap" id="player-wrap">
+            <div class="player-placeholder" id="player-loading">
+              <div class="player-icon">🎬</div>
+              <div>Video yükleniyor…</div>
+            </div>
           </div>
-          <div class="flex-between">
-            <span class="text-2">Session</span>
-            <span class="mono text-accent" id="status-session">Baslamadi</span>
+
+          <div class="player-info will-animate">
+            <div class="player-title" id="video-title">—</div>
+            <div class="player-meta">
+              <span class="genre-chip" id="video-genre"></span>
+              <span class="duration-chip" id="video-duration"></span>
+              <span class="live-session-badge" id="live-badge" style="display:none">
+                <span class="dot"></span> İZLİYORSUN
+              </span>
+            </div>
           </div>
-          <div class="flex-between mt-8">
-            <span class="text-2">Sure</span>
-            <span class="mono" id="status-duration">&ndash;</span>
-          </div>
-          <div class="flex-between mt-8">
-            <span class="text-2">Durum</span>
-            <span id="status-state" class="text-muted">Bekliyor</span>
+
+          <div class="watch-progress-wrap will-animate">
+            <div class="watch-progress-label">Bu oturumda izlenen</div>
+            <div class="watch-time-display"><span id="session-minutes">0</span> dk <span id="session-secs">00</span> sn</div>
+            <div class="progress-wrap" style="margin-bottom:10px">
+              <div class="progress-fill" id="session-bar" style="width:0%"></div>
+            </div>
+            <div class="watch-time-sub" id="session-status">Oturum başlatılmadı</div>
+            <div class="session-controls">
+              <button class="btn-primary" id="btn-start">▶ Seansı Başlat</button>
+              <button class="btn-ghost" id="btn-stop" style="display:none">⏹ Seansı Bitir</button>
+            </div>
           </div>
         </div>
 
-        <div class="card">
-          <div style="font-size:13px;color:var(--text-muted);
-                      margin-bottom:12px;font-weight:500">
-            PUANIM
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+          <!-- CHALLENGES -->
+          <div class="sidebar-card">
+            <div class="sidebar-title">🎯 Aktif Görevler</div>
+            <div id="challenge-list"><div class="spinner"></div></div>
           </div>
-          <div class="stat-num" id="watch-pts">&ndash;</div>
-          <div class="stat-label">toplam puan</div>
-          <div class="mt-16 text-2" style="font-size:13px" id="watch-rank">
-            Sira: &ndash;
+
+          <!-- AI -->
+          <div class="sidebar-card ai-sidebar">
+            <div class="sidebar-title">🤖 AI Asistan</div>
+            <div class="quick-chips">
+              <button class="quick-chip" data-q="Bugün kaç dakika izledim?">📊 Bugünkü izleme</button>
+              <button class="quick-chip" data-q="Streakım kaç gün?">🔥 Streak</button>
+              <button class="quick-chip" data-q="Hangi göreve en yakınım?">🎯 En yakın görev</button>
+            </div>
+            <div class="ai-input-row">
+              <input type="text" id="ai-input" placeholder="Soru sor…" />
+              <button class="btn-primary" id="ai-ask-btn">Sor</button>
+            </div>
+            <div class="ai-loading" id="ai-loading"><div class="spinner"></div> GPT-4o düşünüyor…</div>
+            <div class="ai-answer-preview" id="ai-answer"></div>
           </div>
-        </div>
+
+          <!-- BACK -->
+          <a href="catalog.html" class="btn-ghost" style="text-align:center">← Kataloğa Dön</a>
+        </aside>
       </div>
     </div>
-
   </div>
-</div>
 
-<script src="/js/api.js"></script>
-<script>
-Auth.requireAuth();
+  <div id="toast-container"></div>
 
-const params    = new URLSearchParams(location.search);
-const contentId = params.get("id");
-if (!contentId) window.location.href = "/catalog.html";
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script>
+    initPage();
 
-let sessionId    = null;
-let heartbeatTmr = null;
-let sessionEnded = false;
-
-function logout() { Auth.clear(); window.location.href = "/index.html"; }
-
-async function loadNav() {
-  try {
-    const me = await API.getMe();
-    document.getElementById("nav-pts").textContent   = me.total_points;
-    document.getElementById("watch-pts").textContent = me.total_points;
-    document.getElementById("watch-rank").textContent =
-      `Sira: ${me.rank}. / ${me.total_users} kullanici`;
-  } catch(e) {}
-}
-
-async function loadContent() {
-  try {
-    const v = await API.getContent(contentId);
-    document.title = `DGE — ${v.title}`;
-    document.getElementById("video-title").textContent = v.title;
-    document.getElementById("video-meta").textContent =
-      `${v.genre} · ${v.duration_minutes} dakika · ${v.content_type}`;
-
-    const player = document.getElementById("player");
-    player.src = v.stream_url;
-
-    document.getElementById("loading").style.display        = "none";
-    document.getElementById("player-section").style.display = "";
-
-    setupPlayer(player, v);
-  } catch(e) {
-    document.getElementById("loading").innerHTML =
-      '<p class="text-muted">Icerik yuklenemedi.</p>';
-  }
-}
-
-function setupPlayer(player, content) {
-  player.addEventListener("play", async () => {
-    if (sessionId) return;
-    try {
-      const res = await API.startSession(contentId);
-      sessionId = res.session_id;
-      document.getElementById("status-session").textContent =
-        sessionId.substring(0,16) + "...";
-      document.getElementById("status-state").textContent = "Izleniyor ▶";
-      document.getElementById("status-state").style.color = "var(--accent-1)";
-
-      heartbeatTmr = setInterval(async () => {
-        if (sessionId && !sessionEnded) {
-          try { await API.heartbeat(sessionId); } catch(e) {}
-        }
-      }, 30000);
-    } catch(e) { console.error("Session start:", e); }
-  });
-
-  async function endWatch() {
-    if (!sessionId || sessionEnded) return;
-    sessionEnded = true;
-    clearInterval(heartbeatTmr);
-    document.getElementById("status-state").textContent = "Isleniyor...";
-    try {
-      const res = await API.endSession(sessionId);
-      document.getElementById("status-duration").textContent =
-        res.watch_minutes + " dk";
-      document.getElementById("status-state").textContent =
-        res.completed ? "✓ Tamamlandi" : "Kismen izlendi";
-      document.getElementById("status-state").style.color =
-        res.completed ? "var(--accent-1)" : "var(--text-2)";
-
-      setTimeout(async () => {
-        try {
-          const me = await API.getMe();
-          document.getElementById("nav-pts").textContent   = me.total_points;
-          document.getElementById("watch-pts").textContent = me.total_points;
-          document.getElementById("watch-rank").textContent =
-            `Sira: ${me.rank}. / ${me.total_users} kullanici`;
-        } catch(e) {}
-      }, 2000);
-
-      showRewardPopup(res);
-    } catch(e) {
-      console.error("Session end:", e);
+    if (Auth.getRole() === 'admin') {
+      document.getElementById('nav-admin-link').style.display = '';
     }
-  }
 
-  player.addEventListener("ended", endWatch);
-  player.addEventListener("pause", endWatch);
-  window.addEventListener("beforeunload", endWatch);
-}
+    const params    = new URLSearchParams(window.location.search);
+    const videoId   = params.get('id');
+    let sessionId   = null;
+    let sessionSecs = 0;
+    let timerInterval = null;
+    let heartbeatInt  = null;
+    const HEARTBEAT_INTERVAL = 30; // seconds
 
-function showRewardPopup(res) {
-  const popup = document.getElementById("reward-popup");
-  document.getElementById("popup-title").textContent = "Izleme Kaydedildi!";
-  document.getElementById("popup-body").innerHTML =
-    `<strong>${res.watch_minutes} dakika</strong> izledin.<br>
-     ${res.completed ? "✓ Tamamlandi" : "Kismen izlendi"}<br>
-     <span style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block">
-       Puanlar hesaplaniyor...</span>`;
-  popup.classList.add("show");
-  setTimeout(() => popup.classList.remove("show"), 5000);
-}
+    if (!videoId) window.location.href = 'catalog.html';
 
-loadNav();
-loadContent();
-</script>
+    // LOAD VIDEO INFO
+    async function loadVideo() {
+      const wrap = document.getElementById('player-wrap');
+      try {
+        const v = await API.getContent(videoId);
+        document.getElementById('video-title').textContent = v.title || '—';
+        document.getElementById('video-genre').textContent = v.genre || v.genres || '';
+        document.getElementById('video-duration').textContent = v.duration_minutes
+          ? `${Math.round(v.duration_minutes)} dk` : '';
+
+        // Embed real video if stream_url provided
+        if (v.stream_url) {
+          wrap.innerHTML = `
+            <video id="video-el" controls preload="metadata"
+              style="width:100%;height:100%;object-fit:contain;border-radius:var(--radius)">
+              <source src="${v.stream_url}" />
+            </video>`;
+        } else {
+          wrap.innerHTML = `<div class="player-placeholder">
+            <div class="player-icon">🎬</div>
+            <div>${v.title || 'Video'}</div>
+          </div>`;
+        }
+      } catch (e) {
+        document.getElementById('video-title').textContent = 'Video bulunamadı';
+        wrap.innerHTML = `<div class="player-placeholder">
+          <div class="player-icon">⚠️</div><div>${e.message}</div>
+        </div>`;
+      }
+    }
+
+    // LOAD CHALLENGES
+    async function loadChallenges() {
+      const el = document.getElementById('challenge-list');
+      try {
+        const data = await API.getChallenges();
+        const challenges = data.challenges || data || [];
+        if (!challenges.length) {
+          el.innerHTML = '<p class="text-muted" style="font-size:13px">Aktif görev yok.</p>';
+          return;
+        }
+        const state = await API.getMe();
+        const todayMin = state.watch_minutes_today || 0;
+
+        el.innerHTML = challenges.slice(0, 5).map(c => {
+          const pct = Math.min(100, (todayMin / (c.threshold || 60)) * 100);
+          return `
+            <div class="challenge-progress-item">
+              <div class="cp-header">
+                <span class="cp-name">${c.name || c.challenge_name}</span>
+                <span class="cp-pts">+${c.points || c.reward_points} puan</span>
+              </div>
+              <div class="cp-cond">${c.condition || ''}</div>
+              <div class="progress-wrap">
+                <div class="progress-fill" style="width:${pct}%"></div>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (e) {
+        el.innerHTML = `<p class="text-muted" style="font-size:13px">${e.message}</p>`;
+      }
+    }
+
+    // SESSION TIMER
+    function startTimer() {
+      sessionSecs = 0;
+      timerInterval = setInterval(() => {
+        sessionSecs++;
+        const min = Math.floor(sessionSecs / 60);
+        const sec = String(sessionSecs % 60).padStart(2, '0');
+        document.getElementById('session-minutes').textContent = min;
+        document.getElementById('session-secs').textContent   = sec;
+        const pct = Math.min(100, (sessionSecs / (60 * 60)) * 100);
+        document.getElementById('session-bar').style.width = pct + '%';
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      clearInterval(heartbeatInt);
+    }
+
+    // START SESSION
+    document.getElementById('btn-start').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-start');
+      btn.disabled = true;
+      btn.textContent = 'Başlatılıyor…';
+      try {
+        const d = await API.startSession(videoId);
+        sessionId = d.session_id;
+
+        document.getElementById('session-status').textContent = 'Oturum aktif — süre sayılıyor';
+        document.getElementById('live-badge').style.display  = '';
+        document.getElementById('btn-stop').style.display    = '';
+        btn.style.display = 'none';
+
+        startTimer();
+
+        // Heartbeat every 30s
+        heartbeatInt = setInterval(async () => {
+          try { await API.heartbeat(sessionId); } catch(_) {}
+        }, HEARTBEAT_INTERVAL * 1000);
+
+        // Refresh points pill
+        API.getMe().then(d => {
+          document.getElementById('nav-points').textContent = `⚡ ${d.total_points} puan`;
+        }).catch(() => {});
+
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+        btn.disabled   = false;
+        btn.textContent = '▶ Seansı Başlat';
+      }
+    });
+
+    // STOP SESSION
+    document.getElementById('btn-stop').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-stop');
+      btn.disabled   = true;
+      btn.textContent = 'Durduruluyor…';
+      stopTimer();
+
+      try {
+        const d = await API.endSession(sessionId);
+        const mins = (sessionSecs / 60).toFixed(1);
+
+        document.getElementById('session-status').textContent =
+          `Oturum tamamlandı — ${mins} dakika izlendi`;
+        document.getElementById('live-badge').style.display = 'none';
+        btn.style.display = 'none';
+        document.getElementById('btn-start').style.display  = '';
+        document.getElementById('btn-start').disabled       = false;
+        document.getElementById('btn-start').textContent    = '▶ Yeni Seans';
+
+        sessionId = null;
+
+        // Check rewards
+        if (d.points_earned) {
+          showToast({ title: 'Puan Kazandın! 🎉', msg: d.challenge_name || '', points: d.points_earned, icon: '⚡' });
+          document.getElementById('nav-points').classList.add('pulse');
+          setTimeout(() => document.getElementById('nav-points').classList.remove('pulse'), 600);
+        }
+        if (d.new_badge) {
+          showToast({ title: 'Yeni Rozet! 🏅', msg: d.new_badge, icon: '🏅', duration: 5000 });
+        }
+
+        // Refresh
+        API.getMe().then(s => {
+          document.getElementById('nav-points').textContent = `⚡ ${s.total_points} puan`;
+        }).catch(() => {});
+        loadChallenges();
+
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+        btn.disabled   = false;
+        btn.textContent = '⏹ Seansı Bitir';
+      }
+    });
+
+    // AI
+    async function askAI(question) {
+      const ansEl     = document.getElementById('ai-answer');
+      const loadEl    = document.getElementById('ai-loading');
+      const inputEl   = document.getElementById('ai-input');
+      ansEl.classList.remove('show');
+      loadEl.classList.add('show');
+
+      try {
+        const d = await API.askAI(question);
+        ansEl.textContent = d.answer || d.response || JSON.stringify(d);
+        ansEl.classList.add('show');
+      } catch (e) {
+        ansEl.textContent = e.message;
+        ansEl.classList.add('show');
+      } finally {
+        loadEl.classList.remove('show');
+        inputEl.value = '';
+      }
+    }
+
+    document.querySelectorAll('.quick-chip').forEach(btn => {
+      btn.addEventListener('click', () => askAI(btn.dataset.q));
+    });
+
+    document.getElementById('ai-ask-btn').addEventListener('click', () => {
+      const q = document.getElementById('ai-input').value.trim();
+      if (q.length >= 2) askAI(q);
+    });
+
+    document.getElementById('ai-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const q = e.target.value.trim();
+        if (q.length >= 2) askAI(q);
+      }
+    });
+
+    // INIT
+    loadVideo();
+    loadChallenges();
+  </script>
 </body>
 </html>

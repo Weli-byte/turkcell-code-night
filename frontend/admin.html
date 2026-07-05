@@ -1,122 +1,540 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>DGE &mdash; Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Gamification Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .admin-hero {
+      padding: 40px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .admin-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    /* ADMIN TABS */
+    .admin-tabs {
+      display: flex;
+      gap: 2px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+    }
+    .admin-tab {
+      padding: 9px 18px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s;
+    }
+    .admin-tab.active {
+      background: rgba(0,255,135,0.08);
+      color: var(--accent-1);
+    }
+
+    /* METRICS ROW */
+    .admin-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 900px) { .admin-metrics { grid-template-columns: repeat(2, 1fr); } }
+
+    .admin-metric {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .am-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .am-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 500;
+      background: linear-gradient(90deg,#00FF87,#00D4FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* PIPELINE PANEL */
+    .pipeline-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .pipeline-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .pipeline-result {
+      background: #0D0D18;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-1);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: none;
+    }
+    .pipeline-result.show { display: block; }
+
+    /* UPLOAD */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-zone.drag-over {
+      border-color: var(--accent-1);
+      background: rgba(0,255,135,0.04);
+    }
+    .upload-icon { font-size: 36px; margin-bottom: 12px; }
+    .upload-label { font-size: 14px; color: var(--text-2); margin-bottom: 8px; }
+    .upload-sub   { font-size: 12px; color: var(--text-muted); }
+
+    /* USERS TABLE */
+    .admin-table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    /* CHALLENGE FORM */
+    .challenge-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) { .challenge-form-grid { grid-template-columns: 1fr; } }
+    .form-full { grid-column: 1 / -1; }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .form-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .success-msg {
+      font-size: 13px;
+      color: var(--accent-1);
+      background: rgba(0,255,135,0.08);
+      border: 1px solid rgba(0,255,135,0.25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: none;
+      margin-top: 10px;
+    }
+    .success-msg.show { display: block; }
+  </style>
 </head>
 <body>
+  <div id="scroll-progress"></div>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-halo"></div>
 
-<nav class="navbar">
-  <a class="nav-logo" href="/catalog.html">DGE</a>
-  <div class="nav-links">
-    <a href="/catalog.html">Katalog</a>
-    <a href="/admin.html" class="active">Admin</a>
-  </div>
-  <div class="flex gap-8">
-    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
-    <button class="btn-logout" onclick="logout()">Cikis</button>
-  </div>
-</nav>
-
-<div class="page">
-  <div class="container" style="max-width:800px">
-
-    <h1 class="section-title" style="font-size:28px;margin-bottom:24px;margin-top:16px">
-      Admin Paneli
-    </h1>
-
-    <div class="card" style="margin-bottom:24px">
-      <div class="section-title" style="font-size:16px;margin-bottom:8px">
-        Pipeline Calistir
-      </div>
-      <p class="text-muted" style="font-size:13px;margin-bottom:16px">
-        Tum kullanicilarin aktivitelerini degerlendirir,
-        puanlari ledgera yazar, rozetleri atar, leaderboard'u gunceller.
-      </p>
-      <button class="btn btn-primary" id="run-btn" onclick="runPipeline()">
-        &#9654; Pipeline Calistir
-      </button>
-      <div id="pipeline-result" style="display:none;margin-top:20px">
-        <div class="ai-evidence" id="pipeline-output"></div>
-      </div>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="catalog.html" class="nav-logo">GE Engine</a>
+    <ul class="nav-links">
+      <li><a href="catalog.html">Katalog</a></li>
+      <li><a href="panel.html">Panelim</a></li>
+      <li><a href="leaderboard.html">Sıralama</a></li>
+      <li><a href="admin.html">Admin</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="points-pill" id="nav-points">⚡ — puan</div>
+      <span class="nav-username" id="nav-username"></span>
+      <a class="nav-logout" id="nav-logout" href="#">Çıkış</a>
     </div>
+  </nav>
 
-    <div class="card">
-      <div class="section-title" style="font-size:16px;margin-bottom:16px">
-        Sistem Durumu
+  <div class="page-content">
+    <div class="container">
+
+      <div class="admin-hero will-animate">
+        <h1>⚙️ Admin <span class="text-gradient">Paneli</span></h1>
+        <p class="text-2">Pipeline yönetimi, kullanıcılar ve görev konfigürasyonu</p>
       </div>
-      <div id="sys-stats">
-        <div class="spinner" style="margin:20px auto"></div>
+
+      <!-- METRICS -->
+      <div class="admin-metrics will-animate">
+        <div class="admin-metric">
+          <div class="am-label">Toplam Kullanıcı</div>
+          <div class="am-value" id="am-users">—</div>
+        </div>
+        <div class="admin-metric">
+          <div class="am-label">Aktif Görev</div>
+          <div class="am-value" id="am-challenges">—</div>
+        </div>
+        <div class="admin-metric">
+          <div class="am-label">AI Durumu</div>
+          <div class="am-value" id="am-ai" style="font-size:16px">—</div>
+        </div>
+        <div class="admin-metric">
+          <div class="am-label">Pipeline Çalışma</div>
+          <div class="am-value" id="am-runs">—</div>
+        </div>
       </div>
-    </div>
 
-  </div>
-</div>
+      <!-- TABS -->
+      <div class="admin-tabs will-animate">
+        <button class="admin-tab active" data-tab="pipeline">🚀 Pipeline</button>
+        <button class="admin-tab" data-tab="upload">📥 Veri Yükle</button>
+        <button class="admin-tab" data-tab="challenges">🎯 Görevler</button>
+        <button class="admin-tab" data-tab="users">👥 Kullanıcılar</button>
+      </div>
 
-<script src="/js/api.js"></script>
-<script>
-Auth.requireAuth();
-Auth.requireAdmin();
-function logout() { Auth.clear(); window.location.href = "/index.html"; }
-
-async function loadNav() {
-  try {
-    const me = await API.getMe();
-    document.getElementById("nav-pts").textContent = me.total_points;
-  } catch(e) {}
-}
-
-async function loadStats() {
-  try {
-    const [board, me] = await Promise.all([
-      API.getLeaderboard(1000),
-      API.getMe(),
-    ]);
-    document.getElementById("sys-stats").innerHTML = `
-      <div class="grid-3">
-        <div style="text-align:center">
-          <div class="stat-num">${board.length}</div>
-          <div class="stat-label">Toplam Kullanici</div>
-        </div>
-        <div style="text-align:center">
-          <div class="stat-num">${board.reduce((s,e)=>s+e.total_points,0)}</div>
-          <div class="stat-label">Dagitilan Puan</div>
-        </div>
-        <div style="text-align:center">
-          <div class="stat-num">
-            ${board.reduce((s,e)=>s+e.badges.length,0)}
+      <!-- PIPELINE TAB -->
+      <div id="tab-pipeline">
+        <div class="pipeline-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Pipeline Çalıştır</div>
+              <div class="section-subtitle">Tüm kullanıcılar için deterministik puanlama motoru</div>
+            </div>
+            <div class="pipeline-status">
+              <div class="spinner" id="pipeline-spinner" style="display:none"></div>
+              <span id="pipeline-status-txt">Hazır</span>
+            </div>
           </div>
-          <div class="stat-label">Atanan Rozet</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-primary" id="btn-run-pipeline">▶ Pipeline'ı Çalıştır</button>
+            <button class="btn-ghost" id="btn-refresh-history">Geçmişi Yenile</button>
+          </div>
+          <div id="pipeline-result" class="pipeline-result"></div>
+        </div>
+
+        <!-- RUN HISTORY -->
+        <div class="admin-table-wrap will-animate">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Kullanıcılar</th>
+                <th>Görevler</th>
+                <th>Toplam Puan</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="run-history-body">
+              <tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    `;
-  } catch(e) { console.error(e); }
-}
 
-async function runPipeline() {
-  const btn = document.getElementById("run-btn");
-  btn.disabled = true;
-  btn.textContent = "Calisiyor...";
-  try {
-    const res = await API.runPipeline();
-    document.getElementById("pipeline-output").textContent =
-      JSON.stringify(res, null, 2);
-    document.getElementById("pipeline-result").style.display = "";
-    loadStats();
-  } catch(e) {
-    document.getElementById("pipeline-output").textContent =
-      "Hata: " + e.message;
-    document.getElementById("pipeline-result").style.display = "";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "▶ Pipeline Calistir";
-  }
-}
+      <!-- UPLOAD TAB -->
+      <div id="tab-upload" style="display:none">
+        <div class="form-card">
+          <div class="form-title">CSV Veri Yükleme</div>
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-label">CSV dosyasını sürükle bırak veya tıkla</div>
+            <div class="upload-sub">user_activities.csv formatı · Max 10MB</div>
+            <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px">
+            <button class="btn-primary" id="btn-upload-csv">📤 Yükle</button>
+            <button class="btn-ghost" id="btn-browse">Dosya Seç</button>
+          </div>
+          <div id="upload-result" class="pipeline-result" style="margin-top:16px"></div>
+          <div id="upload-success" class="success-msg"></div>
+        </div>
+      </div>
 
-loadNav();
-loadStats();
-</script>
+      <!-- CHALLENGES TAB -->
+      <div id="tab-challenges" style="display:none">
+        <div class="admin-table-wrap will-animate">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Görev Adı</th>
+                <th>Koşul</th>
+                <th>Puan</th>
+                <th>Aktif</th>
+              </tr>
+            </thead>
+            <tbody id="challenges-admin-body">
+              <tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div id="tab-users" style="display:none">
+        <div class="admin-table-wrap will-animate">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Kullanıcı</th>
+                <th>Rol</th>
+                <th>Toplam Puan</th>
+                <th>Sıralama</th>
+              </tr>
+            </thead>
+            <tbody id="users-admin-body">
+              <tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script>
+    initPage();
+    Auth.requireAdmin();
+
+    // LOAD METRICS
+    async function loadMetrics() {
+      try {
+        const [challengesData, leaderboardData, aiStatus] = await Promise.allSettled([
+          API.getChallenges(),
+          API.getLeaderboard(),
+          API.getAIStatus(),
+        ]);
+
+        if (challengesData.status === 'fulfilled') {
+          const cList = challengesData.value.challenges || challengesData.value || [];
+          document.getElementById('am-challenges').textContent = cList.length;
+        }
+        if (leaderboardData.status === 'fulfilled') {
+          const lData = leaderboardData.value.leaderboard || leaderboardData.value || [];
+          document.getElementById('am-users').textContent = lData.length;
+        }
+        if (aiStatus.status === 'fulfilled') {
+          const s = aiStatus.value;
+          document.getElementById('am-ai').textContent = s.llm_enabled ? '✅ GPT-4o' : '⚡ Template';
+        }
+      } catch (_) {}
+
+      // Pipeline run count — show placeholder since no history endpoint
+      document.getElementById('am-runs').textContent = '—';
+    }
+
+    // TABS
+    const tabPanels = {
+      pipeline:   'tab-pipeline',
+      upload:     'tab-upload',
+      challenges: 'tab-challenges',
+      users:      'tab-users',
+    };
+    const loaders = {
+      challenges: loadChallengesAdmin,
+      users:      loadUsersAdmin,
+    };
+
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        Object.values(tabPanels).forEach(p => document.getElementById(p).style.display = 'none');
+        document.getElementById(tabPanels[btn.dataset.tab]).style.display = '';
+        if (loaders[btn.dataset.tab]) loaders[btn.dataset.tab]();
+      });
+    });
+
+    // PIPELINE RUN
+    document.getElementById('btn-run-pipeline').addEventListener('click', async () => {
+      const btn    = document.getElementById('btn-run-pipeline');
+      const resEl  = document.getElementById('pipeline-result');
+      const spinEl = document.getElementById('pipeline-spinner');
+      const statEl = document.getElementById('pipeline-status-txt');
+      btn.disabled = true;
+      btn.textContent = 'Çalışıyor…';
+      spinEl.style.display = '';
+      statEl.textContent   = 'Pipeline çalıştırılıyor…';
+      resEl.classList.remove('show');
+
+      try {
+        const d = await API.runPipeline();
+        const out = typeof d === 'object' ? JSON.stringify(d, null, 2) : String(d);
+        resEl.textContent = out;
+        resEl.classList.add('show');
+        statEl.textContent = '✅ Tamamlandı';
+        showToast({ title: 'Pipeline Tamamlandı', icon: '✅',
+          msg: `${d.users_processed} kullanıcı · ${d.points_distributed} puan dağıtıldı` });
+        loadMetrics();
+        renderRunHistory([{ run_date: d.run_date, status: 'success',
+          users_processed: d.users_processed,
+          challenges_evaluated: d.challenges_evaluated,
+          total_points_awarded: d.points_distributed }]);
+      } catch (e) {
+        resEl.textContent = `❌ Hata: ${e.message}`;
+        resEl.classList.add('show');
+        statEl.textContent = '❌ Hata';
+        showToast({ title: 'Pipeline Hatası', msg: e.message, icon: '⚠️' });
+      } finally {
+        btn.disabled   = false;
+        btn.textContent = '▶ Pipeline\'ı Çalıştır';
+        spinEl.style.display = 'none';
+      }
+    });
+
+    document.getElementById('btn-refresh-history').addEventListener('click', () => {
+      showToast({ title: 'Pipeline geçmişi bu sürümde mevcut değil', icon: 'ℹ️' });
+    });
+
+    function renderRunHistory(runs) {
+      const tbody = document.getElementById('run-history-body');
+      if (!runs.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text-muted)">Henüz pipeline çalıştırılmadı</td></tr>';
+        return;
+      }
+      tbody.innerHTML = runs.slice(-20).reverse().map(r => `
+        <tr>
+          <td class="mono">${(r.run_date || r.date || '—').slice(0,10)}</td>
+          <td class="accent">${r.users_processed ?? '—'}</td>
+          <td>${r.challenges_evaluated ?? '—'}</td>
+          <td class="accent">${fmtNum(r.total_points_awarded ?? 0)}</td>
+          <td><span class="badge-chip sm ${r.status === 'success' ? 'badge-gold' : 'badge-bronze'}">${r.status || 'ok'}</span></td>
+        </tr>`).join('');
+    }
+
+    // UPLOAD
+    const zone      = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('csv-file-input');
+    let selectedFile = null;
+
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      selectedFile = e.dataTransfer.files[0];
+      zone.querySelector('.upload-label').textContent = `📄 ${selectedFile.name}`;
+    });
+    zone.addEventListener('click', () => fileInput.click());
+    document.getElementById('btn-browse').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) zone.querySelector('.upload-label').textContent = `📄 ${selectedFile.name}`;
+    });
+
+    document.getElementById('btn-upload-csv').addEventListener('click', async () => {
+      if (!selectedFile) { showToast({ title: 'Dosya seçin', icon: '⚠️' }); return; }
+      const resEl  = document.getElementById('upload-result');
+      const succEl = document.getElementById('upload-success');
+      resEl.classList.remove('show');
+      succEl.classList.remove('show');
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const token = Auth.getToken();
+        const res   = await fetch('/api/ingestion/upload', {
+          method:  'POST',
+          headers: token ? { Authorization: 'Bearer ' + token } : {},
+          body:    formData,
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Yükleme hatası');
+        const out = JSON.stringify(d, null, 2);
+        resEl.textContent = out;
+        resEl.classList.add('show');
+        succEl.textContent = `✅ ${d.inserted || 0} kayıt eklendi, ${d.skipped || 0} atlandı`;
+        succEl.classList.add('show');
+        showToast({ title: 'CSV Yüklendi', msg: `${d.inserted} kayıt`, icon: '📥' });
+      } catch (e) {
+        resEl.textContent = `❌ ${e.message}`;
+        resEl.classList.add('show');
+        showToast({ title: 'Yükleme Hatası', msg: e.message, icon: '⚠️' });
+      }
+    });
+
+    // CHALLENGES ADMIN
+    async function loadChallengesAdmin() {
+      const tbody = document.getElementById('challenges-admin-body');
+      tbody.innerHTML = '<tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const data = await API.getChallenges();
+        const list = data.challenges || data || [];
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">Görev bulunamadı</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(c => `
+          <tr>
+            <td class="mono">${c.id || '—'}</td>
+            <td style="color:var(--text-1)">${c.name || c.challenge_name || '—'}</td>
+            <td class="mono" style="color:var(--accent-2);font-size:11px">${c.condition || '—'}</td>
+            <td class="accent">${c.points || c.reward_points || 0}</td>
+            <td><span class="badge-chip sm ${c.active !== false ? 'badge-gold' : 'badge-bronze'}">${c.active !== false ? 'Aktif' : 'Pasif'}</span></td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // USERS ADMIN
+    async function loadUsersAdmin() {
+      const tbody = document.getElementById('users-admin-body');
+      tbody.innerHTML = '<tr><td colspan="5" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const data  = await API.getLeaderboard();
+        const board = data.leaderboard || data || [];
+        tbody.innerHTML = board.map((u, i) => `
+          <tr>
+            <td class="mono">${u.user_id || u.id || '—'}</td>
+            <td style="color:var(--text-1)">${u.username || '—'}${u.is_current_user ? ' <span class="me-chip">Sen</span>' : ''}</td>
+            <td><span class="badge-chip sm ${u.role === 'admin' ? 'badge-gold' : 'badge-bronze'}">${u.role || 'user'}</span></td>
+            <td class="accent">${fmtNum(u.total_points || u.points || 0)}</td>
+            <td class="mono">#${i + 1}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    loadMetrics();
+  </script>
 </body>
 </html>

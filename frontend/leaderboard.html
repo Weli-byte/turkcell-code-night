@@ -1,114 +1,406 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>DGE &mdash; Liderlik</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sıralama — Gamification Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .lb-hero {
+      padding: 48px 0 32px;
+    }
+    .lb-hero h1 {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+    .lb-hero p { color: var(--text-muted); font-size: 14px; }
+
+    .lb-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      width: fit-content;
+      margin-bottom: 28px;
+    }
+    .lb-tab {
+      padding: 8px 18px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lb-tab.active {
+      background: rgba(0,255,135,0.1);
+      color: var(--accent-1);
+    }
+
+    /* PODIUM */
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      padding-top: 20px;
+    }
+    .podium-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 160px;
+    }
+    .podium-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(0,255,135,0.1);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      transition: transform 0.3s ease;
+    }
+    .podium-item.rank-1 .podium-avatar {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255,184,0,0.1);
+      width: 64px;
+      height: 64px;
+      font-size: 26px;
+    }
+    .podium-item.rank-2 .podium-avatar { border-color: var(--silver); color: var(--silver); }
+    .podium-item.rank-3 .podium-avatar { border-color: var(--bronze); color: var(--bronze); }
+
+    .podium-name { font-size: 13px; font-weight: 500; text-align: center; }
+    .podium-pts  {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-1);
+    }
+    .podium-bar {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      background: rgba(0,255,135,0.08);
+      border: 1px solid var(--border-acc);
+      border-bottom: none;
+    }
+    .podium-item.rank-1 .podium-bar { height: 90px; background: rgba(255,184,0,0.1); border-color: rgba(255,184,0,0.3); }
+    .podium-item.rank-2 .podium-bar { height: 65px; background: rgba(168,178,193,0.08); border-color: rgba(168,178,193,0.25); }
+    .podium-item.rank-3 .podium-bar { height: 48px; background: rgba(205,127,50,0.08); border-color: rgba(205,127,50,0.25); }
+
+    .lb-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .rank-medal-1 { font-size: 18px; }
+    .rank-medal-2 { font-size: 18px; }
+    .rank-medal-3 { font-size: 18px; }
+
+    .weekly-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* MY HISTORY */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .history-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 6px;
+    }
+    .history-day-date { font-size: 10px; color: var(--text-muted); text-align: center; }
+    .history-day-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--accent-1);
+    }
+    .history-day-label { font-size: 9px; color: var(--text-muted); }
+
+    .auto-refresh {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .auto-refresh .dot {
+      width: 5px; height: 5px;
+      background: var(--accent-1);
+      border-radius: 50%;
+      animation: live-pulse 2s ease-in-out infinite;
+    }
+  </style>
 </head>
 <body>
+  <div id="scroll-progress"></div>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-halo"></div>
 
-<nav class="navbar">
-  <a class="nav-logo" href="/catalog.html">DGE</a>
-  <div class="nav-links">
-    <a href="/catalog.html">Katalog</a>
-    <a href="/panel.html">Panelim</a>
-    <a href="/leaderboard.html" class="active">Liderlik</a>
-  </div>
-  <div class="flex gap-8">
-    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
-    <button class="btn-logout" onclick="logout()">Cikis</button>
-  </div>
-</nav>
-
-<div class="page">
-  <div class="container">
-
-    <div class="flex-between mt-16" style="margin-bottom:24px">
-      <div>
-        <h1 class="section-title" style="font-size:28px;margin-bottom:4px">
-          Liderlik Tablosu
-        </h1>
-        <span style="display:inline-flex;align-items:center;gap:6px;
-          font-size:13px;color:var(--accent-1)">
-          <span style="width:8px;height:8px;border-radius:50%;
-            background:var(--accent-1);display:inline-block"></span>
-          CANLI
-        </span>
-      </div>
-      <div class="text-muted" style="font-size:12px" id="lb-meta">&ndash;</div>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="catalog.html" class="nav-logo">GE Engine</a>
+    <ul class="nav-links">
+      <li><a href="catalog.html">Katalog</a></li>
+      <li><a href="panel.html">Panelim</a></li>
+      <li><a href="leaderboard.html">Sıralama</a></li>
+      <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="points-pill" id="nav-points">⚡ — puan</div>
+      <span class="nav-username" id="nav-username"></span>
+      <a class="nav-logout" id="nav-logout" href="#">Çıkış</a>
     </div>
+  </nav>
 
-    <div class="card" style="padding:0;overflow:hidden">
-      <div id="lb-body">
-        <div class="spinner" style="margin:40px auto"></div>
+  <div class="page-content">
+    <div class="container">
+
+      <div class="lb-hero will-animate">
+        <h1>Skor <span class="text-gradient">Tablosu</span></h1>
+        <div class="lb-hero p" style="display:flex;align-items:center;gap:12px;margin-top:8px">
+          <p>Tüm zamanların en iyileri · Otomatik güncellenir</p>
+          <div class="auto-refresh"><div class="dot"></div> Canlı</div>
+        </div>
       </div>
+
+      <!-- TABS -->
+      <div class="lb-tabs will-animate">
+        <button class="lb-tab active" id="tab-all">Tüm Zamanlar</button>
+        <button class="lb-tab" id="tab-weekly">Bu Hafta</button>
+        <button class="lb-tab" id="tab-history">Geçmişim</button>
+      </div>
+
+      <!-- ALL TIME VIEW -->
+      <div id="view-all">
+        <!-- PODIUM -->
+        <div class="podium will-animate" id="podium"></div>
+        <!-- TABLE -->
+        <div class="lb-card will-animate">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th style="width:60px">Sıra</th>
+                <th>Kullanıcı</th>
+                <th style="text-align:right">Puan</th>
+              </tr>
+            </thead>
+            <tbody id="lb-body">
+              <tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- WEEKLY VIEW -->
+      <div id="view-weekly" style="display:none">
+        <div class="weekly-info">
+          📅 <span id="week-label">Bu haftanın sıralaması</span>
+        </div>
+        <div class="lb-card will-animate">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th style="width:60px">Sıra</th>
+                <th>Kullanıcı</th>
+                <th style="text-align:right">Haftalık Puan</th>
+              </tr>
+            </thead>
+            <tbody id="lb-weekly-body">
+              <tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HISTORY VIEW -->
+      <div id="view-history" style="display:none">
+        <p class="text-2" style="margin-bottom:20px;font-size:14px">Son 7 gün boyunca sıralama pozisyonun</p>
+        <div class="history-grid will-animate" id="rank-history-grid">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
     </div>
-
   </div>
-</div>
 
-<script src="/js/api.js"></script>
-<script>
-Auth.requireAuth();
-function logout() { Auth.clear(); window.location.href = "/index.html"; }
+  <div id="toast-container"></div>
 
-async function loadLeaderboard() {
-  try {
-    const [board, me] = await Promise.all([
-      API.getLeaderboard(),
-      API.getMe(),
-    ]);
-    document.getElementById("nav-pts").textContent = me.total_points;
-    document.getElementById("lb-meta").textContent =
-      `${board.length} kullanici · Deterministik siralama`;
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script>
+    initPage();
 
-    const rankClass = r => r===1?"top1":r===2?"top2":r===3?"top3":"";
-    const medals    = ["🥇","🥈","🥉"];
+    if (Auth.getRole() === 'admin') {
+      document.getElementById('nav-admin-link').style.display = '';
+    }
 
-    document.getElementById("lb-body").innerHTML = `
-      <table class="lb-table" style="width:100%">
-        <thead><tr>
-          <th style="width:60px">#</th>
-          <th>Kullanici</th>
-          <th>Rozetler</th>
-          <th style="text-align:right">Puan</th>
-        </tr></thead>
-        <tbody>
-          ${board.map(e => `
-            <tr class="${e.is_current_user?'me':''}">
+    const myId = Auth.getUserId();
+    let activeTab = 'all';
+
+    // TAB SWITCH
+    const tabs = { all: 'tab-all', weekly: 'tab-weekly', history: 'tab-history' };
+    const views = { all: 'view-all', weekly: 'view-weekly', history: 'view-history' };
+
+    Object.keys(tabs).forEach(key => {
+      document.getElementById(tabs[key]).addEventListener('click', () => {
+        document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabs[key]).classList.add('active');
+        Object.values(views).forEach(v => document.getElementById(v).style.display = 'none');
+        document.getElementById(views[key]).style.display = '';
+        activeTab = key;
+        if (key === 'weekly') loadWeekly();
+        if (key === 'history') loadHistory();
+      });
+    });
+
+    // RANK MEDAL
+    function rankDisplay(rank) {
+      if (rank === 1) return '🥇';
+      if (rank === 2) return '🥈';
+      if (rank === 3) return '🥉';
+      return `<span class="lb-rank">#${rank}</span>`;
+    }
+
+    // ALL TIME
+    async function loadAllTime() {
+      try {
+        const data = await API.getLeaderboard();
+        const board = data.leaderboard || data || [];
+
+        // PODIUM
+        const top3   = board.slice(0, 3);
+        const order  = [1, 0, 2]; // silver, gold, bronze visual order
+        const podium = document.getElementById('podium');
+        podium.innerHTML = order.filter(i => top3[i]).map(i => {
+          const u = top3[i];
+          return `
+            <div class="podium-item rank-${u.rank}">
+              <div class="podium-avatar">${(u.username || '?')[0].toUpperCase()}</div>
+              <div class="podium-name">${u.username}${u.is_current_user ? ' 👈' : ''}</div>
+              <div class="podium-pts">${fmtNum(u.total_points || u.points)}</div>
+              <div class="podium-bar"></div>
+            </div>`;
+        }).join('');
+
+        // TABLE (from #4 on)
+        const rest = board.slice(3);
+        const tbody = document.getElementById('lb-body');
+        tbody.innerHTML = board.map(u => {
+          const isMe = u.is_current_user;
+          return `
+            <tr class="lb-row ${isMe ? 'me' : ''}">
+              <td class="lb-rank ${u.rank === 1 ? 'gold' : u.rank === 2 ? 'silver' : u.rank === 3 ? 'bronze' : ''}"
+                >${u.rank <= 3 ? ['🥇','🥈','🥉'][u.rank-1] : '#' + u.rank}</td>
               <td>
-                <span class="lb-rank ${rankClass(e.rank)}">
-                  ${e.rank<=3 ? medals[e.rank-1] : "#"+e.rank}
-                </span>
+                <div class="lb-user">
+                  <div class="lb-avatar">${(u.username || '?')[0].toUpperCase()}</div>
+                  <div class="lb-username">${u.username}</div>
+                  ${isMe ? '<span class="me-chip">Sen</span>' : ''}
+                </div>
               </td>
-              <td>
-                <span style="font-weight:${e.is_current_user?'600':'400'}">
-                  ${e.username}
-                </span>
-                ${e.is_current_user
-                  ? '<span class="badge-chip badge-none" style="margin-left:8px;font-size:10px">Sen</span>'
-                  : ''}
-              </td>
-              <td>
-                ${e.badges.map(b =>
-                  `<span class="badge-chip badge-${b}" style="font-size:10px">${b}</span>`
-                ).join(" ") || '<span class="text-muted">&ndash;</span>'}
-              </td>
-              <td style="text-align:right">
-                <span class="lb-pts">${e.total_points}</span>
-              </td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  } catch(e) { console.error(e); }
-}
+              <td class="lb-points">${fmtNum(u.total_points || u.points)}</td>
+            </tr>`;
+        }).join('');
 
-loadLeaderboard();
-setInterval(loadLeaderboard, 30000);
-</script>
+        // Nav points from board
+        const me = board.find(u => u.is_current_user);
+        if (me) {
+          document.getElementById('nav-points').textContent =
+            `⚡ ${me.total_points || me.points} puan`;
+        }
+      } catch (e) {
+        document.getElementById('lb-body').innerHTML =
+          `<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // WEEKLY
+    async function loadWeekly() {
+      const tbody = document.getElementById('lb-weekly-body');
+      tbody.innerHTML = '<tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const data   = await API.getWeeklyLeaderboard();
+        const board  = data || [];
+        if (board.length) {
+          document.getElementById('week-label').textContent =
+            `Bu hafta · ${board[0].week_start} başlangıcı`;
+        }
+        tbody.innerHTML = board.map(u => {
+          const isMe = u.is_current_user;
+          return `
+            <tr class="lb-row ${isMe ? 'me' : ''}">
+              <td class="lb-rank ${u.rank<=3?['gold','silver','bronze'][u.rank-1]:''}"
+                >${u.rank <= 3 ? ['🥇','🥈','🥉'][u.rank-1] : '#' + u.rank}</td>
+              <td>
+                <div class="lb-user">
+                  <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
+                  <div class="lb-username">${u.username}</div>
+                  ${isMe ? '<span class="me-chip">Sen</span>' : ''}
+                </div>
+              </td>
+              <td class="lb-points">${fmtNum(u.weekly_points)}</td>
+            </tr>`;
+        }).join('') || '<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--text-muted)">Bu hafta veri yok</td></tr>';
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    // RANK HISTORY
+    async function loadHistory() {
+      const el = document.getElementById('rank-history-grid');
+      el.innerHTML = '<div class="spinner"></div>';
+      try {
+        const data = await API.getMyRankHistory();
+        const days = data || [];
+        el.innerHTML = days.map(d => `
+          <div class="history-day">
+            <div class="history-day-date">${d.date.slice(5)}</div>
+            <div class="history-day-rank">#${d.rank}</div>
+            <div class="history-day-label">sıra</div>
+          </div>`).join('');
+      } catch (e) {
+        el.innerHTML = `<p class="text-muted" style="font-size:13px">${e.message}</p>`;
+      }
+    }
+
+    // AUTO REFRESH every 30s
+    loadAllTime();
+    setInterval(() => { if (activeTab === 'all') loadAllTime(); }, 30000);
+  </script>
 </body>
 </html>

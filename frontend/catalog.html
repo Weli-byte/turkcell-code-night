@@ -1,187 +1,298 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>DGE &mdash; Katalog</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katalog — Gamification Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .catalog-hero {
+      padding: 56px 0 32px;
+      position: relative;
+    }
+    .catalog-hero h1 {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+    .catalog-hero p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 500px;
+    }
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .filter-chip.active,
+    .filter-chip:hover {
+      background: rgba(0,255,135,0.08);
+      color: var(--accent-1);
+      border-color: var(--border-acc);
+    }
+    .search-input {
+      flex: 1;
+      min-width: 180px;
+      max-width: 300px;
+    }
+    .skeleton {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius);
+      animation: skeleton-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1;   }
+    }
+    .skeleton-thumb { aspect-ratio: 16/9; width: 100%; }
+    .skeleton-info  { height: 16px; margin: 12px 14px 6px; }
+    .skeleton-meta  { height: 10px; margin: 0 14px 14px; width: 60%; }
+
+    .series-section { margin-bottom: 48px; }
+    .series-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent-2);
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 100px;
+      padding: 3px 10px;
+      margin-bottom: 16px;
+      letter-spacing: 0.04em;
+    }
+
+    .thumb-gradient {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(108,0,255,0.25) 0%,
+        rgba(0,255,135,0.12) 100%);
+    }
+    .video-duration-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #fff;
+      padding: 2px 6px;
+    }
+  </style>
 </head>
 <body>
+  <div id="scroll-progress"></div>
+  <div class="noise-overlay"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-halo"></div>
+  <div class="bg-burst"></div>
 
-<nav class="navbar">
-  <a class="nav-logo" href="/catalog.html">DGE</a>
-  <div class="nav-links">
-    <a href="/catalog.html" class="active">Katalog</a>
-    <a href="/panel.html">Panelim</a>
-    <a href="/leaderboard.html">Liderlik</a>
-    <span id="nav-admin-link" style="display:none">
-      <a href="/admin.html">Admin</a>
-    </span>
-  </div>
-  <div class="flex gap-8" style="align-items:center">
-    <div class="nav-points">&#9733; <span id="nav-pts">&ndash;</span></div>
-    <span class="nav-user" id="nav-user">&ndash;</span>
-    <button class="btn-logout" onclick="logout()">Cikis</button>
-  </div>
-</nav>
-
-<div class="page">
-  <div class="container">
-
-    <div class="grid-2 mt-16" style="margin-bottom:32px">
-
-      <div class="card">
-        <div style="font-size:22px;font-weight:700;margin-bottom:8px">
-          Video Izle,<br>
-          <span style="background:var(--accent-grad);
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-            background-clip:text">Odul Kazan</span>
-        </div>
-        <p class="text-2" style="font-size:14px;margin-bottom:16px"
-           id="challenge-summary">Yukleniyor...</p>
-        <div id="my-badges-row" class="flex gap-8" style="flex-wrap:wrap"></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title" style="font-size:16px;margin-bottom:12px">
-          Bugunku Challengelar
-        </div>
-        <div id="challenge-list-mini">
-          <div class="spinner" style="margin:20px auto"></div>
-        </div>
-      </div>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="catalog.html" class="nav-logo">GE Engine</a>
+    <ul class="nav-links">
+      <li><a href="catalog.html">Katalog</a></li>
+      <li><a href="panel.html">Panelim</a></li>
+      <li><a href="leaderboard.html">Sıralama</a></li>
+      <li id="nav-admin-link" style="display:none"><a href="admin.html">Admin</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="points-pill" id="nav-points">⚡ — puan</div>
+      <span class="nav-username" id="nav-username"></span>
+      <a class="nav-logout" id="nav-logout" href="#">Çıkış</a>
     </div>
+  </nav>
 
-    <div id="video-sections">
-      <div class="spinner" style="margin:40px auto"></div>
-    </div>
-
-  </div>
-</div>
-
-<script src="/js/api.js"></script>
-<script>
-Auth.requireAuth();
-
-async function loadNavbar() {
-  try {
-    const me = await API.getMe();
-    document.getElementById("nav-pts").textContent  = me.total_points;
-    document.getElementById("nav-user").textContent = me.username;
-    if (me.role === "admin") {
-      document.getElementById("nav-admin-link").style.display = "";
-    }
-    const badgeRow = document.getElementById("my-badges-row");
-    if (me.badges.length === 0) {
-      badgeRow.innerHTML = '<span class="badge-chip badge-none">Rozet yok &mdash; 500 puana Bronze bekliyor</span>';
-    } else {
-      badgeRow.innerHTML = me.badges.map(b =>
-        `<span class="badge-chip badge-${b}">${b}</span>`
-      ).join("");
-    }
-  } catch(e) { console.error("Navbar:", e); }
-}
-
-async function loadChallenges() {
-  try {
-    const chs = await API.getChallenges();
-    const completed = chs.filter(c => c.passed || c.rewarded_today).length;
-    document.getElementById("challenge-summary").textContent =
-      `Bugun ${chs.length} challenge aktif — ${completed} tamamlandi.`;
-
-    const list = document.getElementById("challenge-list-mini");
-    if (chs.length === 0) {
-      list.innerHTML = '<p class="text-muted">Aktif challenge yok.</p>';
-      return;
-    }
-    list.innerHTML = chs.slice(0,4).map(ch => `
-      <div class="challenge-card ${ch.passed||ch.rewarded_today?'passed':''}"
-           style="margin-bottom:8px">
-        <div class="flex-between">
-          <span class="challenge-name" style="font-size:14px">${ch.name}</span>
-          <span class="challenge-pts">+${ch.reward_points}p</span>
-        </div>
-        <div class="progress-wrap mt-8">
-          <div class="progress-fill" style="width:${ch.percentage}%"></div>
-        </div>
-        <div class="flex-between mt-8">
-          <span class="text-muted" style="font-size:11px">
-            ${ch.current_value.toFixed(0)} / ${ch.target_value}
-          </span>
-          <span style="font-size:11px;color:${ch.rewarded_today?'var(--accent-1)':'var(--text-muted)'}">
-            ${ch.rewarded_today ? '&#10003; Odullendi' : ch.percentage + '%'}
-          </span>
-        </div>
+  <div class="page-content">
+    <div class="container">
+      <div class="catalog-hero will-animate">
+        <h1>Video <span class="text-gradient">Kataloğu</span></h1>
+        <p>İzle, puan kazan, rozetler topla. Her video bir fırsat.</p>
       </div>
-    `).join("");
-    if (chs.length > 4) {
-      list.innerHTML += `<p class="text-muted mt-8" style="font-size:13px">
-        +${chs.length-4} daha &rarr;
-        <a href="/panel.html" style="color:var(--accent-1)">panelde gor</a></p>`;
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar will-animate">
+        <input class="search-input" type="text" id="search-input" placeholder="Video ara…" />
+        <button class="filter-chip active" data-genre="all">Tümü</button>
+        <button class="filter-chip" data-genre="drama">Drama</button>
+        <button class="filter-chip" data-genre="science">Bilim</button>
+        <button class="filter-chip" data-genre="tech">Teknoloji</button>
+        <button class="filter-chip" data-genre="nature">Doğa</button>
+        <button class="filter-chip" data-genre="documentary">Belgesel</button>
+      </div>
+
+      <!-- CONTENT -->
+      <div id="catalog-root"></div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script>
+    initPage();
+
+    // Show admin link if admin
+    if (Auth.getRole() === 'admin') {
+      document.getElementById('nav-admin-link').style.display = '';
     }
-  } catch(e) { console.error("Challenges:", e); }
-}
 
-async function loadVideos() {
-  try {
-    const videos = await API.getCatalog();
-    const sections = document.getElementById("video-sections");
+    // --- CATALOG RENDER ---
+    let allVideos = [];
+    let activeSeries = [];
+    let currentGenre = 'all';
+    let currentSearch = '';
 
-    const groups = {};
-    videos.forEach(v => {
-      if (!groups[v.content_type]) groups[v.content_type] = [];
-      groups[v.content_type].push(v);
-    });
+    const root = document.getElementById('catalog-root');
 
-    const typeLabels = {
-      film:"Filmler", belgesel:"Belgeseller",
-      kisa:"Kisa Filmler", dizi:"Diziler"
-    };
+    function makeSkeletons(n) {
+      return Array.from({length: n}, () => `
+        <div class="video-card">
+          <div class="skeleton skeleton-thumb"></div>
+          <div class="skeleton skeleton-info"></div>
+          <div class="skeleton skeleton-meta"></div>
+        </div>`).join('');
+    }
 
-    sections.innerHTML = Object.entries(groups).map(([type, vids]) => `
-      <div style="margin-bottom:40px">
-        <h2 class="section-title">${typeLabels[type] || type}</h2>
-        <div class="video-grid">
-          ${vids.map(v => `
-            <div class="video-card" onclick="goWatch('${v.id}')">
-              <div class="video-thumb"
-                   style="background:${v.thumbnail_color}">
-                <div class="video-play-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24"
-                       fill="white"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-              </div>
-              <div class="video-info">
-                <div class="video-title">${v.title}</div>
-                <div class="video-meta">
-                  <span class="video-tag">${v.genre}</span>
-                  ${v.duration_minutes} dk
-                </div>
+    function renderCatalog() {
+      let videos = allVideos;
+      if (currentGenre !== 'all') {
+        videos = videos.filter(v =>
+          (v.genre || v.genres || '').toLowerCase().includes(currentGenre));
+      }
+      if (currentSearch.trim()) {
+        const q = currentSearch.toLowerCase();
+        videos = videos.filter(v => v.title?.toLowerCase().includes(q));
+      }
+
+      if (videos.length === 0) {
+        root.innerHTML = `<div class="empty-state">
+          <div class="icon">🎬</div><p>Bu filtreyle video bulunamadı.</p>
+        </div>`;
+        return;
+      }
+
+      // Group by series
+      const bySeriesId = {};
+      const noSeries   = [];
+      videos.forEach(v => {
+        if (v.series_id) {
+          (bySeriesId[v.series_id] = bySeriesId[v.series_id] || []).push(v);
+        } else {
+          noSeries.push(v);
+        }
+      });
+
+      let html = '';
+
+      // Named series
+      activeSeries.forEach(s => {
+        const vids = bySeriesId[s.id];
+        if (!vids || !vids.length) return;
+        html += `
+          <div class="series-section" data-stagger>
+            <div class="section-header">
+              <div>
+                <div class="series-badge">📺 Seri</div>
+                <h2 class="section-title">${s.title || s.name || 'Seri'}</h2>
+                ${s.description ? `<p class="section-subtitle">${s.description}</p>` : ''}
               </div>
             </div>
-          `).join("")}
-        </div>
-      </div>
-    `).join("");
-  } catch(e) {
-    document.getElementById("video-sections").innerHTML =
-      '<p class="text-muted">Videolar yuklenemedi.</p>';
-  }
-}
+            <div class="video-grid">
+              ${vids.map(v => videoCard(v)).join('')}
+            </div>
+          </div>`;
+      });
 
-function goWatch(id) {
-  window.location.href = `/watch.html?id=${id}`;
-}
+      // Standalone
+      if (noSeries.length) {
+        html += `
+          <div class="series-section" data-stagger>
+            <div class="section-header">
+              <div><h2 class="section-title">Tekil Videolar</h2></div>
+            </div>
+            <div class="video-grid">
+              ${noSeries.map(v => videoCard(v)).join('')}
+            </div>
+          </div>`;
+      }
 
-function logout() {
-  Auth.clear();
-  window.location.href = "/index.html";
-}
+      root.innerHTML = html;
+      initAnimations();
+      initCursor();
+    }
 
-loadNavbar();
-loadChallenges();
-loadVideos();
-</script>
+    function videoCard(v) {
+      const durationMin = v.duration_minutes ? Math.round(v.duration_minutes) : '?';
+      const genre = v.genre || v.genres || '';
+      const colors = ['#6C00FF','#00FF87','#00D4FF','#FF4D4D','#FFB800'];
+      const color  = colors[v.id % colors.length] || '#6C00FF';
+      return `
+        <div class="video-card card-hover" onclick="window.location.href='watch.html?id=${v.id}'">
+          <div class="video-thumb" style="background: linear-gradient(135deg, ${color}22 0%, #0D0D1800 100%);">
+            <div class="thumb-gradient"></div>
+            <div class="play-btn"><div class="play-icon"></div></div>
+            <div class="video-duration-badge">${durationMin} dk</div>
+          </div>
+          <div class="video-info">
+            <div class="video-title">${v.title || 'Başlıksız Video'}</div>
+            <div class="video-meta">
+              ${genre ? `<span class="genre-chip">${genre}</span>` : ''}
+              ${v.episode_number ? `<span class="duration-chip">Bölüm ${v.episode_number}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    async function loadCatalog() {
+      root.innerHTML = `<div class="video-grid">${makeSkeletons(6)}</div>`;
+      try {
+        const data = await API.getCatalog();
+        allVideos   = data.videos || data || [];
+        activeSeries = data.series  || [];
+        renderCatalog();
+      } catch (e) {
+        root.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
+      }
+    }
+
+    // GENRE FILTER
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentGenre = btn.dataset.genre;
+        renderCatalog();
+      });
+    });
+
+    // SEARCH
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      currentSearch = e.target.value;
+      renderCatalog();
+    });
+
+    loadCatalog();
+  </script>
 </body>
 </html>
