@@ -684,6 +684,17 @@
           if (lvChip) lvChip.textContent = `Lv ${d.level_up.level}`;
         }
 
+        if (d.new_achievements?.length) {
+          d.new_achievements.forEach((a, i) => {
+            setTimeout(() => showToast({
+              title: `${a.icon} Başarım: ${a.name}`,
+              msg:   `${a.description} (+${a.reward} puan)`,
+              icon:  '🎖',
+              duration: 6500,
+            }), i * 700);
+          });
+        }
+
         if (d.in_party && d.party_minutes > 0) {
           showToast({
             title: '🎉 Parti dakikası işlendi',
@@ -778,6 +789,16 @@
           msg:   `Ortalama: ${d.avg_rating} (${d.rating_count} oy)`,
           icon:  '⭐',
         });
+        if (d.new_achievements?.length) {
+          d.new_achievements.forEach((a, i) => {
+            setTimeout(() => showToast({
+              title: `${a.icon} Başarım: ${a.name}`,
+              msg:   `${a.description} (+${a.reward} puan)`,
+              icon:  '🎖',
+              duration: 6500,
+            }), 600 + i * 700);
+          });
+        }
         if (d.bonus_points > 0) {
           const pill = document.getElementById('nav-points');
           if (pill) { pill.textContent = `⚡ ${d.total_points} puan`; }

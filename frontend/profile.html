@@ -183,6 +183,47 @@
     .pts-reason { font-size: 13px; color: var(--text-2); flex: 1; padding: 0 12px; }
     .pts-amt    { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--accent-1); }
 
+    /* BAŞARIMLAR (Sprint 19) */
+    .ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .ach-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .ach-item:hover { transform: translateY(-2px); }
+    .ach-item.earned {
+      border-color: var(--border-acc);
+      background: rgba(0,255,135,0.04);
+    }
+    .ach-item.locked { opacity: 0.55; }
+    .ach-head { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+    .ach-icon { font-size: 22px; }
+    .ach-name { font-size: 13px; font-weight: 700; color: var(--text-1); }
+    .ach-reward {
+      margin-left: auto; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--accent-1);
+    }
+    .ach-desc { font-size: 11px; color: var(--text-muted); line-height: 1.45; margin-bottom: 8px; }
+    .ach-date { font-size: 10px; color: var(--accent-1); font-family: 'JetBrains Mono', monospace; }
+    .ach-progress-track {
+      height: 5px; background: rgba(255,255,255,0.06);
+      border-radius: 3px; overflow: hidden; margin-bottom: 4px;
+    }
+    .ach-progress-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #00FF87, #00D4FF);
+    }
+    .ach-progress-text {
+      font-size: 10px; color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* PUBLIC PROFILE MODE */
     .public-banner {
       background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2);
@@ -321,6 +362,15 @@
             <div class="next-badge-need" id="next-badge-need"></div>
           </div>
         </div>
+      </div>
+
+      <!-- BAŞARIMLAR (Sprint 19) — sadece kendi profili -->
+      <div class="card will-animate" id="achievements-card" style="margin-bottom:28px;display:none">
+        <div class="section-header">
+          <div class="section-title">🎖 Başarımlar</div>
+          <span class="profile-chip accent" id="ach-summary">—</span>
+        </div>
+        <div class="ach-grid" id="ach-grid"><div class="spinner"></div></div>
       </div>
 
       <!-- HAFTALIK CHART + PUAN GEÇMİŞİ (iki kolon) -->
@@ -593,6 +643,36 @@
       }
     });
 
+    // ── BAŞARIMLAR (Sprint 19) ────────────────────────
+    async function loadAchievements() {
+      if (!isSelf) return;
+      const card = document.getElementById('achievements-card');
+      const grid = document.getElementById('ach-grid');
+      card.style.display = '';
+      try {
+        const d = await API.getMyAchievements();
+        document.getElementById('ach-summary').textContent =
+          `${d.earned_count}/${d.total_count} · +${fmtNum(d.total_reward_earned)} puan`;
+        grid.innerHTML = d.achievements.map(a => `
+          <div class="ach-item ${a.earned ? 'earned' : 'locked'}">
+            <div class="ach-head">
+              <span class="ach-icon">${a.icon}</span>
+              <span class="ach-name">${a.name}</span>
+              <span class="ach-reward">+${a.reward}</span>
+            </div>
+            <div class="ach-desc">${a.description}</div>
+            ${a.earned
+              ? `<div class="ach-date">✓ ${(a.awarded_at || '').slice(0, 10)}</div>`
+              : `<div class="ach-progress-track">
+                   <div class="ach-progress-fill" style="width:${a.pct}%"></div>
+                 </div>
+                 <div class="ach-progress-text">${a.current} / ${a.target}</div>`}
+          </div>`).join('');
+      } catch (e) {
+        grid.innerHTML = `<p style="color:var(--danger);font-size:13px">${e.message}</p>`;
+      }
+    }
+
     // ── LOAD ──────────────────────────────────────────
     async function loadProfile() {
       try {
@@ -604,6 +684,7 @@
     }
 
     loadProfile();
+    loadAchievements();
 
     // ── SHARE ACTIONS ─────────────────────────────────
     document.getElementById('btn-share-profile').addEventListener('click', () => {

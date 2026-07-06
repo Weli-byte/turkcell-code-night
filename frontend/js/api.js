@@ -140,6 +140,7 @@ const API = {
   getFollowing:    ()           => apiFetch("/social/following"),
   getFriendsLeaderboard: ()     => apiFetch("/social/friends-leaderboard"),
   getFollowSuggestions:  ()     => apiFetch("/social/follow-suggestions"),
+  getMyAchievements:     ()     => apiFetch("/achievements/mine"),
   createParty:     (content_id) =>
     apiFetch("/party/create", { method:"POST", body: JSON.stringify({content_id}) }),
   joinParty:       (room_code)  =>

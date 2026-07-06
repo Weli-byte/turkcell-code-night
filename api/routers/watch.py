@@ -151,6 +151,10 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
             "message": f"Lv {new_level['level']} — {new_level['title']} unvanına ulaştın!",
         })
 
+    # Başarım kontrolü (izleme/kaşif/streak/level kilometre taşları)
+    from engine.achievement_engine import check_achievements
+    new_achievements = check_achievements(token["sub"])
+
     # SSE bildirimi kuyruğa ekle
     if result["points_earned"] > 0:
         push_notification(token["sub"], {
@@ -177,6 +181,7 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
         "new_badges":    result["new_badges"],
         "total_points":  result["total_points"],
         "level_up":      new_level if level_up else None,
+        "new_achievements": new_achievements,
         "message":       (
             f"{round(effective_minutes, 1)} dakika izlendi."
             + (f" +{result['points_earned']} puan kazandın!" if result["points_earned"] > 0 else "")

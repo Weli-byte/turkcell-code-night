@@ -24,7 +24,11 @@ def ai_explain(body: ExplainBody, token: dict = Depends(verify_token)):
 @router.post("/chat")
 def ai_chat(body: ExplainBody, token: dict = Depends(verify_token)):
     """Konuşma hafızalı AI koç — geçmiş DB'den, evidence deterministik."""
-    return chat(token["sub"], body.question)
+    result = chat(token["sub"], body.question)
+    # Başarım kontrolü (Meraklı — ilk AI sohbeti)
+    from engine.achievement_engine import check_achievements
+    check_achievements(token["sub"])
+    return result
 
 
 @router.get("/chat/history")

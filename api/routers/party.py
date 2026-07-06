@@ -108,6 +108,11 @@ def create_party(body: CreateBody, token: dict = Depends(verify_token)):
     party = db.execute("SELECT * FROM watch_parties WHERE id=?", (party_id,)).fetchone()
     payload = _room_payload(db, party)
     db.close()
+
+    # Başarım kontrolü (Parti Kurucusu)
+    from engine.achievement_engine import check_achievements
+    check_achievements(user_id)
+
     return payload
 
 

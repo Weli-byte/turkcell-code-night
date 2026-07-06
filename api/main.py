@@ -6,6 +6,7 @@ from api.routers import (
     auth, users, content, watch,
     challenges, leaderboard, badges,
     ai_explain, pipeline, ingestion, notifications, social, party, seasons,
+    achievements,
 )
 import os
 
@@ -51,6 +52,7 @@ app.include_router(notifications.router,  prefix="/api/notifications")
 app.include_router(social.router,         prefix="/api/social")
 app.include_router(party.router,          prefix="/api/party")
 app.include_router(seasons.router,        prefix="/api/seasons")
+app.include_router(achievements.router,   prefix="/api/achievements")
 
 # Frontend static dosyalari — API route'larindan SONRA mount edilmeli
 if os.path.exists("frontend") and any(

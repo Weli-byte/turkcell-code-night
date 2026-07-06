@@ -107,6 +107,10 @@ def rate_content(body: RateBody, token: dict = Depends(verify_token)):
     ).fetchone()
     db.close()
 
+    # Başarım kontrolü (İlk Oy / Eleştirmen)
+    from engine.achievement_engine import check_achievements
+    new_achievements = check_achievements(user_id)
+
     return {
         "ok":           True,
         "rating":       body.rating,
@@ -115,6 +119,7 @@ def rate_content(body: RateBody, token: dict = Depends(verify_token)):
         "total_points": int(total_pts["total"]),
         "avg_rating":   round(float(avg_row["avg_r"] or 0), 1),
         "rating_count": int(avg_row["cnt"]),
+        "new_achievements": new_achievements,
         "message":      ("Oy verildi" if is_new else "Oy güncellendi") +
                         (f" +{bonus_points} puan!" if bonus_points else ""),
     }
@@ -140,6 +145,10 @@ def add_comment(body: CommentBody, token: dict = Depends(verify_token)):
         "SELECT username FROM users WHERE id=?", (token["sub"],)
     ).fetchone()
     db.close()
+
+    # Başarım kontrolü (İlk Yorum)
+    from engine.achievement_engine import check_achievements
+    check_achievements(token["sub"])
 
     return {
         "id":         cm_id,
@@ -315,6 +324,11 @@ def follow_user(username: str, token: dict = Depends(verify_token)):
         "type":    "info",
         "message": f"👤 {follower_name} seni takip etmeye başladı",
     })
+
+    # Takip EDİLEN için başarım kontrolü (Sosyal Kelebek / Popüler)
+    from engine.achievement_engine import check_achievements
+    check_achievements(target["id"])
+
     return {"ok": True, "following": True, "message": f"{username} takip edildi"}
 
 

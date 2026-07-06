@@ -183,6 +183,14 @@ def init_db():
         FOREIGN KEY (follower_id) REFERENCES users(id),
         FOREIGN KEY (following_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS user_achievements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        achievement_id TEXT NOT NULL,
+        awarded_at TEXT NOT NULL,
+        UNIQUE(user_id, achievement_id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users
