@@ -156,6 +156,23 @@ def init_db():
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS seasons (
+        id TEXT PRIMARY KEY,
+        week_start TEXT NOT NULL,
+        week_end TEXT NOT NULL,
+        finalized_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS season_results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        season_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        rank INTEGER NOT NULL,
+        points INTEGER NOT NULL,
+        reward_points INTEGER DEFAULT 0,
+        UNIQUE(season_id, user_id),
+        FOREIGN KEY (season_id) REFERENCES seasons(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

@@ -5,7 +5,7 @@ from database.setup import init_db
 from api.routers import (
     auth, users, content, watch,
     challenges, leaderboard, badges,
-    ai_explain, pipeline, ingestion, notifications, social, party,
+    ai_explain, pipeline, ingestion, notifications, social, party, seasons,
 )
 import os
 
@@ -50,6 +50,7 @@ app.include_router(ingestion.router,      prefix="/api/ingestion")
 app.include_router(notifications.router,  prefix="/api/notifications")
 app.include_router(social.router,         prefix="/api/social")
 app.include_router(party.router,          prefix="/api/party")
+app.include_router(seasons.router,        prefix="/api/seasons")
 
 # Frontend static dosyalari — API route'larindan SONRA mount edilmeli
 if os.path.exists("frontend") and any(
