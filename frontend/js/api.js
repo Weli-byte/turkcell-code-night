@@ -95,6 +95,8 @@ const API = {
   getPublicProfile:   (username) => apiFetch(`/users/public/${encodeURIComponent(username)}`),
   getCatalog:         (q)    => apiFetch("/content/catalog" + (q||"")),
   getContent:         (id)   => apiFetch("/content/" + id),
+  getContentDetail:   (id)   => apiFetch(`/content/${encodeURIComponent(id)}/detail`),
+  getReviewSummary:   (id)   => apiFetch(`/content/${encodeURIComponent(id)}/review-summary`),
   startSession:       (cid)  => apiFetch("/watch/session/start",
     { method:"POST", body: JSON.stringify({content_id:cid}) }),
   endSession:         (sid)  => apiFetch("/watch/session/end",

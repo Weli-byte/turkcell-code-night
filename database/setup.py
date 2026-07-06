@@ -191,6 +191,13 @@ def init_db():
         UNIQUE(user_id, achievement_id),
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS content_ai_summaries (
+        content_id TEXT PRIMARY KEY,
+        summary TEXT NOT NULL,
+        source_hash TEXT NOT NULL,
+        model TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

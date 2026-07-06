@@ -54,3 +54,20 @@ def get_content(
     if not row:
         raise HTTPException(404, "Icerik bulunamadi")
     return dict(row)
+
+
+@router.get("/{content_id}/detail")
+def content_detail(content_id: str, token: dict = Depends(verify_token)):
+    """Detay sayfası: gerçek istatistikler + yıldız dağılımı + benzer videolar."""
+    from engine.content_ai_engine import get_content_detail
+    detail = get_content_detail(content_id, token["sub"])
+    if detail is None:
+        raise HTTPException(404, "Icerik bulunamadi")
+    return detail
+
+
+@router.get("/{content_id}/review-summary")
+def content_review_summary(content_id: str, token: dict = Depends(verify_token)):
+    """GPT-4o topluluk özeti — gerçek yorum+puan verisinden, cache'li."""
+    from engine.content_ai_engine import build_review_summary
+    return build_review_summary(content_id)

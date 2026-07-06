@@ -326,7 +326,7 @@
         ? `<span style="font-size:11px;color:#FFC107">⭐ ${v.avg_rating.toFixed(1)}</span>`
         : '';
       return `
-        <div class="video-card card-hover" onclick="window.location.href='watch.html?id=${v.id}'">
+        <div class="video-card card-hover" onclick="window.location.href='content.html?id=${v.id}'">
           <div class="video-thumb" style="background: linear-gradient(135deg, ${color}22 0%, #0D0D1800 100%);">
             <div class="thumb-gradient"></div>
             <div class="play-btn"><div class="play-icon"></div></div>
@@ -405,7 +405,7 @@
 
         const COLORS = ['#6C00FF','#00FF87','#00D4FF','#FFB800','#FF4D4D'];
         gridEl.innerHTML = d.videos.map((v, i) => `
-          <a class="rec-card" href="watch.html?id=${v.id}">
+          <a class="rec-card" href="content.html?id=${v.id}">
             <div class="rec-card-dot" style="background:${COLORS[i % COLORS.length]}"></div>
             <div>
               <div class="rec-card-title">${v.title}</div>

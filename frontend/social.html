@@ -330,7 +330,7 @@
           return;
         }
         grid.innerHTML = d.trending.map((v, i) => `
-          <a class="trending-card" href="watch.html?id=${encodeURIComponent(v.id)}">
+          <a class="trending-card" href="content.html?id=${encodeURIComponent(v.id)}">
             <div class="trending-thumb" style="background:${v.thumbnail_color}20;border:1px solid ${v.thumbnail_color}40">
               ${GENRE_ICONS[v.genre] || '🎬'}
             </div>
