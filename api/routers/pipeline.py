@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from api.auth_utils import verify_token, require_admin
 from database.setup import get_db
 from engine.pipeline import run_pipeline
+from engine.admin_insights_engine import build_admin_insights
 
 router = APIRouter(tags=["Admin"])
 
@@ -10,6 +11,13 @@ router = APIRouter(tags=["Admin"])
 def trigger_pipeline(token: dict = Depends(verify_token)):
     require_admin(token)
     return run_pipeline()
+
+
+@router.get("/insights")
+def admin_insights(token: dict = Depends(verify_token)):
+    """Platform geneli gerçek metrikler + GPT-4o yönetici analizi."""
+    require_admin(token)
+    return build_admin_insights()
 
 
 @router.get("/runs")

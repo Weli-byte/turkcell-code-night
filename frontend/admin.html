@@ -162,6 +162,7 @@
         <button class="admin-tab active" data-tab="pipeline">🚀 Pipeline</button>
         <button class="admin-tab" data-tab="challenges">🎯 Görevler</button>
         <button class="admin-tab" data-tab="users">👥 Kullanıcılar</button>
+        <button class="admin-tab" data-tab="insights">🧠 AI Analiz</button>
         <button class="admin-tab" data-tab="upload">📥 Veri Yükle</button>
       </div>
 
@@ -274,6 +275,31 @@
         </div>
       </div>
 
+      <!-- ── AI INSIGHTS TAB ───────────────────────────── -->
+      <div id="tab-insights" style="display:none">
+        <div class="form-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">🧠 AI Platform Analizi</div>
+              <div class="section-subtitle">Tüm platform metrikleri gerçek DB'den toplanır, GPT-4o yönetici özeti + 3 aksiyon önerisi üretir</div>
+            </div>
+            <span id="insights-loading" style="display:none;font-size:13px;color:var(--text-muted)">
+              <span class="spinner" style="width:14px;height:14px"></span> GPT-4o analiz ediyor…
+            </span>
+          </div>
+          <button class="btn-primary" id="btn-run-insights">🧠 Analizi Çalıştır</button>
+
+          <div id="insights-box" style="display:none;margin-top:20px">
+            <div style="background:linear-gradient(135deg,rgba(108,0,255,0.07) 0%,rgba(0,212,255,0.04) 100%);border:1px solid var(--border-acc);border-radius:var(--radius);padding:20px 24px">
+              <div id="insights-text" style="font-size:14px;line-height:1.8;color:var(--text-1);white-space:pre-wrap"></div>
+              <div id="insights-meta" style="font-size:11px;color:var(--text-muted);margin-top:12px"></div>
+            </div>
+            <div class="metrics-mini-grid" id="insights-metrics"
+              style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:16px"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── UPLOAD TAB ────────────────────────────────── -->
       <div id="tab-upload" style="display:none">
         <div class="form-card">
@@ -329,7 +355,7 @@
     }
 
     // ── TABS ──────────────────────────────────────────
-    const TAB_PANELS = { pipeline:'tab-pipeline', challenges:'tab-challenges', users:'tab-users', upload:'tab-upload' };
+    const TAB_PANELS = { pipeline:'tab-pipeline', challenges:'tab-challenges', users:'tab-users', insights:'tab-insights', upload:'tab-upload' };
     const TAB_LOADERS = { challenges: loadChallengesAdmin, users: loadUsersAdmin, pipeline: loadRunHistory };
 
     document.querySelectorAll('.admin-tab').forEach(btn => {
@@ -372,6 +398,48 @@
     });
 
     document.getElementById('btn-refresh-runs').addEventListener('click', loadRunHistory);
+
+    // ── AI INSIGHTS ───────────────────────────────────
+    document.getElementById('btn-run-insights').addEventListener('click', async () => {
+      const btn    = document.getElementById('btn-run-insights');
+      const loadEl = document.getElementById('insights-loading');
+      const box    = document.getElementById('insights-box');
+      btn.disabled = true;
+      loadEl.style.display = 'inline-flex';
+      try {
+        const d = await API.getAdminInsights();
+        const m = d.metrics;
+        document.getElementById('insights-text').textContent = d.answer;
+        document.getElementById('insights-meta').textContent =
+          (d.llm_enhanced ? `⚡ GPT-4o analizi` : '📋 Template özet') +
+          ` · ${m.generated_at} · veriler gerçek DB'den`;
+
+        const cards = [
+          ['👥 Kullanıcı',       `${m.users.total} (${m.users.active_7d} aktif/7g)`],
+          ['😴 Pasif (7g)',      m.users.inactive_7d],
+          ['⏱ İzleme (7g)',      `${Math.round(m.watch.minutes_7d)} dk`],
+          ['⚡ Puan (7g)',        fmtNum(m.points.points_7d)],
+          ['🎬 Top içerik',      m.top_content_7d[0] ? `${m.top_content_7d[0].title} (${m.top_content_7d[0].watches})` : '—'],
+          ['🎯 Top görev',       m.challenges_7d[0] ? `${m.challenges_7d[0].name} (${m.challenges_7d[0].completions})` : '—'],
+          ['⭐ Rating ort.',      m.ratings.count ? `${m.ratings.avg} (${m.ratings.count} oy)` : '—'],
+          ['🎉 Party dk',        Math.round(m.watch_party.party_minutes)],
+          ['💬 AI sohbet',       `${m.ai_chat.messages} mesaj / ${m.ai_chat.users} kişi`],
+        ];
+        document.getElementById('insights-metrics').innerHTML = cards.map(([label, val]) => `
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${label}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text-1)">${val}</div>
+          </div>`).join('');
+
+        box.style.display = '';
+        if (window.gsap) gsap.from(box, { opacity: 0, y: 12, duration: 0.4, ease: 'power3.out' });
+      } catch (e) {
+        showToast({ title: 'Analiz Hatası', msg: e.message, icon: '⚠️' });
+      } finally {
+        btn.disabled = false;
+        loadEl.style.display = 'none';
+      }
+    });
 
     async function loadRunHistory() {
       const tbody = document.getElementById('run-history-body');

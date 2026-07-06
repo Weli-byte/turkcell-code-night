@@ -228,6 +228,21 @@ input, textarea { font-family: inherit; }
   animation: pill-pulse 0.6s ease-out;
 }
 
+.nav-level-chip {
+  display: flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: rgba(108, 0, 255, 0.12);
+  border: 1px solid rgba(108, 0, 255, 0.35);
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a78bfa;
+  cursor: default;
+  margin-right: 8px;
+}
+
 @keyframes pill-pulse {
   0%   { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.4); }
   50%  { box-shadow: 0 0 0 8px rgba(0, 255, 135, 0); }

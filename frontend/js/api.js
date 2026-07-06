@@ -140,6 +140,7 @@ const API = {
   runPipeline:          ()       => apiFetch("/pipeline/run", { method:"POST" }),
   getPipelineRuns:      ()       => apiFetch("/pipeline/runs"),
   getAdminMetrics:      ()       => apiFetch("/pipeline/metrics"),
+  getAdminInsights:     ()       => apiFetch("/pipeline/insights"),
   getAllChallenges:      ()       => apiFetch("/challenges/all"),
   getChallengeFields:   ()       => apiFetch("/challenges/fields"),
   createChallenge:      (body)   => apiFetch("/challenges/", { method:"POST", body: JSON.stringify(body) }),

@@ -150,7 +150,18 @@ function initNavbar() {
 
   if (pill && Auth.isLoggedIn()) {
     API.getMe()
-      .then((d) => { if (pill) pill.textContent = `⚡ ${d.total_points} puan`; })
+      .then((d) => {
+        if (pill) pill.textContent = `⚡ ${d.total_points} puan`;
+        // Seviye rozeti — gerçek toplam puandan deterministik hesap
+        if (d.level && !document.getElementById('nav-level')) {
+          const lv = document.createElement('span');
+          lv.id = 'nav-level';
+          lv.className = 'nav-level-chip';
+          lv.title = `${d.level.title} — sonraki seviyeye ${d.level.xp_needed} puan`;
+          lv.textContent = `Lv ${d.level.level}`;
+          pill.parentNode.insertBefore(lv, pill);
+        }
+      })
       .catch(() => {});
   }
 

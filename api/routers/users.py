@@ -4,6 +4,7 @@ from api.auth_utils import verify_token, hash_password
 from engine.state_builder import build_user_state
 from engine.leaderboard_engine import get_leaderboard
 from engine.badge_engine import get_badge_progress
+from engine.level_engine import get_level
 from engine.ledger import get_history
 from database.setup import get_db
 from datetime import datetime, timedelta
@@ -39,6 +40,7 @@ def get_me(token: dict = Depends(verify_token)):
         "badges":              state["badges"],
         "streak_days":         state["streak_days"],
         "watch_minutes_today": state["watch_minutes_today"],
+        "level":               get_level(state["total_points"]),
     }
 
 
@@ -246,6 +248,7 @@ def my_full_profile(token: dict = Depends(verify_token)):
         "badges":           [{"tier": b["badge_tier"], "awarded_at": b["awarded_at"]} for b in badges],
         "recent_points":    [dict(h) for h in history],
         "weekly":           week_days,
+        "level":            get_level(state["total_points"]),
     }
 
 
@@ -317,4 +320,5 @@ def public_profile(username: str, token: dict = Depends(verify_token)):
         "next_badge":        progress["next_badge"],
         "badges":            [{"tier": b["badge_tier"], "awarded_at": b["awarded_at"]} for b in badges],
         "is_self":           uid == token["sub"],
+        "level":             get_level(state["total_points"]),
     }

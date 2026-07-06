@@ -241,6 +241,23 @@
         </div>
       </div>
 
+      <!-- LEVEL / XP BAR -->
+      <div class="card will-animate" id="level-card" style="margin-bottom:28px;display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="nav-level-chip" id="lv-chip" style="font-size:15px;padding:7px 16px">Lv 0</span>
+            <div>
+              <div style="font-size:15px;font-weight:700" id="lv-title">—</div>
+              <div style="font-size:11px;color:var(--text-muted)" id="lv-next-title"></div>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)" id="lv-xp-text"></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-fill" id="lv-fill" style="width:0%"></div>
+        </div>
+      </div>
+
       <!-- STATS GRID -->
       <div class="stats-grid will-animate">
         <div class="stat-card">
@@ -462,6 +479,22 @@
           `${fmtNum(d.points_to_next || 0)} puan daha gerekli (${pct}% tamamlandı)`;
         if (window.gsap) {
           gsap.from('#next-badge-fill', { width: '0%', duration: 1, ease: 'power2.out', delay: 0.3 });
+        }
+      }
+
+      // Level / XP bar
+      if (d.level) {
+        const lv = d.level;
+        document.getElementById('level-card').style.display = '';
+        document.getElementById('lv-chip').textContent  = `Lv ${lv.level}`;
+        document.getElementById('lv-title').textContent = lv.title;
+        document.getElementById('lv-next-title').textContent =
+          lv.next_title !== lv.title ? `Sonraki unvan: ${lv.next_title}` : '';
+        document.getElementById('lv-xp-text').textContent =
+          `${fmtNum(lv.xp_in_level)} / ${fmtNum(lv.xp_for_next)} XP — sonraki seviyeye ${fmtNum(lv.xp_needed)} puan`;
+        document.getElementById('lv-fill').style.width = lv.pct + '%';
+        if (window.gsap) {
+          gsap.from('#lv-fill', { width: '0%', duration: 1.1, ease: 'power2.out', delay: 0.25 });
         }
       }
 
