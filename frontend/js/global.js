@@ -171,6 +171,64 @@ function initNavbar() {
       window.location.href = 'index.html';
     });
   }
+
+  initBurgerMenu();
+}
+
+/* ============================================================
+   MOBILE BURGER MENU (Sprint 22)
+   JS injection — HTML dosyalarına dokunmadan tüm sayfalarda çalışır
+   ============================================================ */
+function initBurgerMenu() {
+  const navbar = document.querySelector('.navbar');
+  const links  = navbar ? navbar.querySelector('.nav-links') : null;
+  if (!navbar || !links || document.getElementById('nav-burger')) return;
+
+  const burger = document.createElement('button');
+  burger.id = 'nav-burger';
+  burger.className = 'nav-burger';
+  burger.setAttribute('aria-label', 'Menü');
+  burger.textContent = '☰';
+
+  const right = navbar.querySelector('.nav-right');
+  if (right) right.appendChild(burger);
+  else navbar.appendChild(burger);
+
+  const close = () => {
+    navbar.classList.remove('nav-open');
+    burger.textContent = '☰';
+  };
+
+  burger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    navbar.classList.toggle('nav-open');
+    burger.textContent = navbar.classList.contains('nav-open') ? '✕' : '☰';
+  });
+  links.addEventListener('click', close);
+  document.addEventListener('click', (e) => {
+    if (navbar.classList.contains('nav-open') && !navbar.contains(e.target)) close();
+  });
+}
+
+/* ============================================================
+   PWA (Sprint 22) — manifest + service worker
+   ============================================================ */
+function initPWA() {
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const l = document.createElement('link');
+    l.rel = 'manifest';
+    l.href = '/manifest.json';
+    document.head.appendChild(l);
+  }
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    const m = document.createElement('meta');
+    m.name = 'theme-color';
+    m.content = '#050508';
+    document.head.appendChild(m);
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 }
 
 /* ============================================================
@@ -186,6 +244,7 @@ function initPage({ auth = true } = {}) {
   initScrollProgress();
   initCursor();
   initNavbar();
+  initPWA();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAnimations);

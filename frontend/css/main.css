@@ -1114,14 +1114,68 @@ a.lb-username:hover { color: var(--accent-1); text-decoration: underline; }
 /* ================================================================
    RESPONSIVE — MOBILE
    ================================================================ */
+/* Hamburger butonu — mobil dışında gizli (Sprint 22) */
+.nav-burger {
+  display: none;
+  width: 38px;
+  height: 38px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-1);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s, color 0.2s;
+}
+.nav-burger:hover { border-color: var(--border-acc); color: var(--accent-1); }
+
 @media (max-width: 768px) {
   * { cursor: auto !important; }
   .cursor-dot, .cursor-halo { display: none; }
 
   .container { padding: 0 16px; }
-  .navbar { padding: 0 16px; }
+  .navbar { padding: 0 14px; }
 
-  .nav-links { display: none; }
+  /* Hamburger dropdown menü — navigasyon mobilde kaybolmaz */
+  .nav-burger { display: flex; }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: var(--nav-h);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: rgba(5, 5, 8, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px 14px;
+    animation: fadeIn 0.15s ease;
+  }
+  .navbar.nav-open .nav-links { display: flex; }
+  .nav-links a { padding: 12px; font-size: 15px; display: block; }
+  .nav-links a::after { display: none; }
+
+  .nav-username { display: none; }
+  .nav-right { gap: 8px; }
+  .points-pill { font-size: 11px; padding: 4px 10px; }
+  .nav-level-chip { font-size: 10px; padding: 4px 8px; margin-right: 4px; }
+
+  /* Bildirim paneli tam genişlik */
+  .notif-panel {
+    position: fixed;
+    top: var(--nav-h);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
 
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
 
@@ -1138,6 +1192,19 @@ a.lb-username:hover { color: var(--accent-1); text-decoration: underline; }
 
   .ai-input-row { flex-direction: column; }
 
+  /* Tablolar yatay kaydırılabilir */
+  .lb-card, .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lb-table, .data-table { min-width: 480px; }
+
+  /* Sekme barları yatay kaydırılabilir */
+  .lb-tabs, .admin-tabs, .social-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    flex-wrap: nowrap;
+  }
+  .lb-tab, .admin-tab, .social-tab { white-space: nowrap; flex-shrink: 0; }
+
   #toast-container { bottom: 16px; right: 16px; left: 16px; }
   .toast { min-width: unset; max-width: 100%; }
 }
@@ -1145,6 +1212,16 @@ a.lb-username:hover { color: var(--accent-1); text-decoration: underline; }
 @media (max-width: 480px) {
   .video-grid { grid-template-columns: 1fr; }
   .stat-grid  { grid-template-columns: 1fr; }
+
+  .nav-logo { font-size: 17px; }
+  h1 { font-size: 24px !important; }
+
+  .card { padding: 16px; }
+
+  .filter-bar { gap: 6px; }
+  .search-input { width: 100%; min-width: 0; }
+
+  .btn-primary, .btn-ghost { font-size: 13px; }
 }
 
 /* ================================================================
