@@ -119,6 +119,11 @@ const API = {
   getChatHistory:       ()  => apiFetch("/ai/chat/history"),
   clearChatHistory:     ()  => apiFetch("/ai/chat/history", { method:"DELETE" }),
   getWeeklyReport:      ()  => apiFetch("/ai/weekly-report"),
+  getNotifications:     (unreadOnly) =>
+    apiFetch("/notifications/list" + (unreadOnly ? "?unread_only=true" : "")),
+  getUnreadCount:       ()  => apiFetch("/notifications/unread-count"),
+  markNotifsRead:       (idsOrAll) => apiFetch("/notifications/read",
+    { method:"POST", body: JSON.stringify(idsOrAll === true ? {all:true} : {ids:idsOrAll}) }),
   rateContent:     (content_id, rating, comment) =>
     apiFetch("/social/rate", { method:"POST", body: JSON.stringify({content_id, rating, comment}) }),
   addComment:      (content_id, comment) =>

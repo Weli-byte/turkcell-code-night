@@ -672,6 +672,18 @@
           });
         }
 
+        if (d.level_up) {
+          celebratePoints(d.level_up.level * 10);
+          showToast({
+            title: `⬆️ Seviye Atladın! Lv ${d.level_up.level}`,
+            msg:   `${d.level_up.title} unvanına ulaştın — sonraki seviyeye ${d.level_up.xp_needed} puan`,
+            icon:  '🌟',
+            duration: 7000,
+          });
+          const lvChip = document.getElementById('nav-level');
+          if (lvChip) lvChip.textContent = `Lv ${d.level_up.level}`;
+        }
+
         if (d.in_party && d.party_minutes > 0) {
           showToast({
             title: '🎉 Parti dakikası işlendi',

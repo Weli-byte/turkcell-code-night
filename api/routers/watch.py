@@ -127,10 +127,29 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
         body.session_id, ended.isoformat()
     ))
     db.commit()
+
+    # Level-up tespiti için evaluasyon ÖNCESİ gerçek toplam puan
+    prev_total = db.execute(
+        "SELECT COALESCE(SUM(points),0) AS t FROM points_ledger WHERE user_id=?",
+        (token["sub"],),
+    ).fetchone()["t"]
     db.close()
 
     # Senkron evaluasyon — sadece bu kullanıcı için, hızlı
     result = evaluate_user(token["sub"], today)
+
+    # Seviye atlama kontrolü (deterministik eğri, gerçek puanlardan)
+    from engine.level_engine import get_level
+    prev_level = get_level(int(prev_total))["level"]
+    new_level  = get_level(result["total_points"])
+    level_up   = new_level["level"] > prev_level
+    if level_up:
+        push_notification(token["sub"], {
+            "type":    "level",
+            "level":   new_level["level"],
+            "title":   new_level["title"],
+            "message": f"Lv {new_level['level']} — {new_level['title']} unvanına ulaştın!",
+        })
 
     # SSE bildirimi kuyruğa ekle
     if result["points_earned"] > 0:
@@ -157,6 +176,7 @@ def end_session(body: EndBody, token: dict = Depends(verify_token)):
         "reward_name":   result["reward_name"],
         "new_badges":    result["new_badges"],
         "total_points":  result["total_points"],
+        "level_up":      new_level if level_up else None,
         "message":       (
             f"{round(effective_minutes, 1)} dakika izlendi."
             + (f" +{result['points_earned']} puan kazandın!" if result["points_earned"] > 0 else "")

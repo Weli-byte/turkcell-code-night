@@ -1207,6 +1207,110 @@ a.lb-username:hover { color: var(--accent-1); text-decoration: underline; }
   animation: fadeIn 0.2s ease;
 }
 
+/* Bildirim merkezi paneli (Sprint 16) */
+.notif-wrap { position: relative; }
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-width: 90vw;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  z-index: 500;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.notif-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.notif-mark-all {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--accent-1);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.notif-mark-all:hover { opacity: 0.75; }
+
+.notif-panel-list {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.notif-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: default;
+  transition: background 0.15s;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: rgba(255, 255, 255, 0.02); }
+.notif-item.unread {
+  background: rgba(0, 255, 135, 0.035);
+  cursor: pointer;
+}
+.notif-item.unread:hover { background: rgba(0, 255, 135, 0.06); }
+
+.notif-item-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.notif-item-body { flex: 1; min-width: 0; }
+.notif-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 2px;
+}
+.notif-item-msg {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+.notif-item-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.notif-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
 /* ================================================================
    WEEKLY ACTIVITY CHART
    ================================================================ */
