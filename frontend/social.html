@@ -208,6 +208,14 @@
             </div>
           </div>
 
+          <!-- TAKİP ÖNERİLERİ -->
+          <div class="card will-animate" style="margin-bottom:20px">
+            <div class="section-header">
+              <div class="section-title">👥 Takip Önerileri</div>
+            </div>
+            <div id="follow-suggestions"><div class="spinner"></div></div>
+          </div>
+
           <!-- TOP RATERS -->
           <div class="card will-animate" style="margin-bottom:20px">
             <div class="section-header">
@@ -458,10 +466,48 @@
       if (e.key === 'Enter') joinPartyFromSocial();
     });
 
+    // ── TAKİP ÖNERİLERİ (Sprint 18) ──────────────────────
+    async function loadFollowSuggestions() {
+      const el = document.getElementById('follow-suggestions');
+      try {
+        const d = await API.getFollowSuggestions();
+        if (!d.suggestions.length) {
+          el.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">Herkesi takip ediyorsun! 🎉</p>';
+          return;
+        }
+        el.innerHTML = d.suggestions.map(s => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+            <div class="comment-avatar">${(s.username||'?')[0].toUpperCase()}</div>
+            <div style="flex:1;min-width:0">
+              <a class="lb-username" href="profile.html?u=${encodeURIComponent(s.username)}" style="font-size:13px;font-weight:600">${s.username}</a>
+              <div style="font-size:11px;color:var(--text-muted)">⚡ ${s.total_points} puan · 👥 ${s.follower_count} takipçi</div>
+            </div>
+            <button class="btn-ghost btn-follow-sm" data-username="${s.username}" style="font-size:11px;padding:4px 12px">➕ Takip</button>
+          </div>`).join('');
+
+        el.querySelectorAll('.btn-follow-sm').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+              const r = await API.followUser(btn.dataset.username);
+              showToast({ title: r.message, icon: '➕' });
+              btn.textContent = '✓';
+            } catch (e) {
+              showToast({ title: 'Hata', msg: e.message, icon: '⚠️' });
+              btn.disabled = false;
+            }
+          });
+        });
+      } catch (e) {
+        el.innerHTML = `<p style="color:var(--danger);font-size:13px">${e.message}</p>`;
+      }
+    }
+
     // ── INIT ─────────────────────────────────────────────
     loadFeed();
     loadTopRaters();
     loadCatalogSelect();
+    loadFollowSuggestions();
 
     // Auto-refresh feed every 30s
     setInterval(loadFeed, 30000);

@@ -134,6 +134,12 @@ const API = {
   getContentStats: (content_id) => apiFetch(`/social/content-stats/${encodeURIComponent(content_id)}`),
   getSocialFeed:   ()           => apiFetch("/social/feed"),
   getTrending:     ()           => apiFetch("/social/trending"),
+  followUser:      (username)   => apiFetch(`/social/follow/${encodeURIComponent(username)}`, { method:"POST" }),
+  unfollowUser:    (username)   => apiFetch(`/social/follow/${encodeURIComponent(username)}`, { method:"DELETE" }),
+  getFollowers:    ()           => apiFetch("/social/followers"),
+  getFollowing:    ()           => apiFetch("/social/following"),
+  getFriendsLeaderboard: ()     => apiFetch("/social/friends-leaderboard"),
+  getFollowSuggestions:  ()     => apiFetch("/social/follow-suggestions"),
   createParty:     (content_id) =>
     apiFetch("/party/create", { method:"POST", body: JSON.stringify({content_id}) }),
   joinParty:       (room_code)  =>

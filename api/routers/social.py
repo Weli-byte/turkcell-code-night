@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 from api.auth_utils import verify_token
+from api.notifications_store import push_notification
 from database.setup import get_db
 from datetime import datetime, timedelta
 import uuid
@@ -270,6 +271,154 @@ def activity_feed(token: dict = Depends(verify_token)):
 
     feed.sort(key=lambda x: x["ts"] or "", reverse=True)
     return {"feed": feed[:30]}
+
+
+# ── Takip Sistemi (Sprint 18) ──────────────────────────────────
+
+def _user_by_username(db, username: str):
+    return db.execute(
+        "SELECT id, username FROM users WHERE username=?", (username,)
+    ).fetchone()
+
+
+@router.post("/follow/{username}")
+def follow_user(username: str, token: dict = Depends(verify_token)):
+    """Kullanıcıyı takip et. Takip edilene kalıcı bildirim düşer."""
+    db     = get_db()
+    target = _user_by_username(db, username)
+    if not target:
+        db.close()
+        raise HTTPException(404, "Kullanıcı bulunamadı")
+    if target["id"] == token["sub"]:
+        db.close()
+        raise HTTPException(422, "Kendini takip edemezsin")
+
+    existing = db.execute(
+        "SELECT id FROM follows WHERE follower_id=? AND following_id=?",
+        (token["sub"], target["id"]),
+    ).fetchone()
+    if existing:
+        db.close()
+        return {"ok": True, "following": True, "message": "Zaten takip ediyorsun"}
+
+    db.execute(
+        "INSERT INTO follows (follower_id, following_id, created_at) VALUES (?, ?, ?)",
+        (token["sub"], target["id"], datetime.now().isoformat()),
+    )
+    db.commit()
+    follower_name = db.execute(
+        "SELECT username FROM users WHERE id=?", (token["sub"],)
+    ).fetchone()["username"]
+    db.close()
+
+    push_notification(target["id"], {
+        "type":    "info",
+        "message": f"👤 {follower_name} seni takip etmeye başladı",
+    })
+    return {"ok": True, "following": True, "message": f"{username} takip edildi"}
+
+
+@router.delete("/follow/{username}")
+def unfollow_user(username: str, token: dict = Depends(verify_token)):
+    """Takibi bırak."""
+    db     = get_db()
+    target = _user_by_username(db, username)
+    if not target:
+        db.close()
+        raise HTTPException(404, "Kullanıcı bulunamadı")
+    db.execute(
+        "DELETE FROM follows WHERE follower_id=? AND following_id=?",
+        (token["sub"], target["id"]),
+    )
+    db.commit()
+    db.close()
+    return {"ok": True, "following": False, "message": f"{username} takipten çıkarıldı"}
+
+
+@router.get("/followers")
+def my_followers(token: dict = Depends(verify_token)):
+    """Beni takip edenler + toplam puanları."""
+    db   = get_db()
+    rows = db.execute("""
+        SELECT u.username, f.created_at,
+               COALESCE((SELECT SUM(points) FROM points_ledger WHERE user_id=u.id), 0) AS total_points,
+               EXISTS(SELECT 1 FROM follows f2
+                      WHERE f2.follower_id=? AND f2.following_id=u.id) AS i_follow_back
+        FROM follows f
+        JOIN users u ON u.id = f.follower_id
+        WHERE f.following_id = ?
+        ORDER BY f.created_at DESC
+    """, (token["sub"], token["sub"])).fetchall()
+    db.close()
+    return {"followers": [
+        {"username": r["username"], "since": r["created_at"],
+         "total_points": int(r["total_points"]),
+         "i_follow_back": bool(r["i_follow_back"])}
+        for r in rows
+    ]}
+
+
+@router.get("/following")
+def my_following(token: dict = Depends(verify_token)):
+    """Takip ettiklerim + toplam puanları."""
+    db   = get_db()
+    rows = db.execute("""
+        SELECT u.username, f.created_at,
+               COALESCE((SELECT SUM(points) FROM points_ledger WHERE user_id=u.id), 0) AS total_points
+        FROM follows f
+        JOIN users u ON u.id = f.following_id
+        WHERE f.follower_id = ?
+        ORDER BY f.created_at DESC
+    """, (token["sub"],)).fetchall()
+    db.close()
+    return {"following": [
+        {"username": r["username"], "since": r["created_at"],
+         "total_points": int(r["total_points"])}
+        for r in rows
+    ]}
+
+
+@router.get("/friends-leaderboard")
+def friends_leaderboard(token: dict = Depends(verify_token)):
+    """Takip ettiklerim + ben — puana göre mini liderlik."""
+    db   = get_db()
+    rows = db.execute("""
+        SELECT u.id, u.username,
+               COALESCE((SELECT SUM(points) FROM points_ledger WHERE user_id=u.id), 0) AS total_points
+        FROM users u
+        WHERE u.id = ?
+           OR u.id IN (SELECT following_id FROM follows WHERE follower_id=?)
+        ORDER BY total_points DESC, u.username ASC
+    """, (token["sub"], token["sub"])).fetchall()
+    db.close()
+    return {"leaderboard": [
+        {"rank": i + 1, "username": r["username"],
+         "total_points": int(r["total_points"]),
+         "is_current_user": r["id"] == token["sub"]}
+        for i, r in enumerate(rows)
+    ]}
+
+
+@router.get("/follow-suggestions")
+def follow_suggestions(token: dict = Depends(verify_token)):
+    """Takip önerileri — henüz takip etmediğim en yüksek puanlı gerçek kullanıcılar."""
+    db   = get_db()
+    rows = db.execute("""
+        SELECT u.username,
+               COALESCE((SELECT SUM(points) FROM points_ledger WHERE user_id=u.id), 0) AS total_points,
+               (SELECT COUNT(*) FROM follows WHERE following_id=u.id) AS follower_count
+        FROM users u
+        WHERE u.id != ?
+          AND u.id NOT IN (SELECT following_id FROM follows WHERE follower_id=?)
+        ORDER BY total_points DESC, u.username ASC
+        LIMIT 5
+    """, (token["sub"], token["sub"])).fetchall()
+    db.close()
+    return {"suggestions": [
+        {"username": r["username"], "total_points": int(r["total_points"]),
+         "follower_count": int(r["follower_count"])}
+        for r in rows
+    ]}
 
 
 @router.get("/trending")

@@ -246,6 +246,7 @@
           <button class="lb-tab active" data-tab="all">Tüm Zamanlar</button>
           <button class="lb-tab" data-tab="weekly">Bu Hafta</button>
           <button class="lb-tab" data-tab="seasons">🏆 Sezonlar</button>
+          <button class="lb-tab" data-tab="friends">👥 Arkadaşlar</button>
           <button class="lb-tab" data-tab="streak">Streak</button>
           <button class="lb-tab" data-tab="history">Geçmişim</button>
         </div>
@@ -314,6 +315,25 @@
         <div id="seasons-list" class="will-animate"><div class="spinner"></div></div>
       </div>
 
+      <!-- FRIENDS VIEW -->
+      <div id="view-friends" style="display:none">
+        <p class="text-2" style="margin-bottom:20px;font-size:14px">
+          Takip ettiklerin ve sen — profillerden kullanıcı takip ederek arkadaş liderliğini büyüt.
+        </p>
+        <div class="lb-card will-animate">
+          <table class="lb-table">
+            <thead><tr>
+              <th style="width:64px">Sıra</th>
+              <th>Kullanıcı</th>
+              <th style="text-align:right">Puan</th>
+            </tr></thead>
+            <tbody id="lb-friends-body">
+              <tr><td colspan="3" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- STREAK VIEW -->
       <div id="view-streak" style="display:none">
         <div class="lb-card will-animate">
@@ -368,7 +388,7 @@
     let refreshTimer = null;
 
     // ── TABS ──────────────────────────────────────────
-    const TAB_VIEWS = { all:'view-all', weekly:'view-weekly', seasons:'view-seasons', streak:'view-streak', history:'view-history' };
+    const TAB_VIEWS = { all:'view-all', weekly:'view-weekly', seasons:'view-seasons', friends:'view-friends', streak:'view-streak', history:'view-history' };
 
     document.querySelectorAll('.lb-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -384,6 +404,7 @@
         if (activeTab === 'all')     loadAllTime();
         if (activeTab === 'weekly')  loadWeekly();
         if (activeTab === 'seasons') loadSeasons();
+        if (activeTab === 'friends') loadFriends();
         if (activeTab === 'streak')  loadStreaks();
         if (activeTab === 'history') loadHistory();
       });
@@ -587,6 +608,34 @@
           </div>`).join('');
       } catch (e) {
         el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+      }
+    }
+
+    // ── ARKADAŞLAR (Sprint 18) ────────────────────────
+    async function loadFriends() {
+      const tbody = document.getElementById('lb-friends-body');
+      tbody.innerHTML = '<tr><td colspan="3" style="padding:24px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>';
+      try {
+        const d = await API.getFriendsLeaderboard();
+        const board = d.leaderboard || [];
+        if (board.length <= 1) {
+          tbody.innerHTML = '<tr><td colspan="3" style="padding:24px;text-align:center;color:var(--text-muted)">Henüz kimseyi takip etmiyorsun.<br><span style="font-size:12px">Liderlik tablosundan profillere girip takip edebilirsin.</span></td></tr>';
+          return;
+        }
+        tbody.innerHTML = board.map(u => `
+          <tr class="lb-row ${u.is_current_user ? 'me' : ''}">
+            <td class="lb-rank ${u.rank<=3?['gold','silver','bronze'][u.rank-1]:''}">${u.rank<=3?['🥇','🥈','🥉'][u.rank-1]:'#'+u.rank}</td>
+            <td>
+              <div class="lb-user">
+                <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
+                <a class="lb-username" href="profile.html?u=${encodeURIComponent(u.username)}">${u.username}</a>
+                ${u.is_current_user ? '<span class="me-chip">Sen</span>' : ''}
+              </div>
+            </td>
+            <td class="lb-points">${fmtNum(u.total_points)}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
       }
     }
 

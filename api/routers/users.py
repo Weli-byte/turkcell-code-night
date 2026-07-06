@@ -219,6 +219,13 @@ def my_full_profile(token: dict = Depends(verify_token)):
         week_days.append({"date": d, "minutes": round(float(act["minutes"]), 1),
                           "points": int(pts["total"])})
 
+    follower_cnt = db.execute(
+        "SELECT COUNT(*) AS c FROM follows WHERE following_id=?", (user_id,)
+    ).fetchone()["c"]
+    following_cnt = db.execute(
+        "SELECT COUNT(*) AS c FROM follows WHERE follower_id=?", (user_id,)
+    ).fetchone()["c"]
+
     db.close()
 
     max_min = max((d["minutes"] for d in week_days), default=1) or 1
@@ -249,6 +256,8 @@ def my_full_profile(token: dict = Depends(verify_token)):
         "recent_points":    [dict(h) for h in history],
         "weekly":           week_days,
         "level":            get_level(state["total_points"]),
+        "follower_count":   int(follower_cnt),
+        "following_count":  int(following_cnt),
     }
 
 
@@ -303,11 +312,25 @@ def public_profile(username: str, token: dict = Depends(verify_token)):
         (uid,),
     ).fetchall()
 
+    follower_cnt = db.execute(
+        "SELECT COUNT(*) AS c FROM follows WHERE following_id=?", (uid,)
+    ).fetchone()["c"]
+    following_cnt = db.execute(
+        "SELECT COUNT(*) AS c FROM follows WHERE follower_id=?", (uid,)
+    ).fetchone()["c"]
+    is_following = db.execute(
+        "SELECT 1 FROM follows WHERE follower_id=? AND following_id=?",
+        (token["sub"], uid),
+    ).fetchone() is not None
+
     db.close()
 
     return {
         "username":          user["username"],
         "created_at":        user["created_at"],
+        "follower_count":    int(follower_cnt),
+        "following_count":   int(following_cnt),
+        "is_following":      is_following,
         "rank":              rank,
         "total_users":       total_u,
         "percentile":        percentile,

@@ -173,6 +173,16 @@ def init_db():
         FOREIGN KEY (season_id) REFERENCES seasons(id),
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS follows (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        follower_id TEXT NOT NULL,
+        following_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(follower_id, following_id),
+        CHECK(follower_id != following_id),
+        FOREIGN KEY (follower_id) REFERENCES users(id),
+        FOREIGN KEY (following_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

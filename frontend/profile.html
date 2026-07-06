@@ -234,9 +234,12 @@
             <span class="profile-chip accent" id="p-percentile">Top —%</span>
             <span class="profile-chip" id="p-badge-chip">Rozet yok</span>
             <span class="profile-chip" id="p-joined">Üye: —</span>
+            <span class="profile-chip" id="p-followers" style="display:none">👥 — takipçi</span>
+            <span class="profile-chip" id="p-following" style="display:none">➡️ — takip</span>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-primary" id="btn-follow" style="font-size:13px;display:none">➕ Takip Et</button>
           <button class="btn-ghost" id="btn-share-profile" style="font-size:13px">🔗 Profili Paylaş</button>
         </div>
       </div>
@@ -482,6 +485,23 @@
         }
       }
 
+      // Takip sayıları + buton (Sprint 18)
+      if (d.follower_count != null) {
+        const fEl = document.getElementById('p-followers');
+        fEl.style.display = '';
+        fEl.textContent = `👥 ${d.follower_count} takipçi`;
+      }
+      if (d.following_count != null) {
+        const gEl = document.getElementById('p-following');
+        gEl.style.display = '';
+        gEl.textContent = `➡️ ${d.following_count} takip`;
+      }
+      if (!isSelf && d.is_following != null) {
+        const btn = document.getElementById('btn-follow');
+        btn.style.display = '';
+        setFollowBtn(btn, d.is_following);
+      }
+
       // Level / XP bar
       if (d.level) {
         const lv = d.level;
@@ -543,6 +563,35 @@
 
       document.title = `${d.username} — Profil`;
     }
+
+    // ── TAKİP (Sprint 18) ─────────────────────────────
+    function setFollowBtn(btn, following) {
+      btn.dataset.following = following ? '1' : '0';
+      btn.textContent = following ? '✓ Takip Ediliyor' : '➕ Takip Et';
+      btn.className   = following ? 'btn-ghost' : 'btn-primary';
+      btn.style.fontSize = '13px';
+    }
+
+    document.getElementById('btn-follow').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const following = btn.dataset.following === '1';
+      btn.disabled = true;
+      try {
+        const d = following
+          ? await API.unfollowUser(pubUser)
+          : await API.followUser(pubUser);
+        setFollowBtn(btn, d.following);
+        showToast({ title: d.message, icon: d.following ? '➕' : '👋' });
+        // Takipçi sayacını canlı güncelle
+        const fEl = document.getElementById('p-followers');
+        const cur = parseInt((fEl.textContent.match(/\d+/) || [0])[0]);
+        fEl.textContent = `👥 ${Math.max(0, cur + (d.following ? 1 : -1))} takipçi`;
+      } catch (err) {
+        showToast({ title: 'Hata', msg: err.message, icon: '⚠️' });
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
     // ── LOAD ──────────────────────────────────────────
     async function loadProfile() {
