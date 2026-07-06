@@ -143,6 +143,8 @@ const API = {
   getFriendsLeaderboard: ()     => apiFetch("/social/friends-leaderboard"),
   getFollowSuggestions:  ()     => apiFetch("/social/follow-suggestions"),
   getMyAchievements:     ()     => apiFetch("/achievements/mine"),
+  search:                (q)    => apiFetch("/search?q=" + encodeURIComponent(q)),
+  getPublicStats:        ()     => apiFetch("/stats/public"),
   getAchievementStats:   ()     => apiFetch("/achievements/stats"),
   getAdminContentList:   ()     => apiFetch("/content/admin-list"),
   createContent:         (body) => apiFetch("/content/", { method:"POST", body: JSON.stringify(body) }),

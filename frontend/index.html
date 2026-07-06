@@ -166,6 +166,24 @@
         <div class="auth-feature"><span class="f-icon">⚡</span>Puan Sistemi</div>
         <div class="auth-feature"><span class="f-icon">🎯</span>Görevler</div>
       </div>
+
+      <!-- CANLI PLATFORM İSTATİSTİKLERİ (Sprint 23 — gerçek DB'den) -->
+      <div id="live-stats" style="display:none;margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;background:linear-gradient(90deg,#00FF87,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="ls-users">—</div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Kullanıcı</div>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;background:linear-gradient(90deg,#00FF87,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="ls-points">—</div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Dağıtılan Puan</div>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;background:linear-gradient(90deg,#00FF87,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="ls-minutes">—</div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">İzlenen Dakika</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -176,6 +194,17 @@
     if (Auth.isLoggedIn()) window.location.href = 'catalog.html';
 
     initCursor();
+
+    // Canlı platform istatistikleri — gerçek DB'den, auth gerektirmez
+    (async () => {
+      try {
+        const s = await API.getPublicStats();
+        document.getElementById('ls-users').textContent   = s.users;
+        document.getElementById('ls-points').textContent  = fmtNum(s.total_points);
+        document.getElementById('ls-minutes').textContent = fmtNum(Math.round(s.watch_minutes));
+        document.getElementById('live-stats').style.display = '';
+      } catch (_) {}
+    })();
 
     // TAB SWITCH
     const tabLogin    = document.getElementById('tab-login');

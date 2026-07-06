@@ -211,6 +211,158 @@ function initBurgerMenu() {
 }
 
 /* ============================================================
+   GLOBAL ARAMA — Ctrl+K KOMUT PALETİ (Sprint 23)
+   JS injection — tüm sayfalarda çalışır, sonuçlar gerçek API'den
+   ============================================================ */
+function initCommandPalette() {
+  if (!Auth.isLoggedIn() || document.getElementById('cmdk-overlay')) return;
+
+  const PAGES = [
+    { icon: '🎬', title: 'Katalog',    href: 'catalog.html' },
+    { icon: '📊', title: 'Panelim',    href: 'panel.html' },
+    { icon: '🏆', title: 'Sıralama',   href: 'leaderboard.html' },
+    { icon: '👤', title: 'Profil',     href: 'profile.html' },
+    { icon: '📡', title: 'Sosyal',     href: 'social.html' },
+  ];
+  if (Auth.getRole() === 'admin') {
+    PAGES.push({ icon: '🛠', title: 'Admin Paneli', href: 'admin.html' });
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'cmdk-overlay';
+  overlay.className = 'cmdk-overlay';
+  overlay.innerHTML = `
+    <div class="cmdk-box">
+      <div class="cmdk-input-row">
+        <span>🔍</span>
+        <input id="cmdk-input" placeholder="Video, kullanıcı veya sayfa ara…"
+               autocomplete="off" spellcheck="false" />
+        <kbd class="cmdk-kbd">ESC</kbd>
+      </div>
+      <div class="cmdk-results" id="cmdk-results"></div>
+      <div class="cmdk-footer">
+        <span><kbd class="cmdk-kbd">↑↓</kbd> gezin</span>
+        <span><kbd class="cmdk-kbd">↵</kbd> aç</span>
+        <span><kbd class="cmdk-kbd">Ctrl K</kbd> aç/kapa</span>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const input     = overlay.querySelector('#cmdk-input');
+  const resultsEl = overlay.querySelector('#cmdk-results');
+  let items       = [];   // düz liste: {href, el}
+  let selected    = 0;
+  let debounceT   = null;
+  let reqSeq      = 0;
+
+  function open() {
+    overlay.classList.add('open');
+    input.value = '';
+    renderResults(null, '');
+    setTimeout(() => input.focus(), 30);
+  }
+  function close() { overlay.classList.remove('open'); }
+  function toggle() { overlay.classList.contains('open') ? close() : open(); }
+
+  function setSelected(i) {
+    if (!items.length) return;
+    selected = (i + items.length) % items.length;
+    items.forEach((it, idx) => it.el.classList.toggle('selected', idx === selected));
+    items[selected].el.scrollIntoView({ block: 'nearest' });
+  }
+
+  function renderResults(data, q) {
+    const ql = q.trim().toLowerCase();
+    const pages = PAGES.filter(p => !ql || p.title.toLowerCase().includes(ql));
+    let html = '';
+
+    if (pages.length) {
+      html += `<div class="cmdk-section">Sayfalar</div>` + pages.map(p => `
+        <div class="cmdk-item" data-href="${p.href}">
+          <span class="cmdk-item-icon">${p.icon}</span>
+          <span class="cmdk-item-title">${p.title}</span>
+        </div>`).join('');
+    }
+    if (data?.videos?.length) {
+      html += `<div class="cmdk-section">Videolar</div>` + data.videos.map(v => `
+        <div class="cmdk-item" data-href="content.html?id=${encodeURIComponent(v.id)}">
+          <span class="cmdk-item-icon" style="color:${v.thumbnail_color}">🎬</span>
+          <span class="cmdk-item-title">${v.title}</span>
+          <span class="cmdk-item-meta">${v.genre} · ${Math.round(v.duration_minutes)} dk
+            ${v.avg_rating > 0 ? '· ⭐ ' + v.avg_rating : ''} · 👁 ${v.watches}</span>
+        </div>`).join('');
+    }
+    if (data?.users?.length) {
+      html += `<div class="cmdk-section">Kullanıcılar</div>` + data.users.map(u => `
+        <div class="cmdk-item" data-href="profile.html?u=${encodeURIComponent(u.username)}">
+          <span class="cmdk-item-icon">👤</span>
+          <span class="cmdk-item-title">${u.username}${u.is_me ? ' (sen)' : ''}</span>
+          <span class="cmdk-item-meta">Lv ${u.level} · ⚡ ${u.total_points}</span>
+        </div>`).join('');
+    }
+    if (!html) {
+      html = `<div class="cmdk-empty">“${q}” için sonuç yok</div>`;
+    }
+
+    resultsEl.innerHTML = html;
+    items = [...resultsEl.querySelectorAll('.cmdk-item')].map(el => ({
+      href: el.dataset.href, el,
+    }));
+    items.forEach((it, idx) => {
+      it.el.addEventListener('click', () => { window.location.href = it.href; });
+      it.el.addEventListener('mousemove', () => setSelected(idx));
+    });
+    selected = 0;
+    if (items.length) items[0].el.classList.add('selected');
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value;
+    clearTimeout(debounceT);
+    if (q.trim().length < 1) { renderResults(null, ''); return; }
+    debounceT = setTimeout(async () => {
+      const seq = ++reqSeq;
+      try {
+        const data = await API.search(q.trim());
+        if (seq === reqSeq) renderResults(data, q);   // bayat yanıtı atla
+      } catch (_) {
+        if (seq === reqSeq) renderResults(null, q);
+      }
+    }, 250);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSelected(selected + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setSelected(selected - 1); }
+    else if (e.key === 'Enter' && items[selected]) {
+      window.location.href = items[selected].href;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      toggle();
+    } else if (e.key === 'Escape' && overlay.classList.contains('open')) {
+      close();
+    }
+  });
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  // Navbar'a arama butonu
+  const right = document.querySelector('.nav-right');
+  if (right && !document.getElementById('nav-search-btn')) {
+    const btn = document.createElement('button');
+    btn.id = 'nav-search-btn';
+    btn.className = 'nav-search-btn';
+    btn.title = 'Ara (Ctrl+K)';
+    btn.innerHTML = '🔍';
+    btn.addEventListener('click', open);
+    right.insertBefore(btn, right.firstChild);
+  }
+}
+
+/* ============================================================
    PWA (Sprint 22) — manifest + service worker
    ============================================================ */
 function initPWA() {
@@ -244,6 +396,7 @@ function initPage({ auth = true } = {}) {
   initScrollProgress();
   initCursor();
   initNavbar();
+  initCommandPalette();
   initPWA();
 
   if (document.readyState === 'loading') {
