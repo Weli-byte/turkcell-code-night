@@ -162,6 +162,7 @@
         <button class="admin-tab active" data-tab="pipeline">🚀 Pipeline</button>
         <button class="admin-tab" data-tab="challenges">🎯 Görevler</button>
         <button class="admin-tab" data-tab="users">👥 Kullanıcılar</button>
+        <button class="admin-tab" data-tab="content">🎬 İçerik</button>
         <button class="admin-tab" data-tab="insights">🧠 AI Analiz</button>
         <button class="admin-tab" data-tab="upload">📥 Veri Yükle</button>
       </div>
@@ -275,6 +276,72 @@
         </div>
       </div>
 
+      <!-- ── CONTENT TAB (Sprint 21) ───────────────────── -->
+      <div id="tab-content" style="display:none">
+        <div class="form-card">
+          <div class="form-title" id="ct-form-title">➕ Yeni Video Ekle</div>
+          <div class="form-grid">
+            <div>
+              <label class="form-label">Başlık</label>
+              <input type="text" id="ct-title" class="form-input" placeholder="örn. Big Buck Bunny" />
+            </div>
+            <div>
+              <label class="form-label">Tür (genre)</label>
+              <input type="text" id="ct-genre" class="form-input" list="genre-list" placeholder="animasyon" />
+              <datalist id="genre-list"></datalist>
+            </div>
+            <div>
+              <label class="form-label">Tip</label>
+              <select id="ct-type" class="form-input">
+                <option value="film">film</option>
+                <option value="dizi">dizi</option>
+                <option value="belgesel">belgesel</option>
+                <option value="kisa">kisa</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Süre (dk)</label>
+              <input type="number" id="ct-duration" class="form-input" min="1" max="600" placeholder="10" />
+            </div>
+            <div style="grid-column:1/-1">
+              <label class="form-label">Stream URL (mp4)</label>
+              <input type="text" id="ct-url" class="form-input" placeholder="https://…/video.mp4" />
+            </div>
+            <div>
+              <label class="form-label">Kart Rengi</label>
+              <input type="color" id="ct-color" class="form-input" value="#4a90d9" style="height:40px;padding:4px" />
+            </div>
+            <div>
+              <label class="form-label">Seri ID (opsiyonel)</label>
+              <input type="text" id="ct-series" class="form-input" placeholder="s_macera" />
+            </div>
+            <div>
+              <label class="form-label">Bölüm No (opsiyonel)</label>
+              <input type="number" id="ct-episode" class="form-input" min="1" max="999" />
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px">
+            <button class="btn-primary" id="btn-save-content">💾 Kaydet</button>
+            <button class="btn-ghost" id="btn-cancel-content" style="display:none">✖ İptal</button>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-bottom:12px">
+          <div class="section-title">Katalog (<span id="ct-count">—</span> video)</div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Başlık</th><th>Tür</th><th>Süre</th>
+              <th>İzlenme</th><th>⭐</th><th>💬</th><th>İşlem</th>
+            </tr></thead>
+            <tbody id="content-admin-body">
+              <tr><td colspan="7" style="padding:32px;text-align:center"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ── AI INSIGHTS TAB ───────────────────────────── -->
       <div id="tab-insights" style="display:none">
         <div class="form-card">
@@ -355,8 +422,8 @@
     }
 
     // ── TABS ──────────────────────────────────────────
-    const TAB_PANELS = { pipeline:'tab-pipeline', challenges:'tab-challenges', users:'tab-users', insights:'tab-insights', upload:'tab-upload' };
-    const TAB_LOADERS = { challenges: loadChallengesAdmin, users: loadUsersAdmin, pipeline: loadRunHistory };
+    const TAB_PANELS = { pipeline:'tab-pipeline', challenges:'tab-challenges', users:'tab-users', content:'tab-content', insights:'tab-insights', upload:'tab-upload' };
+    const TAB_LOADERS = { challenges: loadChallengesAdmin, users: loadUsersAdmin, pipeline: loadRunHistory, content: loadContentAdmin };
 
     document.querySelectorAll('.admin-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -399,6 +466,125 @@
 
     document.getElementById('btn-refresh-runs').addEventListener('click', loadRunHistory);
 
+    // ── İÇERİK YÖNETİMİ (Sprint 21) ───────────────────
+    let contentCache = {};
+    let editingContentId = null;
+
+    function resetContentForm() {
+      editingContentId = null;
+      document.getElementById('ct-form-title').textContent = '➕ Yeni Video Ekle';
+      document.getElementById('btn-cancel-content').style.display = 'none';
+      ['ct-title','ct-genre','ct-url','ct-series','ct-episode','ct-duration']
+        .forEach(id => document.getElementById(id).value = '');
+      document.getElementById('ct-type').value  = 'film';
+      document.getElementById('ct-color').value = '#4a90d9';
+    }
+
+    function fillContentForm(c) {
+      editingContentId = c.id;
+      document.getElementById('ct-form-title').textContent = `✏️ Düzenle: ${c.title}`;
+      document.getElementById('btn-cancel-content').style.display = '';
+      document.getElementById('ct-title').value    = c.title;
+      document.getElementById('ct-genre').value    = c.genre;
+      document.getElementById('ct-type').value     = c.content_type;
+      document.getElementById('ct-duration').value = c.duration_minutes;
+      document.getElementById('ct-url').value      = c.stream_url;
+      document.getElementById('ct-color').value    = c.thumbnail_color || '#4a90d9';
+      document.getElementById('ct-series').value   = c.series_id || '';
+      document.getElementById('ct-episode').value  = c.episode_number || '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function loadContentAdmin() {
+      const tbody = document.getElementById('content-admin-body');
+      try {
+        const list = await API.getAdminContentList();
+        contentCache = {};
+        document.getElementById('ct-count').textContent = list.length;
+
+        // Tür datalist'i gerçek katalogdan
+        const genres = [...new Set(list.map(v => v.genre))].sort();
+        document.getElementById('genre-list').innerHTML =
+          genres.map(g => `<option value="${g}">`).join('');
+
+        tbody.innerHTML = list.map(c => {
+          contentCache[c.id] = c;
+          return `
+            <tr>
+              <td>${c.title}</td>
+              <td><span class="genre-chip">${c.genre}</span></td>
+              <td class="mono">${c.duration_minutes} dk</td>
+              <td class="mono">${c.watch_count} (${Math.round(c.total_minutes)} dk)</td>
+              <td class="mono">${c.avg_rating > 0 ? '⭐ ' + c.avg_rating : '—'}</td>
+              <td class="mono">${c.comment_count}</td>
+              <td>
+                <button class="btn-ghost" data-action="edit-content" data-id="${c.id}" style="font-size:11px;padding:3px 10px">✏️</button>
+                <button class="btn-ghost" data-action="delete-content" data-id="${c.id}" style="font-size:11px;padding:3px 10px">🗑</button>
+              </td>
+            </tr>`;
+        }).join('') ||
+          '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">Katalog boş</td></tr>';
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--danger)">${e.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById('content-admin-body').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.action === 'edit-content') {
+        fillContentForm(contentCache[id]);
+      } else if (btn.dataset.action === 'delete-content') {
+        if (!confirm(`'${contentCache[id]?.title}' silinsin mi?`)) return;
+        try {
+          await API.deleteContent(id);
+          showToast({ title: 'Video silindi', icon: '🗑' });
+          loadContentAdmin();
+        } catch (err) {
+          showToast({ title: 'Silinemedi', msg: err.message, icon: '⚠️', duration: 6000 });
+        }
+      }
+    });
+
+    document.getElementById('btn-save-content').addEventListener('click', async () => {
+      const body = {
+        title:            document.getElementById('ct-title').value.trim(),
+        genre:            document.getElementById('ct-genre').value.trim().toLowerCase(),
+        content_type:     document.getElementById('ct-type').value,
+        duration_minutes: parseInt(document.getElementById('ct-duration').value),
+        stream_url:       document.getElementById('ct-url').value.trim(),
+        thumbnail_color:  document.getElementById('ct-color').value,
+      };
+      const series = document.getElementById('ct-series').value.trim();
+      const ep     = document.getElementById('ct-episode').value;
+      if (series) body.series_id = series;
+      if (ep)     body.episode_number = parseInt(ep);
+
+      if (!body.title || !body.genre || !body.stream_url || !body.duration_minutes) {
+        showToast({ title: 'Başlık, tür, süre ve URL zorunlu', icon: '⚠️' }); return;
+      }
+      const btn = document.getElementById('btn-save-content');
+      btn.disabled = true;
+      try {
+        if (editingContentId) {
+          await API.updateContent(editingContentId, body);
+          showToast({ title: 'Video güncellendi', icon: '✅' });
+        } else {
+          await API.createContent(body);
+          showToast({ title: 'Video eklendi', msg: body.title, icon: '🎬' });
+        }
+        resetContentForm();
+        loadContentAdmin();
+      } catch (e) {
+        showToast({ title: 'Hata', msg: e.message, icon: '⚠️', duration: 6000 });
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btn-cancel-content').addEventListener('click', resetContentForm);
+
     // ── AI INSIGHTS ───────────────────────────────────
     document.getElementById('btn-run-insights').addEventListener('click', async () => {
       const btn    = document.getElementById('btn-run-insights');
@@ -424,6 +610,7 @@
           ['⭐ Rating ort.',      m.ratings.count ? `${m.ratings.avg} (${m.ratings.count} oy)` : '—'],
           ['🎉 Party dk',        Math.round(m.watch_party.party_minutes)],
           ['💬 AI sohbet',       `${m.ai_chat.messages} mesaj / ${m.ai_chat.users} kişi`],
+          ['🎖 Başarımlar',      Object.values(m.achievements_earned || {}).reduce((a,b) => a+b, 0) + ' kazanım'],
         ];
         document.getElementById('insights-metrics').innerHTML = cards.map(([label, val]) => `
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 14px">

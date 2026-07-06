@@ -143,6 +143,11 @@ const API = {
   getFriendsLeaderboard: ()     => apiFetch("/social/friends-leaderboard"),
   getFollowSuggestions:  ()     => apiFetch("/social/follow-suggestions"),
   getMyAchievements:     ()     => apiFetch("/achievements/mine"),
+  getAchievementStats:   ()     => apiFetch("/achievements/stats"),
+  getAdminContentList:   ()     => apiFetch("/content/admin-list"),
+  createContent:         (body) => apiFetch("/content/", { method:"POST", body: JSON.stringify(body) }),
+  updateContent:         (id,b) => apiFetch(`/content/${encodeURIComponent(id)}`, { method:"PUT", body: JSON.stringify(b) }),
+  deleteContent:         (id)   => apiFetch(`/content/${encodeURIComponent(id)}`, { method:"DELETE" }),
   createParty:     (content_id) =>
     apiFetch("/party/create", { method:"POST", body: JSON.stringify({content_id}) }),
   joinParty:       (room_code)  =>

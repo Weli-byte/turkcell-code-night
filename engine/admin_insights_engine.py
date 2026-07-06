@@ -115,6 +115,12 @@ def collect_platform_metrics() -> dict:
         FROM chat_messages
     """).fetchone()
 
+    # Başarım dağılımı (Sprint 21)
+    ach_rows = db.execute("""
+        SELECT achievement_id, COUNT(*) AS c FROM user_achievements
+        GROUP BY achievement_id ORDER BY c DESC
+    """).fetchall()
+
     db.close()
 
     return {
@@ -164,6 +170,9 @@ def collect_platform_metrics() -> dict:
         "ai_chat": {
             "messages": int(chat_stats["msgs"]),
             "users":    int(chat_stats["users"]),
+        },
+        "achievements_earned": {
+            r["achievement_id"]: int(r["c"]) for r in ach_rows
         },
     }
 
