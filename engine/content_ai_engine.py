@@ -81,8 +81,15 @@ def get_content_detail(content_id: str, user_id: str) -> dict | None:
 
     db.close()
 
+    # Duygu analizi (Sprint 26): analiz edilmemiş yorumlar lazy tamamlanır,
+    # dağılım yalnızca GERÇEKTEN etiketlenmiş yorumlardan hesaplanır
+    from engine.sentiment_engine import analyze_pending, get_content_sentiment
+    analyze_pending(content_id)
+    sentiment = get_content_sentiment(content_id)
+
     return {
         "content":        dict(content),
+        "sentiment":      sentiment,
         "watch_count":    int(stats["watch_count"]),
         "total_minutes":  round(float(stats["total_minutes"]), 1),
         "completions":    int(stats["completions"]),

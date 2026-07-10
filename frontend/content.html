@@ -63,6 +63,23 @@
     .ai-summary-text { font-size: 14px; color: var(--text-1); line-height: 1.7; }
     .ai-summary-meta { font-size: 10px; color: var(--text-muted); margin-top: 10px; }
 
+    /* SENTIMENT (Sprint 26) */
+    .sentiment-bar-wrap { margin-top: 14px; }
+    .sentiment-bar {
+      display: flex; height: 9px; border-radius: 5px; overflow: hidden;
+      background: rgba(255,255,255,0.05);
+    }
+    .sentiment-bar .seg-poz { background: linear-gradient(90deg, #00FF87, #00D470); }
+    .sentiment-bar .seg-notr { background: rgba(255,255,255,0.18); }
+    .sentiment-bar .seg-neg { background: linear-gradient(90deg, #FF6B6B, #FF4D4D); }
+    .sentiment-legend {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      margin-top: 7px; font-size: 11px; color: var(--text-muted);
+    }
+    .comment-sentiment {
+      font-size: 13px; margin-left: 6px; cursor: default;
+    }
+
     /* RATING DIST */
     .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
     .dist-stars { font-size: 11px; width: 66px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
@@ -179,6 +196,10 @@
             </div>
             <div class="ai-summary-text" id="ai-summary-text"><div class="spinner"></div></div>
             <div class="ai-summary-meta" id="ai-summary-meta"></div>
+            <div class="sentiment-bar-wrap" id="sentiment-wrap" style="display:none">
+              <div class="sentiment-bar" id="sentiment-bar"></div>
+              <div class="sentiment-legend" id="sentiment-legend"></div>
+            </div>
           </div>
 
           <div class="card will-animate">
@@ -289,6 +310,22 @@
             </a>`).join('');
         }
 
+        // Duygu dağılımı (Sprint 26) — sadece GPT-4o ile etiketlenmiş yorumlardan
+        if (d.sentiment && d.sentiment.analyzed > 0) {
+          const s = d.sentiment, dist = s.distribution;
+          const pct = k => Math.round(dist[k] / s.analyzed * 100);
+          document.getElementById('sentiment-wrap').style.display = '';
+          document.getElementById('sentiment-bar').innerHTML = `
+            ${dist.pozitif ? `<div class="seg-poz" style="width:${pct('pozitif')}%"></div>` : ''}
+            ${dist.notr    ? `<div class="seg-notr" style="width:${pct('notr')}%"></div>` : ''}
+            ${dist.negatif ? `<div class="seg-neg" style="width:${pct('negatif')}%"></div>` : ''}`;
+          document.getElementById('sentiment-legend').innerHTML = `
+            <span>😊 %${pct('pozitif')} pozitif</span>
+            <span>😐 %${pct('notr')} nötr</span>
+            <span>😞 %${pct('negatif')} negatif</span>
+            <span style="margin-left:auto">${s.analyzed}/${s.total} yorum GPT-4o ile analiz edildi</span>`;
+        }
+
         // Puan dağılımı
         document.getElementById('rating-dist').innerHTML = d.rating_dist.map(r => `
           <div class="dist-row">
@@ -347,6 +384,7 @@
           el.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">İlk yorumu sen yap!</p>';
           return;
         }
+        const SENT_EMOJI = { pozitif: '😊', negatif: '😞', notr: '😐' };
         el.innerHTML = d.comments.map(c => `
           <div class="comment-item">
             <div class="comment-avatar">${(c.username||'?')[0].toUpperCase()}</div>
@@ -354,6 +392,7 @@
               <div>
                 <a class="comment-user lb-username" href="profile.html?u=${encodeURIComponent(c.username)}">${c.username}</a>
                 <span class="comment-time">${relTime(c.created_at)}</span>
+                ${c.sentiment ? `<span class="comment-sentiment" title="GPT-4o duygu analizi: ${c.sentiment}">${SENT_EMOJI[c.sentiment] || ''}</span>` : ''}
               </div>
               <div class="comment-text">${c.comment.replace(/</g,'&lt;')}</div>
             </div>

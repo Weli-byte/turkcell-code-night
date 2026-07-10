@@ -174,7 +174,14 @@ def collect_platform_metrics() -> dict:
         "achievements_earned": {
             r["achievement_id"]: int(r["c"]) for r in ach_rows
         },
+        "community_sentiment": _platform_sentiment(),
     }
+
+
+def _platform_sentiment() -> dict:
+    """GPT-4o ile etiketlenmiş yorumların platform geneli dağılımı (Sprint 26)."""
+    from engine.sentiment_engine import get_platform_sentiment
+    return get_platform_sentiment()
 
 
 def build_admin_insights() -> dict:

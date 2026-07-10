@@ -678,6 +678,9 @@
           ['🎉 Party dk',        Math.round(m.watch_party.party_minutes)],
           ['💬 AI sohbet',       `${m.ai_chat.messages} mesaj / ${m.ai_chat.users} kişi`],
           ['🎖 Başarımlar',      Object.values(m.achievements_earned || {}).reduce((a,b) => a+b, 0) + ' kazanım'],
+          ['😊 Topluluk duygusu', m.community_sentiment?.analyzed
+            ? `skor ${m.community_sentiment.score > 0 ? '+' : ''}${m.community_sentiment.score} (${m.community_sentiment.analyzed} yorum)`
+            : 'analiz yok'],
         ];
         document.getElementById('insights-metrics').innerHTML = cards.map(([label, val]) => `
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 14px">

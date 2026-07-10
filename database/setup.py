@@ -198,6 +198,13 @@ def init_db():
         model TEXT NOT NULL,
         updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS comment_sentiments (
+        comment_id TEXT PRIMARY KEY,
+        sentiment TEXT NOT NULL CHECK(sentiment IN ('pozitif','negatif','notr')),
+        model TEXT NOT NULL,
+        analyzed_at TEXT NOT NULL,
+        FOREIGN KEY (comment_id) REFERENCES content_comments(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

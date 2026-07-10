@@ -111,6 +111,11 @@ def rate_content(body: RateBody, token: dict = Depends(verify_token)):
     from engine.achievement_engine import check_achievements
     new_achievements = check_achievements(user_id)
 
+    # Oyla birlikte yorum geldiyse duygu analizi (Sprint 26)
+    if body.comment:
+        from engine.sentiment_engine import analyze_pending
+        analyze_pending(body.content_id)
+
     return {
         "ok":           True,
         "rating":       body.rating,
@@ -150,6 +155,10 @@ def add_comment(body: CommentBody, token: dict = Depends(verify_token)):
     from engine.achievement_engine import check_achievements
     check_achievements(token["sub"])
 
+    # Duygu analizi — yeni yorum GPT-4o ile anında etiketlenir (Sprint 26)
+    from engine.sentiment_engine import analyze_pending
+    analyze_pending(body.content_id)
+
     return {
         "id":         cm_id,
         "user_id":    token["sub"],
@@ -162,13 +171,15 @@ def add_comment(body: CommentBody, token: dict = Depends(verify_token)):
 
 @router.get("/comments/{content_id}")
 def get_comments(content_id: str, token: dict = Depends(verify_token)):
-    """İçerik yorumları + kullanıcının mevcut oyunu."""
+    """İçerik yorumları + GPT-4o duygu etiketi + kullanıcının mevcut oyu."""
     db   = get_db()
     rows = db.execute("""
         SELECT cc.id, cc.comment, cc.created_at,
-               u.username, u.id AS user_id
+               u.username, u.id AS user_id,
+               cs.sentiment
         FROM content_comments cc
         JOIN users u ON u.id = cc.user_id
+        LEFT JOIN comment_sentiments cs ON cs.comment_id = cc.id
         WHERE cc.content_id = ?
         ORDER BY cc.created_at DESC
         LIMIT 50
