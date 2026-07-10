@@ -1,123 +1,127 @@
-# DGE — Deterministik Oyunlaştırma Platformu
+# GE Engine — AI Destekli Deterministik Oyunlaştırma Platformu
 
-Gerçek zamanlı çalışan bir video platformu + **deterministik** oyunlaştırma
-motoru. Kullanıcılar kayıt olur, tarayıcıda gerçekten video izler; izlenen
-her saniye ölçülür, challenge eşiği aşıldığı **anda** puan, rozet ve canlı
-bildirim düşer. Tüm iş kararları (puan/rozet/sıralama) deterministik bir
-kural motorunda alınır — `random` yok, `eval()` yok, LLM iş kararı veremez.
+Gerçek zamanlı video platformu + oyunlaştırma motoru + **GPT-4o AI katmanı**.
+Kullanıcılar kayıt olur, tarayıcıda gerçekten video izler; izlenen her saniye
+ölçülür, görev eşiği aşıldığı **anda** puan, seviye, rozet, başarım ve canlı
+bildirim düşer. Tüm iş kararları (puan / rozet / sıralama / sezon ödülü)
+deterministik kural motorunda alınır — `random` yok, `eval()` yok, mock yok,
+**LLM asla iş kararı vermez: sadece gerçek veriyi anlatır ve çevirir.**
 
 ## Hızlı Başlangıç
 
-### Docker ile (önerilen)
-
 ```bash
-docker compose up --build
-# SPA  → http://localhost:8080
-# API  → http://localhost:8000 (Swagger: /docs)
-# Admin: admin / change-me-admin-1 (docker-compose.yml'de değiştir)
+# 1) .env dosyası oluştur (kök dizine):
+#    OPENAI_API_KEY=sk-...        ← AI katmanı için (yoksa deterministik mod)
+#    LLM_ENABLED=true
+#    LLM_MODEL=gpt-4o
+#    SECRET_KEY=degistir-bunu
+
+# 2) Başlat (Windows):
+start.bat
+
+# veya manuel:
+pip install fastapi "uvicorn[standard]" pydantic PyJWT openai python-dotenv
+python database/setup.py
+uvicorn api.main:app --reload --port 8000
 ```
 
-### Manuel (geliştirme)
+- Uygulama → **http://localhost:8000/** &nbsp;·&nbsp; Swagger → **/docs**
+- Varsayılan admin: `admin / admin123`
+- PWA: tarayıcıdan "uygulamayı yükle" ile telefona kurulabilir
 
-```bash
-python -m pip install -e ".[dev]"
-uvicorn gamification_backend.main:app        # API → :8000
-cd frontend && npm install && npm run dev    # SPA → http://localhost:5173
-```
+## AI Engine — 12 Yetenek
 
-Admin hesabı için API'yi şu env'lerle başlat:
-`GAMIFICATION_BACKEND_ADMIN_USERNAME` + `GAMIFICATION_BACKEND_ADMIN_PASSWORD`.
+Her yetenek **gerçek DB verisi** üzerinde çalışır; GPT-4o yalnızca dil
+katmanıdır ve her birinin LLM'siz **deterministik fallback'i** vardır
+(fallback'ler de ezber değil, gerçek sayılardan hesaplanır).
 
-## Neler Var?
+| Yetenek | Ne yapar | Nerede |
+|---|---|---|
+| 🤖 AI Koç (sohbet) | Konuşma hafızalı çok turlu sohbet; her turda güncel evidence yeniden üretilir | Panel |
+| 🎯 Günün Planı | Panel açılışında otomatik 3 maddelik kişisel plan (streak riski + görev açıkları + sezon); günde 1 GPT çağrısı, cache'li | Panel |
+| 🧭 Intent sınıflandırma | Türkçe soruları kalıp + GPT-4o ile kategorize eder; kategorisiz soruları serbest modda DOĞRUDAN yanıtlar | Panel · İzleme |
+| 🔍 Doğal dil araması | "yarım saatten kısa yüksek puanlı animasyon" → GPT filtreye çevirir, sonuç **gerçek parametreli SQL**'den | Ctrl+K palet |
+| 🎬 Kişisel öneriler | Gerçek izleme geçmişinden tür profili + GPT açıklaması | Katalog |
+| 💡 Görev ipuçları | Her aktif görevin anlık açığı + GPT motivasyon satırı | Panel |
+| 📋 Günlük özet · 📅 Haftalık rapor | Gerçek gün/hafta kırılımından GPT koç anlatısı | Panel |
+| 🗣 Topluluk özeti | Gerçek yorum + puanlardan "topluluk ne diyor"; kaynak değişmedikçe cache | İçerik detayı |
+| 😊 Duygu analizi | Her yorum GPT ile 1 kez etiketlenir (pozitif/negatif/nötr); LLM yoksa **uydurma etiket yok** | İçerik · Admin |
+| ⚔️ Rakip analizi | İki kullanıcının gerçek istatistik kıyası; yakalama süresi gerçek 7 gün temposundan | Liderlik |
+| 🧠 Platform analizi | 13 gerçek metrik kümesinden yönetici özeti + 3 aksiyon önerisi | Admin |
+| 🛠 AI Görev Tasarımcısı | GPT metriklerden görev önerir → **safe parser doğrular** → admin onaylarsa oluşur | Admin |
 
-- **Video platformu** — açık lisanslı katalog (Blender filmleri + kısa
-  diziler); player gerçek izleme süresini ölçer (seek/pause sayılmaz),
-  15 sn'de bir motora raporlar.
-- **Canlı değerlendirme** — her event'te kural motoru çalışır: eşik
-  aşıldığı anda ödül + SSE bildirimi. Günde tek ödül kuralı **veritabanı
-  kısıtıyla** garantilidir.
-- **Dashboard** — puanlar, rozetler (Bronze 500 / Silver 1500 / Gold 3000),
-  challenge ilerleme çubukları, bildirim merkezi, append-only puan geçmişi.
-- **Canlı leaderboard** — puan azalan + alfabetik tie-break; kendi satırın
-  vurgulu; botlar 🤖 etiketli.
-- **AI Asistan** — "Kaç puanım var?", "Neden bu sıradayım?" gibi sorulara
-  deterministik motor kanıtıyla (evidence) cevap verir; LLM (Gemini/OpenAI
-  anahtarı varsa) yalnızca dili cilalar, karar veremez.
-- **Admin paneli** — challenge CRUD (koşullar güvenli parser'dan geçmeden
-  yazılmaz), kullanıcılar, batch geçmişi, trafik simülatörü kontrolü.
-- **Trafik simülatörü** — persona botları (binge'çi / gündelik / eleştirmen)
-  gerçek ingestion yolundan event üretir; kotalar onlara da uygulanır;
-  seed'li rastgelelik → aynı seed aynı trafik.
-- **Gün sonu batch** — her gece 23:55 UTC'de tüm kullanıcıları
-  deterministik sırayla yeniden değerlendirir; idempotent şema sayesinde
-  canlı sonuçlarla asla çelişemez, yalnızca boşluk doldurur.
+## Oyunlaştırma Çekirdeği (deterministik)
+
+- **Puan motoru** — görev koşulları `alan operatör sayı` sözdiziminde,
+  whitelist'li parser (eval yok); günlük cap, idempotent değerlendirme
+- **Seviye/XP** — `T(n)=50·n·(n+1)` eğrisi, unvanlar (Çaylak → Platform Yıldızı)
+- **Rozetler** — Bronze/Silver/Gold/Platinum puan eşikleri
+- **Başarımlar** — 14 tek seferlik kilometre taşı; koşullar gerçek DB
+  sorguları, Kaşif hedefi katalogdaki tür sayısından **dinamik**
+- **Sezonlar** — ISO hafta yarışları; pazartesi lazy-finalization (zamanlayıcı
+  yok, idempotent), ilk 3'e gerçek ledger ödülü (500/300/150)
+- **Watch Party** — oda kodu ile ortak izleme; parti dakikaları sunucuda ölçülür
+
+## Sosyal Katman
+
+Takip sistemi + arkadaş liderliği · yorum + 1-5 yıldız oylama · aktivite
+akışı + trend içerikler · public profiller + paylaşım kartı · kalıcı bildirim
+merkezi (SSE canlı + DB geçmişi) · içerik detay sayfası (benzer videolar,
+puan dağılımı)
 
 ## Mimari
 
 ```text
-React SPA (frontend/)                    FastAPI (src/gamification_backend/)
-  katalog · player · dashboard    HTTP     api/ → services/ → repositories/
-  leaderboard · admin · SSE      ─────►         │
-                                                ▼ saf fonksiyon çağrıları
-                                  Deterministik motor (src/gamification_engine/)
-                                    rules (eval'siz parser) · reward_selector
-                                    badges · leaderboard · ai/explanation
-                                                │
-                                                ▼
-                                  SQLite: users, watch_events, challenges,
-                                  reward_events (günde tek ödül UNIQUE),
-                                  points_ledger (INSERT-ONLY, trigger korumalı),
-                                  badges, notifications, runs
+Vanilla JS SPA (frontend/)                FastAPI (api/)
+  8 sayfa · GSAP · SSE · PWA      HTTP     routers/ (17 router)
+  Ctrl+K komut paleti            ─────►        │
+                                               ▼
+                                  Motorlar (engine/ — 24 modül)
+                                    kural parser (eval'siz) · level · season
+                                    achievement · sentiment · nl_search
+                                    llm_adapter (TEK OpenAI çağrı noktası)
+                                               │
+                                               ▼
+                                  SQLite (database/) — 21 tablo
+                                    points_ledger (append-only mantığı)
+                                    UNIQUE kısıtlarıyla çifte ödül imkânsız
 ```
 
-Motor (`gamification_engine`) bağımsız ve saf kalır: v1'in batch CLI'ı
-(`gamification-engine run/explain`) aynen çalışır, golden-file regresyon
-testleriyle korunur.
+**AI mimari kuralı:** `engine/llm_adapter.py` dışında hiçbir dosya OpenAI
+çağrısı yapamaz. `llm_call()` hata/kapalı durumda `None` döner; çağıran her
+motor deterministik yoluna düşer. `LLM_ENABLED=false` global kill switch.
 
 ## Mühendislik Garantileri
 
-- **Determinizm** — aynı event seti ⇒ aynı sonuç; testler bunu iki bağımsız
-  veritabanında ters event sırasıyla doğrular.
-- **Append-only ledger** — UPDATE/DELETE veritabanı trigger'ıyla engellenir;
-  ham SQL bile puan geçmişini değiştiremez.
-- **Anti-abuse** — event tarihi sunucu atar (UTC); kullanıcı yalnızca kendi
-  adına event atabilir (token'dan); günlük izleme kotası video süresi × 3.
-- **Güvenli kurallar** — koşullar `alan operatör tamsayı` sözdiziminde,
-  whitelist'li parser ile; admin bile geçersiz/`eval` benzeri koşul giremez.
+- **Mock/simülasyon yok** — her sayı gerçek DB sorgusundan; AI fallback'leri
+  bile gerçek medyan/tempo hesaplarından
+- **Çifte ödül imkânsız** — UNIQUE kısıtları + `INSERT OR IGNORE` + rowcount
+  guard (görev/rozet/başarım/sezon)
+- **Güvenli kurallar** — koşullar whitelist parser'dan geçer; AI önerileri
+  dahi aynı parser'la doğrulanır, admin onayı olmadan hiçbir şey oluşmaz
+- **Anti-abuse** — izleme süresi `timeupdate` delta'larıyla ölçülür (seek
+  sayılmaz), günlük video cap'i, tarihler sunucudan
+- **Şeffaflık** — her AI cevabında model rozeti + evidence; cache'ler
+  "önbellekten" etiketiyle görünür
 
-## Geliştirme
+## API Özeti
 
-```bash
-pytest              # 323 test + coverage kapısı (fail-under=85)
-ruff check src tests && ruff format src tests
-mypy                # strict
-cd frontend && npm run build   # tsc strict + vite
-```
-
-CI her push'ta Python 3.11/3.12 üzerinde lint + format + type-check + test
-çalıştırır.
-
-## v1 Batch Motoru (korunuyor)
-
-CSV → JSON çalışan orijinal batch hattı ve tanıtım sayfası:
-
-```bash
-gamification-engine run --activities data/input/user_activities.csv \
-  --challenges data/input/challenges.csv --output-dir data/output \
-  --run-date 2026-07-01
-gamification-engine explain --user-id u001 --question "Kaç puanım var?" \
-  --output-dir data/output --challenges data/input/challenges.csv
-python server.py   # v1 landing page → http://localhost:8000
-```
-
-## Dokümantasyon
-
-| Doküman | İçerik |
+| Grup | Öne çıkanlar |
 |---|---|
-| [docs/v2_plan.md](docs/v2_plan.md) | Faz 2 mimarisi ve sprint kayıtları (20-30) |
-| [docs/architecture.md](docs/architecture.md) | Motor mimarisi ve modül sorumlulukları |
-| [docs/rule_engine.md](docs/rule_engine.md) | Koşul sözdizimi, tie-break, yeni challenge ekleme |
-| [docs/ai_layer.md](docs/ai_layer.md) | Açıklama katmanı, LLM adapter, prompt contract |
-| [docs/operations.md](docs/operations.md) | Batch akışı, hata kodları |
-| [docs/testing_and_determinism.md](docs/testing_and_determinism.md) | Determinizm garantileri, golden file süreci |
-| [docs/backlog.md](docs/backlog.md) | Teknik borç ve gelecek özellikler |
+| `/api/auth` | register · login · refresh |
+| `/api/users` | me · profil · public profil · şifre |
+| `/api/content` | katalog · detay · AI topluluk özeti · admin CRUD |
+| `/api/watch` | session start/end/heartbeat (canlı değerlendirme) |
+| `/api/challenges` | aktif görevler + ilerleme · admin CRUD · **ai-suggest** |
+| `/api/ai` | chat · daily-plan · weekly-report · digest · recommendations · explain |
+| `/api/social` | follow · feed · trending · rivalry · yorum/oylama |
+| `/api/seasons` | current · history (lazy finalization) |
+| `/api/achievements` | mine · stats |
+| `/api/search` | birleşik arama · **ai (doğal dil)** |
+| `/api/notifications` | SSE stream · kalıcı liste · okundu yönetimi |
+| `/api/pipeline` | run · metrics · **insights (AI)** |
+
+## Teknoloji
+
+FastAPI · SQLite · OpenAI GPT-4o · Vanilla JS (framework'süz) · GSAP + Lenis
+· SSE · JWT (HS256) · PWA (service worker, API'ye asla dokunmaz)
