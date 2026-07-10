@@ -144,6 +144,7 @@ const API = {
   getFollowSuggestions:  ()     => apiFetch("/social/follow-suggestions"),
   getMyAchievements:     ()     => apiFetch("/achievements/mine"),
   search:                (q)    => apiFetch("/search?q=" + encodeURIComponent(q)),
+  aiSearch:              (q)    => apiFetch("/search/ai?q=" + encodeURIComponent(q)),
   getPublicStats:        ()     => apiFetch("/stats/public"),
   getAchievementStats:   ()     => apiFetch("/achievements/stats"),
   getAdminContentList:   ()     => apiFetch("/content/admin-list"),

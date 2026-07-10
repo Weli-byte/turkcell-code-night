@@ -12,6 +12,17 @@ from engine.level_engine import get_level
 router = APIRouter(tags=["Search"])
 
 
+@router.get("/ai")
+def ai_natural_search(
+    q: str = Query(..., min_length=3, max_length=120),
+    token: dict = Depends(verify_token),
+):
+    """Doğal dil araması (Sprint 25) — GPT-4o sorguyu filtreye çevirir,
+    sonuçlar gerçek parametreli SQL'den gelir."""
+    from engine.nl_search_engine import nl_search
+    return nl_search(q, token["sub"])
+
+
 @router.get("")
 def global_search(
     q: str = Query(..., min_length=1, max_length=60),

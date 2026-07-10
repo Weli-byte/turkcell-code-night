@@ -271,10 +271,78 @@ function initCommandPalette() {
     items[selected].el.scrollIntoView({ block: 'nearest' });
   }
 
+  function bindItems() {
+    items = [...resultsEl.querySelectorAll('.cmdk-item')].map(el => ({
+      href: el.dataset.href,
+      ai:   el.dataset.ai === '1',
+      el,
+    }));
+    items.forEach((it, idx) => {
+      it.el.addEventListener('click', () => activateItem(it));
+      it.el.addEventListener('mousemove', () => setSelected(idx));
+    });
+    selected = 0;
+    if (items.length) items[0].el.classList.add('selected');
+  }
+
+  function activateItem(it) {
+    if (!it) return;
+    if (it.ai) { runAISearch(input.value.trim()); return; }
+    if (it.href) window.location.href = it.href;
+  }
+
+  function videoItemHTML(v) {
+    return `
+      <div class="cmdk-item" data-href="content.html?id=${encodeURIComponent(v.id)}">
+        <span class="cmdk-item-icon" style="color:${v.thumbnail_color}">🎬</span>
+        <span class="cmdk-item-title">${v.title}</span>
+        <span class="cmdk-item-meta">${v.genre} · ${Math.round(v.duration_minutes)} dk
+          ${v.avg_rating > 0 ? '· ⭐ ' + v.avg_rating : ''} · 👁 ${v.watches}</span>
+      </div>`;
+  }
+
+  // Doğal dil AI araması (Sprint 25) — GPT-4o sorguyu filtreye çevirir,
+  // sonuçlar gerçek SQL'den gelir
+  async function runAISearch(q) {
+    if (!q) return;
+    resultsEl.innerHTML =
+      `<div class="cmdk-empty">🤖 GPT-4o sorguyu çözümlüyor…</div>`;
+    items = [];
+    try {
+      const d = await API.aiSearch(q);
+      let html = `<div class="cmdk-section">🤖 AI Sonuçları
+        ${d.llm_enhanced ? '· ⚡ ' + d.model : '· kelime araması'}
+        · ${d.filter_summary}</div>`;
+      if (!d.results.length) {
+        html += `<div class="cmdk-empty">Bu filtreye uyan içerik yok</div>`;
+      } else {
+        if (d.widened) {
+          html += `<div class="cmdk-empty" style="padding:8px 16px">Filtre sonuç vermedi — kelime aramasına genişletildi</div>`;
+        }
+        html += d.results.map(videoItemHTML).join('');
+      }
+      resultsEl.innerHTML = html;
+      bindItems();
+    } catch (e) {
+      resultsEl.innerHTML = `<div class="cmdk-empty">${e.message}</div>`;
+    }
+  }
+
   function renderResults(data, q) {
     const ql = q.trim().toLowerCase();
     const pages = PAGES.filter(p => !ql || p.title.toLowerCase().includes(ql));
     let html = '';
+
+    // Çok kelimeli / uzun sorgu → doğal dil AI araması önerisi en üstte
+    const words = q.trim().split(/\s+/).filter(Boolean);
+    if (words.length >= 2 || q.trim().length >= 12) {
+      html += `
+        <div class="cmdk-item" data-ai="1">
+          <span class="cmdk-item-icon">🤖</span>
+          <span class="cmdk-item-title">AI ile ara: “${q.trim()}”</span>
+          <span class="cmdk-item-meta">doğal dil · GPT-4o</span>
+        </div>`;
+    }
 
     if (pages.length) {
       html += `<div class="cmdk-section">Sayfalar</div>` + pages.map(p => `
@@ -284,13 +352,8 @@ function initCommandPalette() {
         </div>`).join('');
     }
     if (data?.videos?.length) {
-      html += `<div class="cmdk-section">Videolar</div>` + data.videos.map(v => `
-        <div class="cmdk-item" data-href="content.html?id=${encodeURIComponent(v.id)}">
-          <span class="cmdk-item-icon" style="color:${v.thumbnail_color}">🎬</span>
-          <span class="cmdk-item-title">${v.title}</span>
-          <span class="cmdk-item-meta">${v.genre} · ${Math.round(v.duration_minutes)} dk
-            ${v.avg_rating > 0 ? '· ⭐ ' + v.avg_rating : ''} · 👁 ${v.watches}</span>
-        </div>`).join('');
+      html += `<div class="cmdk-section">Videolar</div>` +
+        data.videos.map(videoItemHTML).join('');
     }
     if (data?.users?.length) {
       html += `<div class="cmdk-section">Kullanıcılar</div>` + data.users.map(u => `
@@ -305,15 +368,7 @@ function initCommandPalette() {
     }
 
     resultsEl.innerHTML = html;
-    items = [...resultsEl.querySelectorAll('.cmdk-item')].map(el => ({
-      href: el.dataset.href, el,
-    }));
-    items.forEach((it, idx) => {
-      it.el.addEventListener('click', () => { window.location.href = it.href; });
-      it.el.addEventListener('mousemove', () => setSelected(idx));
-    });
-    selected = 0;
-    if (items.length) items[0].el.classList.add('selected');
+    bindItems();
   }
 
   input.addEventListener('input', () => {
@@ -335,7 +390,7 @@ function initCommandPalette() {
     if (e.key === 'ArrowDown') { e.preventDefault(); setSelected(selected + 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setSelected(selected - 1); }
     else if (e.key === 'Enter' && items[selected]) {
-      window.location.href = items[selected].href;
+      activateItem(items[selected]);
     }
   });
 
