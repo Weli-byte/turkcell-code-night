@@ -205,6 +205,17 @@ def init_db():
         analyzed_at TEXT NOT NULL,
         FOREIGN KEY (comment_id) REFERENCES content_comments(id)
     );
+    CREATE TABLE IF NOT EXISTS daily_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        plan_date TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        evidence TEXT,
+        model TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(user_id, plan_date),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
     """)
     cur.execute("""
         INSERT OR IGNORE INTO users

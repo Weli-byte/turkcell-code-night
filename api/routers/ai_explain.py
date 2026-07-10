@@ -47,6 +47,14 @@ def ai_weekly_report(token: dict = Depends(verify_token)):
     return build_weekly_report(token["sub"])
 
 
+@router.get("/daily-plan")
+def ai_daily_plan(refresh: bool = False, token: dict = Depends(verify_token)):
+    """Günün Planı (Sprint 27) — günde bir kez GPT-4o ile üretilir,
+    cache'ten servis edilir; refresh=true elle yeniler."""
+    from engine.daily_plan_engine import build_daily_plan
+    return build_daily_plan(token["sub"], force=refresh)
+
+
 @router.get("/recommendations")
 def ai_recommendations(token: dict = Depends(verify_token)):
     """Gerçek izleme geçmişine dayalı GPT-4o video önerileri."""

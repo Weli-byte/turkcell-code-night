@@ -123,6 +123,7 @@ const API = {
   getChatHistory:       ()  => apiFetch("/ai/chat/history"),
   clearChatHistory:     ()  => apiFetch("/ai/chat/history", { method:"DELETE" }),
   getWeeklyReport:      ()  => apiFetch("/ai/weekly-report"),
+  getDailyPlan:         (refresh) => apiFetch("/ai/daily-plan" + (refresh ? "?refresh=true" : "")),
   getNotifications:     (unreadOnly) =>
     apiFetch("/notifications/list" + (unreadOnly ? "?unread_only=true" : "")),
   getUnreadCount:       ()  => apiFetch("/notifications/unread-count"),

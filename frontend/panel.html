@@ -380,6 +380,24 @@
         </div>
       </div>
 
+      <!-- GÜNÜN PLANI (Sprint 27: proaktif AI koç) -->
+      <div class="ai-box will-animate" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="ai-box-title">🎯 Günün Planı</div>
+            <div class="ai-box-sub" style="margin-bottom:0">Gerçek verilerinden bugün için üretilen kişisel hedefler</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="plan-risk-chip" style="display:none;font-size:11px;color:#FF6B6B;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.25);border-radius:100px;padding:3px 12px">🔥 Streak risk altında</span>
+            <span id="plan-meta" style="font-size:10px;color:var(--text-muted)"></span>
+            <button class="btn-ghost" id="plan-refresh" style="font-size:12px;padding:4px 12px" title="Planı yeniden üret">↻</button>
+          </div>
+        </div>
+        <div id="plan-body" style="margin-top:14px">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
       <!-- AI KOÇ (Sprint 14: konuşma hafızalı sohbet) -->
       <div class="ai-box will-animate">
         <div class="ai-box-title">🤖 AI Koç</div>
@@ -645,6 +663,31 @@
       }
     });
 
+    // GÜNÜN PLANI (Sprint 27) — panel açılışında otomatik, günlük cache'li
+    async function loadDailyPlan(refresh = false) {
+      const body = document.getElementById('plan-body');
+      const meta = document.getElementById('plan-meta');
+      const risk = document.getElementById('plan-risk-chip');
+      if (refresh) body.innerHTML = '<div class="spinner"></div>';
+      try {
+        const d = await API.getDailyPlan(refresh);
+        // "1. ..." maddelerini satırlara ayır
+        const lines = d.answer.split(/\n+/).filter(l => l.trim());
+        body.innerHTML = lines.map(l => `
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:14px;line-height:1.6;color:var(--text-1)">
+            <span style="flex-shrink:0">${l.trim().match(/^1[.)]/) ? '🥇' : l.trim().match(/^2[.)]/) ? '🥈' : l.trim().match(/^3[.)]/) ? '🥉' : '▸'}</span>
+            <span>${l.trim().replace(/^\d+[.)]\s*/, '')}</span>
+          </div>`).join('');
+        meta.textContent =
+          (d.llm_enhanced ? `⚡ ${d.model}` : '📐 deterministik') +
+          (d.cached ? ' · bugünün planı (önbellek)' : ' · şimdi üretildi');
+        risk.style.display = d.evidence?.streak_at_risk ? '' : 'none';
+      } catch (e) {
+        body.innerHTML = `<p style="font-size:13px;color:var(--danger)">${e.message}</p>`;
+      }
+    }
+    document.getElementById('plan-refresh').addEventListener('click', () => loadDailyPlan(true));
+
     // AI KOÇ — konuşma hafızalı sohbet (Sprint 14)
     const chatThread = document.getElementById('chat-thread');
     const chatTyping = document.getElementById('chat-typing');
@@ -786,7 +829,7 @@
     // INIT
     (async () => {
       await loadProfile();
-      await Promise.allSettled([loadBadges(), loadHistory(), loadChallenges(), loadWeeklyChart(), loadChatHistory()]);
+      await Promise.allSettled([loadBadges(), loadHistory(), loadChallenges(), loadWeeklyChart(), loadChatHistory(), loadDailyPlan()]);
     })();
   </script>
 </body>
