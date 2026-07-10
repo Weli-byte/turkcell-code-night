@@ -446,6 +446,20 @@ def follow_suggestions(token: dict = Depends(verify_token)):
     ]}
 
 
+@router.get("/rivalry/{username}")
+def rivalry_analysis(username: str, token: dict = Depends(verify_token)):
+    """AI Rakip Analizi (Sprint 28) — iki kullanıcının gerçek istatistik
+    kıyası + GPT-4o taktik yorumu."""
+    from engine.rivalry_engine import build_rivalry
+    try:
+        result = build_rivalry(token["sub"], username)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if result is None:
+        raise HTTPException(404, "Kullanıcı bulunamadı")
+    return result
+
+
 @router.get("/trending")
 def trending_content(token: dict = Depends(verify_token)):
     """Bu haftanın trend içerikleri — izlenme + puan bazlı sıralama."""

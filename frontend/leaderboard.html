@@ -191,6 +191,68 @@
       font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);
     }
     .season-participants { font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; }
+
+    /* RAKİP ANALİZİ (Sprint 28) */
+    .rival-btn {
+      background:none; border:1px solid var(--border); border-radius:7px;
+      font-size:13px; padding:3px 9px; cursor:pointer;
+      transition:border-color 0.15s, transform 0.15s;
+    }
+    .rival-btn:hover { border-color:var(--border-acc); transform:scale(1.1); }
+
+    .rivalry-overlay {
+      position:fixed; inset:0; z-index:9000;
+      background:rgba(0,0,0,0.75); backdrop-filter:blur(8px);
+      display:flex; align-items:center; justify-content:center; padding:16px;
+      opacity:0; pointer-events:none; transition:opacity 0.2s;
+    }
+    .rivalry-overlay.show { opacity:1; pointer-events:all; }
+    .rivalry-modal {
+      background:var(--bg-card); border:1px solid var(--border-acc);
+      border-radius:var(--radius); padding:28px 32px;
+      max-width:560px; width:100%; max-height:88vh; overflow-y:auto;
+      transform:translateY(16px); transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .rivalry-overlay.show .rivalry-modal { transform:translateY(0); }
+    .rivalry-head {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin-bottom:22px;
+    }
+    .rivalry-side { text-align:center; flex:1; }
+    .rivalry-avatar {
+      width:56px; height:56px; border-radius:50%; margin:0 auto 8px;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Syne',sans-serif; font-size:22px; font-weight:800;
+    }
+    .rivalry-side.me .rivalry-avatar {
+      background:rgba(0,255,135,0.1); border:2px solid var(--border-acc); color:var(--accent-1);
+    }
+    .rivalry-side.them .rivalry-avatar {
+      background:rgba(255,77,77,0.1); border:2px solid rgba(255,77,77,0.35); color:#FF6B6B;
+    }
+    .rivalry-name { font-size:14px; font-weight:700; }
+    .rivalry-lv { font-size:11px; color:var(--text-muted); }
+    .rivalry-vs {
+      font-family:'Syne',sans-serif; font-size:22px; font-weight:800;
+      color:var(--text-muted);
+    }
+    .rv-row { margin-bottom:12px; }
+    .rv-label {
+      display:flex; justify-content:space-between;
+      font-size:11px; color:var(--text-muted); margin-bottom:4px;
+      font-family:'JetBrains Mono',monospace;
+    }
+    .rv-bars { display:flex; gap:4px; height:8px; }
+    .rv-bar-me, .rv-bar-them { border-radius:4px; min-width:2px; }
+    .rv-bar-me   { background:linear-gradient(90deg,#00FF87,#00D470); }
+    .rv-bar-them { background:linear-gradient(90deg,#FF6B6B,#FF4D4D); }
+    .rivalry-analysis {
+      margin-top:18px; padding:16px 18px;
+      background:linear-gradient(135deg,rgba(108,0,255,0.07),rgba(0,212,255,0.04));
+      border:1px solid var(--border-acc); border-radius:10px;
+      font-size:14px; line-height:1.7;
+    }
+    .rivalry-meta { font-size:10px; color:var(--text-muted); margin-top:10px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -370,6 +432,31 @@
     <span class="sticky-rank" id="sticky-pts" style="color:var(--accent-2)">— puan</span>
   </div>
 
+  <!-- RAKİP ANALİZİ MODALI (Sprint 28) -->
+  <div class="rivalry-overlay" id="rivalry-overlay">
+    <div class="rivalry-modal">
+      <div class="rivalry-head">
+        <div class="rivalry-side me">
+          <div class="rivalry-avatar" id="rv-me-avatar">?</div>
+          <div class="rivalry-name" id="rv-me-name">—</div>
+          <div class="rivalry-lv" id="rv-me-lv"></div>
+        </div>
+        <div class="rivalry-vs">VS</div>
+        <div class="rivalry-side them">
+          <div class="rivalry-avatar" id="rv-them-avatar">?</div>
+          <div class="rivalry-name" id="rv-them-name">—</div>
+          <div class="rivalry-lv" id="rv-them-lv"></div>
+        </div>
+      </div>
+      <div id="rv-bars"><div class="spinner"></div></div>
+      <div class="rivalry-analysis" id="rv-analysis" style="display:none"></div>
+      <div class="rivalry-meta" id="rv-meta"></div>
+      <div style="margin-top:16px;text-align:right">
+        <button class="btn-ghost" id="rv-close" style="font-size:13px">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <script src="js/api.js"></script>
@@ -520,6 +607,7 @@
                   <div class="lb-avatar">${(u.username||'?')[0].toUpperCase()}</div>
                   <a class="lb-username" href="profile.html?u=${encodeURIComponent(u.username)}">${u.username}</a>
                   ${isMe ? '<span class="me-chip">Sen</span>' : ''}
+                  ${!isMe ? `<button class="rival-btn" data-username="${u.username}" title="AI rakip analizi">⚔️</button>` : ''}
                 </div>
               </td>
               <td style="text-align:center">${deltaChip(u.username, u.rank)}</td>
@@ -608,6 +696,72 @@
           </div>`).join('');
       } catch (e) {
         el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+      }
+    }
+
+    // ── AI RAKİP ANALİZİ (Sprint 28) ──────────────────
+    const rvOverlay = document.getElementById('rivalry-overlay');
+    document.getElementById('rv-close').addEventListener('click', () => rvOverlay.classList.remove('show'));
+    rvOverlay.addEventListener('click', (e) => { if (e.target === rvOverlay) rvOverlay.classList.remove('show'); });
+
+    document.getElementById('lb-body').addEventListener('click', (e) => {
+      const btn = e.target.closest('.rival-btn');
+      if (btn) openRivalry(btn.dataset.username);
+    });
+
+    async function openRivalry(username) {
+      rvOverlay.classList.add('show');
+      document.getElementById('rv-bars').innerHTML = '<div class="cmdk-empty" style="padding:20px;text-align:center;font-size:13px;color:var(--text-muted)">🤖 GPT-4o iki profili analiz ediyor…</div>';
+      document.getElementById('rv-analysis').style.display = 'none';
+      document.getElementById('rv-meta').textContent = '';
+      document.getElementById('rv-them-name').textContent = username;
+      document.getElementById('rv-them-avatar').textContent = username[0].toUpperCase();
+      const myName = Auth.getUsername() || '?';
+      document.getElementById('rv-me-name').textContent = myName;
+      document.getElementById('rv-me-avatar').textContent = myName[0].toUpperCase();
+
+      try {
+        const d  = await API.getRivalry(username);
+        const me = d.evidence.me, them = d.evidence.rival;
+
+        document.getElementById('rv-me-lv').textContent   = `Lv ${me.level} · ${me.level_title}`;
+        document.getElementById('rv-them-lv').textContent = `Lv ${them.level} · ${them.level_title}`;
+
+        const metrics = [
+          ['⚡ Toplam puan',      me.total_points,  them.total_points],
+          ['📈 7 gün puan',       me.week_points,   them.week_points],
+          ['⏱ 7 gün izleme (dk)', me.week_minutes,  them.week_minutes],
+          ['🔥 Streak (gün)',     me.streak_days,   them.streak_days],
+          ['🎯 Görev (7g)',       me.challenges_7d, them.challenges_7d],
+          ['🎖 Başarım',          me.achievements,  them.achievements],
+        ];
+        document.getElementById('rv-bars').innerHTML = metrics.map(([label, a, b]) => {
+          const max = Math.max(a, b) || 1;
+          return `
+            <div class="rv-row">
+              <div class="rv-label"><span>${fmtNum(a)}</span><span>${label}</span><span>${fmtNum(b)}</span></div>
+              <div class="rv-bars">
+                <div style="flex:1;display:flex;justify-content:flex-end">
+                  <div class="rv-bar-me" style="width:${Math.round(a/max*100)}%"></div>
+                </div>
+                <div style="flex:1;display:flex">
+                  <div class="rv-bar-them" style="width:${Math.round(b/max*100)}%"></div>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+
+        const cmp = d.evidence.comparison;
+        const anEl = document.getElementById('rv-analysis');
+        anEl.textContent = d.answer;
+        anEl.style.display = '';
+        document.getElementById('rv-meta').textContent =
+          (d.llm_enhanced ? `⚡ ${d.model} taktik analizi` : '📐 deterministik kıyas') +
+          ` · lider: ${cmp.leader} · fark: ${fmtNum(cmp.point_diff)} puan` +
+          (cmp.catch_up_days ? ` · ${cmp.catch_up_days > 0 ? '~' + cmp.catch_up_days + ' günde yakalarsın' : '~' + (-cmp.catch_up_days) + ' günde yakalanabilirsin'}` : '');
+      } catch (e) {
+        document.getElementById('rv-bars').innerHTML =
+          `<p style="color:var(--danger);font-size:13px;text-align:center;padding:16px">${e.message}</p>`;
       }
     }
 

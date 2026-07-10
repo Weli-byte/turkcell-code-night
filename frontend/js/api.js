@@ -143,6 +143,7 @@ const API = {
   getFollowing:    ()           => apiFetch("/social/following"),
   getFriendsLeaderboard: ()     => apiFetch("/social/friends-leaderboard"),
   getFollowSuggestions:  ()     => apiFetch("/social/follow-suggestions"),
+  getRivalry:            (username) => apiFetch(`/social/rivalry/${encodeURIComponent(username)}`),
   getMyAchievements:     ()     => apiFetch("/achievements/mine"),
   search:                (q)    => apiFetch("/search?q=" + encodeURIComponent(q)),
   aiSearch:              (q)    => apiFetch("/search/ai?q=" + encodeURIComponent(q)),
