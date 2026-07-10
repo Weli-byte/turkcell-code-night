@@ -97,6 +97,39 @@ def classify_intent_llm(question: str, valid_intents: list[str]) -> str | None:
     return None
 
 
+def answer_freeform(question: str, evidence: dict, fallback: str) -> dict:
+    """
+    Kalıba oturmayan sorular için GERÇEK cevap modu (Sprint 24).
+    Rephrase değil: GPT-4o soruyu evidence'a dayanarak doğrudan yanıtlar.
+    Veride olmayan bilgi için dürüstçe 'göremiyorum' der; sayı uydurmaz.
+    LLM yoksa deterministik fallback döner.
+    """
+    user_msg = (
+        f"Kullanıcının GERÇEK verileri (deterministik motor çıktısı):\n"
+        f"{json.dumps(evidence, ensure_ascii=False, indent=2)}\n\n"
+        f"Kullanıcının sorusu: {question}\n\n"
+        f"Bu soruyu SADECE yukarıdaki verilere dayanarak doğrudan yanıtla. "
+        f"Veride olmayan bir şey soruluyorsa dürüstçe o veriyi göremediğini "
+        f"söyle ve elindeki en yakın bilgiyi ver. Sayı uydurma. "
+        f"Maksimum 4 cümle, Türkçe."
+    )
+    answer = llm_call(SYSTEM_PROMPT, user_msg, max_tokens=350)
+
+    if answer is None or len(answer) < 10:
+        return {
+            "answer":       fallback,
+            "llm_enhanced": False,
+            "llm_error":    None if not is_llm_available() else "LLM cevabı alınamadı",
+            "model":        "template" if not is_llm_available() else LLM_MODEL,
+        }
+    return {
+        "answer":       answer,
+        "llm_enhanced": True,
+        "llm_error":    None,
+        "model":        LLM_MODEL,
+    }
+
+
 def enhance_with_llm(
     question: str,
     template_answer: str,

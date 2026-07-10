@@ -295,6 +295,16 @@ def build_answer(intent: str, user_id: str) -> dict:
             answer = "Şu an aktif görev bulunmuyor."
 
     else:
+        # general: evidence'ı zenginleştir — serbest AI cevabı tüm tabloyu görsün
+        evidence["episodes_completed_today"] = state["episodes_completed_today"]
+        evidence["watch_minutes_7d"]         = state["watch_minutes_7d"]
+        evidence["today_points"]             = state["today_points"]
+        evidence["ratings_given_today"]      = state["ratings_given_today"]
+        evidence["active_challenges"] = [
+            {"name": c["name"], "condition": c["condition"],
+             "reward_points": c["reward_points"]}
+            for c in active_chs
+        ]
         answer = (
             f"Toplam {total} puanın ve {rank}. sıran var. "
             f"Bugün {state['watch_minutes_today']:.0f} dakika izledin. "
@@ -320,13 +330,22 @@ def explain(question: str, user_id: str) -> dict:
 
     result = build_answer(intent, user_id)
 
-    from engine.llm_adapter import enhance_with_llm
-    llm_result = enhance_with_llm(
-        question        = question,
-        template_answer = result["answer"],
-        evidence        = result["evidence"],
-        intent          = intent,
-    )
+    from engine.llm_adapter import enhance_with_llm, answer_freeform
+    if intent == "general":
+        # Kalıba oturmayan soru: ezber yönlendirme metni yerine
+        # GPT-4o zengin evidence'la soruyu DOĞRUDAN yanıtlar (Sprint 24)
+        llm_result = answer_freeform(
+            question = question,
+            evidence = result["evidence"],
+            fallback = result["answer"],
+        )
+    else:
+        llm_result = enhance_with_llm(
+            question        = question,
+            template_answer = result["answer"],
+            evidence        = result["evidence"],
+            intent          = intent,
+        )
 
     return {
         "answer":        llm_result["answer"],

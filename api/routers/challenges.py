@@ -165,3 +165,12 @@ def delete_challenge(ch_id: str, token: dict = Depends(verify_token)):
 def allowed_fields():
     """Admin form için geçerli alan listesi."""
     return {"fields": sorted(ALLOWED_FIELDS), "operators": [">=", ">", "<=", "<", "==", "!="]}
+
+
+@router.post("/ai-suggest")
+def ai_suggest_challenges(token: dict = Depends(verify_token)):
+    """GPT-4o gerçek platform metriklerinden görev önerir (Sprint 24).
+    Öneriler safe parser'dan geçirilir; görev ancak admin kaydederse oluşur."""
+    require_admin(token)
+    from engine.challenge_designer_engine import suggest_challenges
+    return suggest_challenges()

@@ -203,6 +203,24 @@
       <!-- ── CHALLENGES TAB ────────────────────────────── -->
       <div id="tab-challenges" style="display:none">
 
+        <!-- AI GÖREV TASARIMCISI (Sprint 24) -->
+        <div class="form-card" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div class="form-title" style="margin-bottom:2px">🤖 AI Görev Tasarımcısı</div>
+              <div style="font-size:12px;color:var(--text-muted)">
+                GPT-4o gerçek platform metriklerini analiz edip yeni görev önerir —
+                öneri güvenli parser'dan geçer, görev ancak sen kaydedince oluşur.
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-ai-suggest" style="font-size:13px">🤖 Görev Öner</button>
+          </div>
+          <div id="ai-suggest-loading" style="display:none;margin-top:12px;font-size:13px;color:var(--text-muted)">
+            <span class="spinner" style="width:14px;height:14px"></span> GPT-4o metrikleri analiz ediyor…
+          </div>
+          <div id="ai-suggest-results" style="display:none;margin-top:14px"></div>
+        </div>
+
         <!-- CREATE / EDIT FORM -->
         <div class="form-card">
           <div class="form-title" id="ch-form-title">➕ Yeni Görev Oluştur</div>
@@ -465,6 +483,55 @@
     });
 
     document.getElementById('btn-refresh-runs').addEventListener('click', loadRunHistory);
+
+    // ── AI GÖREV TASARIMCISI (Sprint 24) ──────────────
+    document.getElementById('btn-ai-suggest').addEventListener('click', async () => {
+      const btn    = document.getElementById('btn-ai-suggest');
+      const loadEl = document.getElementById('ai-suggest-loading');
+      const resEl  = document.getElementById('ai-suggest-results');
+      btn.disabled = true;
+      loadEl.style.display = '';
+      resEl.style.display = 'none';
+      try {
+        const d = await API.aiSuggestChallenges();
+        if (!d.suggestions.length) {
+          resEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">Geçerli öneri üretilemedi — tekrar dene.</p>';
+        } else {
+          resEl.innerHTML =
+            `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">
+              ${d.llm_enhanced ? '⚡ GPT-4o analizi' : '📐 Deterministik öneri (gerçek medyan verilerden)'} ·
+              tüm koşullar güvenli parser'dan geçti</div>` +
+            d.suggestions.map((s, i) => `
+              <div style="background:var(--bg-card);border:1px solid var(--border-acc);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <strong style="font-size:14px">${s.name}</strong>
+                  <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-2);background:rgba(0,212,255,0.06);padding:2px 8px;border-radius:5px">${s.condition}</code>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-1)">+${s.reward_points}p</span>
+                  <button class="btn-ghost" data-suggest-idx="${i}" style="margin-left:auto;font-size:12px;padding:4px 14px">📝 Formu Doldur</button>
+                </div>
+                ${s.rationale ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">💡 ${s.rationale}</div>` : ''}
+              </div>`).join('');
+          resEl.querySelectorAll('[data-suggest-idx]').forEach(b => {
+            b.addEventListener('click', () => {
+              const s = d.suggestions[parseInt(b.dataset.suggestIdx)];
+              document.getElementById('ch-name').value      = s.name;
+              document.getElementById('ch-condition').value = s.condition;
+              document.getElementById('ch-points').value    = s.reward_points;
+              document.getElementById('ch-priority').value  = s.priority;
+              document.getElementById('ch-condition').dispatchEvent(new Event('input'));
+              showToast({ title: 'Form dolduruldu', msg: 'Kontrol edip kaydet — görev o zaman oluşur', icon: '📝' });
+              document.getElementById('ch-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+          });
+        }
+        resEl.style.display = '';
+      } catch (e) {
+        showToast({ title: 'Öneri hatası', msg: e.message, icon: '⚠️' });
+      } finally {
+        btn.disabled = false;
+        loadEl.style.display = 'none';
+      }
+    });
 
     // ── İÇERİK YÖNETİMİ (Sprint 21) ───────────────────
     let contentCache = {};

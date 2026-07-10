@@ -320,8 +320,9 @@
     function videoCard(v) {
       const durationMin = v.duration_minutes ? Math.round(v.duration_minutes) : '?';
       const genre = v.genre || v.genres || '';
-      const colors = ['#6C00FF','#00FF87','#00D4FF','#FF4D4D','#FFB800'];
-      const color  = colors[v.id % colors.length] || '#6C00FF';
+      // Gerçek DB rengi (eski kod: colors[v.id % 5] — string id ile NaN,
+      // tüm kartlar aynı renkti ve DB'deki thumbnail_color kullanılmıyordu)
+      const color = v.thumbnail_color || '#6C00FF';
       const ratingHTML = v.avg_rating > 0
         ? `<span style="font-size:11px;color:#FFC107">⭐ ${v.avg_rating.toFixed(1)}</span>`
         : '';
@@ -403,10 +404,9 @@
         ansEl.classList.add('show');
         badgeEl.textContent = d.llm_enhanced ? '⚡ GPT-4o' : 'AI';
 
-        const COLORS = ['#6C00FF','#00FF87','#00D4FF','#FFB800','#FF4D4D'];
-        gridEl.innerHTML = d.videos.map((v, i) => `
+        gridEl.innerHTML = d.videos.map((v) => `
           <a class="rec-card" href="content.html?id=${v.id}">
-            <div class="rec-card-dot" style="background:${COLORS[i % COLORS.length]}"></div>
+            <div class="rec-card-dot" style="background:${v.thumbnail_color || '#6C00FF'}"></div>
             <div>
               <div class="rec-card-title">${v.title}</div>
               <div class="rec-card-meta">${v.genre} · ${v.duration_minutes} dk</div>

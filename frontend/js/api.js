@@ -166,6 +166,7 @@ const API = {
   getAdminInsights:     ()       => apiFetch("/pipeline/insights"),
   getAllChallenges:      ()       => apiFetch("/challenges/all"),
   getChallengeFields:   ()       => apiFetch("/challenges/fields"),
+  aiSuggestChallenges:  ()       => apiFetch("/challenges/ai-suggest", { method:"POST" }),
   createChallenge:      (body)   => apiFetch("/challenges/", { method:"POST", body: JSON.stringify(body) }),
   updateChallenge:      (id, b)  => apiFetch(`/challenges/${id}`, { method:"PUT",    body: JSON.stringify(b) }),
   toggleChallenge:      (id)     => apiFetch(`/challenges/${id}/toggle`, { method:"POST" }),
