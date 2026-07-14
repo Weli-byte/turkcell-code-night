@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS content_catalog (
 );
 
 CREATE TABLE IF NOT EXISTS watch_sessions (
-    id            INTEGER PRIMARY KEY,
+    id            TEXT PRIMARY KEY,
     user_id       TEXT NOT NULL,
     content_id    TEXT NOT NULL,
     started_at    TEXT NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS user_activities (
     genres_watched      INTEGER NOT NULL DEFAULT 0,
     watch_party_minutes REAL NOT NULL DEFAULT 0,
     ratings_given       INTEGER NOT NULL DEFAULT 0,
-    session_id          INTEGER,
+    session_id          TEXT,
     created_at          TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS points_ledger (
     reason        TEXT NOT NULL,
     challenge_id  TEXT,
     activity_date TEXT,
-    session_id    INTEGER,
+    session_id    TEXT,
     created_at    TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
