@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DGE — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+
+      <h1 class="mt-32">Admin Paneli</h1>
+
+      <!-- BOLUM 1: Pipeline -->
+      <section class="card card-accent mt-24 anim-fade">
+        <div class="flex-between" style="flex-wrap:wrap; gap:16px">
+          <div>
+            <h3>Gamification Pipeline</h3>
+            <p class="text-2 mt-4" style="font-size:13px">
+              Tüm kullanıcıları değerlendirir, challenge'ları kontrol eder,
+              puan ve rozet dağıtır. Idempotent — aynı gün tekrar çalıştırmak güvenlidir.
+            </p>
+          </div>
+          <button id="btn-pipeline" class="btn btn-primary" onclick="runPipeline()">▶ Pipeline Çalıştır</button>
+        </div>
+        <pre id="pipeline-result" class="code-panel mt-16 hidden"></pre>
+      </section>
+
+      <!-- BOLUM 2: Sistem istatistikleri -->
+      <section class="mt-48">
+        <h2 class="anim-fade">Sistem İstatistikleri</h2>
+        <div id="admin-stats" class="grid-3 mt-16 anim-stagger">
+          <div class="card text-center">
+            <div class="stat-num" id="stat-users" data-countup="0">0</div>
+            <div class="stat-label">Toplam Kullanıcı</div>
+          </div>
+          <div class="card text-center">
+            <div class="stat-num" id="stat-total-pts" data-countup="0">0</div>
+            <div class="stat-label">Dağıtılan Puan</div>
+          </div>
+          <div class="card text-center">
+            <div class="stat-num" id="stat-badges" data-countup="0">0</div>
+            <div class="stat-label">Atanan Rozet</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOLUM 3: AI Config -->
+      <section id="ai-config" class="card mt-48 anim-fade">
+        <h2>AI Konfigürasyonu</h2>
+        <div class="grid-2 mt-16">
+          <div>
+            <div class="flex-between mt-8">
+              <span class="text-2" style="font-size:13px">LLM Durumu</span>
+              <span id="cfg-llm-status" class="badge-chip badge-none">–</span>
+            </div>
+            <div class="flex-between mt-12">
+              <span class="text-2" style="font-size:13px">Model</span>
+              <span id="cfg-model" class="mono text-cyan" style="font-size:13px">–</span>
+            </div>
+            <div class="flex-between mt-12">
+              <span class="text-2" style="font-size:13px">Sağlayıcı</span>
+              <span id="cfg-provider" class="mono" style="font-size:13px">–</span>
+            </div>
+          </div>
+          <div>
+            <div class="flex-between mt-8">
+              <span class="text-2" style="font-size:13px">Toplam Çağrı (24s)</span>
+              <span id="cfg-calls" class="mono text-accent" style="font-size:13px">–</span>
+            </div>
+            <div class="flex-between mt-12">
+              <span class="text-2" style="font-size:13px">Ort. Latency</span>
+              <span id="cfg-latency" class="mono" style="font-size:13px">–</span>
+            </div>
+            <div class="flex-between mt-12">
+              <span class="text-2" style="font-size:13px">Ort. Grounding</span>
+              <span id="cfg-grounding" class="mono text-accent" style="font-size:13px">–</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOLUM 4: Token Dashboard -->
+      <section id="token-dashboard" class="mt-48">
+        <h2 class="anim-fade">Token Kullanımı</h2>
+        <div class="grid-3 mt-16 anim-stagger">
+          <div class="card-dark text-center">
+            <div class="stat-num" id="tok-total" data-countup="0">0</div>
+            <div class="stat-label">Toplam Token (24s)</div>
+          </div>
+          <div class="card-dark text-center">
+            <div class="stat-num" id="tok-cost">$0</div>
+            <div class="stat-label">Toplam Maliyet</div>
+          </div>
+          <div class="card-dark text-center">
+            <div class="stat-num" id="tok-latency">0ms</div>
+            <div class="stat-label">Ort. Yanıt Süresi</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/gsap-init.js"></script>
+  <script src="/js/global.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/smart-features.js"></script>
+  <script src="/js/animations.js"></script>
+  <script>
+    async function loadAdminStats() {
+      const [board, ai] = await Promise.all([
+        API.getLeaderboard(1000),
+        apiFetch('/api/ai/status'),
+      ]);
+
+      // Sistem istatistikleri (leaderboard toplamlarindan)
+      const totalUsers  = board.length;
+      const totalPts    = board.reduce((s, e) => s + (e.total_points || 0), 0);
+      const totalBadges = board.reduce((s, e) => s + ((e.badges || []).length), 0);
+      animateCountUp(document.getElementById('stat-users'), totalUsers);
+      animateCountUp(document.getElementById('stat-total-pts'), totalPts);
+      animateCountUp(document.getElementById('stat-badges'), totalBadges);
+
+      // AI config
+      const st = document.getElementById('cfg-llm-status');
+      st.textContent = ai.llm_available ? 'Aktif' : 'Pasif';
+      st.className = 'badge-chip ' + (ai.llm_available ? 'badge-GOLD' : 'badge-none');
+      document.getElementById('cfg-model').textContent    = ai.model;
+      document.getElementById('cfg-provider').textContent = ai.provider;
+      const s24 = ai.stats_24h || {};
+      document.getElementById('cfg-calls').textContent     = s24.total_calls ?? 0;
+      document.getElementById('cfg-latency').textContent   = (s24.avg_latency_ms ?? 0) + ' ms';
+      document.getElementById('cfg-grounding').textContent = s24.avg_grounding_score ?? '-';
+
+      // Token dashboard
+      animateCountUp(document.getElementById('tok-total'), s24.total_tokens || 0);
+      document.getElementById('tok-cost').textContent    = '$' + (s24.total_cost ?? 0).toFixed(4);
+      document.getElementById('tok-latency').textContent = Math.round(s24.avg_latency_ms ?? 0) + 'ms';
+    }
+
+    async function runPipeline() {
+      const btn = document.getElementById('btn-pipeline');
+      const panel = document.getElementById('pipeline-result');
+      btn.disabled = true;
+      btn.textContent = 'Çalışıyor…';
+      try {
+        const res = await API.runPipeline();
+        panel.textContent = JSON.stringify(res, null, 2);
+        panel.classList.remove('hidden');
+        gsap.from(panel, { height: 0, opacity: 0, duration: 0.5, ease: 'expo.out' });
+        showToast(`Pipeline tamamlandı: ${res.users_processed} kullanıcı, ${res.points_distributed} puan`);
+        await loadAdminStats();
+      } catch (e) {
+        showToast('Pipeline hatası: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '▶ Pipeline Çalıştır';
+      }
+    }
+
+    (async () => {
+      const me = await initGlobalElements({ requireAdminRole: true });
+      if (!me) return;
+      await loadAdminStats();
+
+      // Animasyon kurallari
+      initAnimations({ entrance: { heroSel: 'h1' } });
+
+      ScrollTrigger.refresh();
+    })();
+  </script>
+</body>
+</html>

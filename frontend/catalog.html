@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DGE — Katalog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+
+      <!-- HERO -->
+      <section class="grid-2 mt-32" style="align-items:center; padding-top:40px; gap:40px">
+        <div>
+          <span class="status-chip status-live">CANLI</span>
+          <h1 class="mt-16">Video İzle,</h1>
+          <h1 class="text-gradient">Ödül Kazan</h1>
+          <p id="challenge-summary" class="text-2 mt-12">Yükleniyor…</p>
+          <div id="badge-row" class="flex-center gap-8 mt-16"></div>
+        </div>
+        <div id="challenge-mini" class="anim-stagger flex-col gap-12"></div>
+      </section>
+
+      <!-- AI CHALLENGE CARD (smart-features: renderAIChallengeCard) -->
+      <div id="ai-challenge-container" class="mt-24 mb-24" style="margin-top:48px"></div>
+
+      <!-- VIDEO BOLUMLERI -->
+      <div id="video-sections" class="mt-48"></div>
+
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/gsap-init.js"></script>
+  <script src="/js/global.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/smart-features.js"></script>
+  <script src="/js/animations.js"></script>
+  <script>
+    function goWatch(id) {
+      window.location.href = '/watch.html?id=' + encodeURIComponent(id);
+    }
+
+    const TYPE_LABELS = { film: 'Filmler', belgesel: 'Belgeseller', kisa: 'Kısa Filmler' };
+
+    function playIcon() {
+      return '<div class="video-play"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>';
+    }
+
+    function renderHero(me, challenges) {
+      const done = challenges.filter(c => c.rewarded_today || c.percentage >= 100).length;
+      document.getElementById('challenge-summary').textContent =
+        `${challenges.length} challenge aktif — ${done} tamamlandı`;
+
+      const badgeRow = document.getElementById('badge-row');
+      if (me.badges && me.badges.length) {
+        badgeRow.innerHTML = me.badges
+          .map(b => `<span class="badge-chip ${getBadgeClass(b)}">${esc(b)}</span>`)
+          .join('');
+      } else {
+        badgeRow.innerHTML = '<span class="badge-chip badge-none">Henüz rozet yok</span>';
+      }
+
+      // Sag: mini challenge kartlari (priority en yuksek 4)
+      const mini = challenges.slice(0, 4).map(c => `
+        <div class="card" style="padding:14px 18px">
+          <div class="flex-between">
+            <span style="font-size:13px; font-weight:600">${esc(c.name)}</span>
+            <span class="challenge-pts">+${c.reward_points}p</span>
+          </div>
+          <div class="progress-wrap progress-sm mt-8">
+            <div class="progress-fill" style="width:${c.percentage || 0}%"></div>
+          </div>
+        </div>`).join('');
+      document.getElementById('challenge-mini').innerHTML = mini;
+    }
+
+    function renderVideos(videos) {
+      const groups = {};
+      videos.forEach(v => {
+        (groups[v.content_type] = groups[v.content_type] || []).push(v);
+      });
+
+      const wrap = document.getElementById('video-sections');
+      wrap.innerHTML = Object.entries(groups).map(([type, vids]) => `
+        <section class="mt-32">
+          <h2 class="anim-fade">${esc(TYPE_LABELS[type] || type)}</h2>
+          <div class="video-grid anim-stagger mt-16">
+            ${vids.map(v => `
+              <div class="video-card" data-content-id="${esc(v.id)}" onclick="goWatch('${esc(v.id)}')">
+                <div class="video-thumb" style="background:linear-gradient(135deg, ${esc(v.thumbnail_color || '#222')}33, ${esc(v.thumbnail_color || '#222')}11)">
+                  ${playIcon()}
+                </div>
+                <div class="video-info">
+                  <div class="video-title">${esc(v.title)}</div>
+                  <div class="video-meta">
+                    <span class="video-tag">${esc(v.genre || '-')}</span>
+                    <span>${v.duration_minutes} dk</span>
+                  </div>
+                </div>
+              </div>`).join('')}
+          </div>
+        </section>`).join('');
+    }
+
+    (async () => {
+      // 1-2. Global elementler + navbar (API.getMe icinde)
+      const me = await initGlobalElements();
+      if (!me) return;
+
+      // 3. Challenge ozeti
+      const challenges = await API.getChallenges();
+      renderHero(me, challenges);
+
+      // 4. Video katalog
+      const videos = await API.getCatalog();
+      renderVideos(videos);
+      ScrollTrigger.refresh();
+
+      // 5. Animasyon kurallari + video kart animasyonlari
+      initAnimations();
+      animateVideoCards();
+
+      // 6. Smart Prefetch: gorunen video kartlarini on-yukle
+      initSmartPrefetch();
+
+      // 6. AI Challenge Card (arka planda, sayfayi bloklamaz)
+      renderAIChallengeCard(
+        document.getElementById('ai-challenge-container')
+      );
+    })();
+  </script>
+</body>
+</html>

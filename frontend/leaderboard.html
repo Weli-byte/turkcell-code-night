@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DGE — Liderlik</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+
+      <div class="flex-between mt-32" style="flex-wrap:wrap; gap:12px">
+        <div class="flex-center gap-12">
+          <h1>Liderlik Tablosu</h1>
+          <span class="status-chip status-live">CANLI</span>
+        </div>
+        <span id="lb-meta" class="text-2" style="font-size:13px"></span>
+      </div>
+
+      <!-- sekme butonlari (Multi-Leaderboard Tabs: Genel/Bu Hafta/en_aktif/en_sosyal/ai_score) -->
+      <div id="lb-tabs" class="flex gap-8 mt-24" style="margin-bottom:20px; flex-wrap:wrap"></div>
+
+      <!-- lb-table icerigi smart-features.renderLeaderboard ile doldurulur -->
+      <div class="card" style="padding:0; overflow:hidden">
+        <div id="lb-body"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/gsap-init.js"></script>
+  <script src="/js/global.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/smart-features.js"></script>
+  <script src="/js/animations.js"></script>
+  <script>
+    // Multi-Leaderboard Tabs (smart-features.js):
+    // sekme kaynaklari: API.getLeaderboard / weekly / en_aktif / en_sosyal / ai_score.
+    // Auto-refresh: startRealtimeUpdate icindeki setInterval ile 30 sn'de bir gercek API poll.
+    // switchLeaderboardTab window'a initLeaderboardTabs tarafindan baglanir.
+    (async () => {
+      const me = await initGlobalElements();
+      if (!me) return;
+
+      initLeaderboardTabs(
+        document.getElementById('lb-body'),
+        document.getElementById('lb-tabs')
+      );
+
+      // Animasyon kurallari + satir animasyonu
+      initAnimations();
+      animateLeaderboardRows();
+
+      // Meta bilgisi: genel leaderboard'dan kullanici sayisi
+      try {
+        const board = await API.getLeaderboard(1000);
+        document.getElementById('lb-meta').textContent =
+          `${board.length} kullanıcı · AI destekli`;
+      } catch (e) { /* meta kritik degil */ }
+    })();
+  </script>
+</body>
+</html>

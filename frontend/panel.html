@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DGE — Panelim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous"></script>
+  <style>
+    .avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800;
+      background: rgba(0,255,135,0.08);
+      border: 2px solid var(--accent-1);
+      color: var(--accent-1);
+    }
+    .badge-box {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px; text-align: center;
+      background: var(--bg-card);
+    }
+    .badge-box.earned { border-color: var(--accent-1); }
+    .badge-box.locked { opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+
+      <!-- BOLUM 1: Kullanici karti -->
+      <section id="user-card" class="card mt-32 anim-fade">
+        <div class="flex-center gap-24" style="flex-wrap:wrap">
+          <div class="avatar" id="user-avatar">–</div>
+          <div style="flex:1; min-width:180px">
+            <h2 id="user-name">–</h2>
+            <div id="user-badges" class="flex-center gap-8 mt-8"></div>
+          </div>
+          <div class="flex-center gap-32">
+            <div class="text-center">
+              <div class="stat-num" id="stat-points" data-countup="0">0</div>
+              <div class="stat-label">Toplam Puan</div>
+            </div>
+            <div class="text-center">
+              <div class="stat-num" id="stat-rank" data-countup="0">0</div>
+              <div class="stat-label">Sıra</div>
+            </div>
+            <div class="text-center">
+              <div class="stat-num" id="stat-streak" data-countup="0">0</div>
+              <div class="stat-label">Günlük Seri</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOLUM 2: Challenge'lar -->
+      <section class="mt-48">
+        <h2 class="anim-fade">Challenge'lar</h2>
+        <div id="challenge-list" class="anim-stagger flex-col gap-12 mt-16"></div>
+      </section>
+
+      <!-- BOLUM 3: Rozet ilerlemesi -->
+      <section class="mt-48">
+        <h2 class="anim-fade">Rozet İlerlemesi</h2>
+        <div id="badge-progress" class="grid-4 mt-16"></div>
+      </section>
+
+      <!-- BOLUM 4: AI Asistan -->
+      <section id="ai-section" class="card card-accent mt-48 anim-fade">
+        <div style="font-size:17px; font-weight:600; margin-bottom:4px">🤖 AI Asistan</div>
+        <p class="text-muted" style="font-size:13px; margin-bottom:16px">
+          Deterministik motordan kanıtlı cevaplar. GPT-4o ile zenginleştirilir.
+        </p>
+
+        <!-- Intent badge (streaming'de gorunur) -->
+        <div id="ai-intent-badge" style="display:none; margin-bottom:10px">
+          <span class="badge-chip badge-none" id="ai-intent-text" style="font-size:11px"></span>
+        </div>
+
+        <!-- Live Reasoning -->
+        <div id="ai-reasoning"
+             style="display:none; margin-bottom:12px; padding:12px;
+                    background:var(--bg-dark); border-radius:var(--radius-sm);
+                    border:1px solid var(--border)"></div>
+
+        <!-- Hizli soru chip'leri -->
+        <div style="margin-bottom:12px; flex-wrap:wrap; display:flex">
+          <span class="ai-chip" onclick="askAI('Kaç puanım var?')">Kaç puanım var?</span>
+          <span class="ai-chip" onclick="askAI('Neden bu sıradayım?')">Neden bu sıradayım?</span>
+          <span class="ai-chip" onclick="askAI('Rozet ne zaman gelir?')">Rozet ne zaman gelir?</span>
+          <span class="ai-chip" onclick="askAI('Bugün ne yaptım?')">Bugün ne yaptım?</span>
+          <span class="ai-chip" onclick="askAI('Ne yapmalıyım?')">Ne yapmalıyım?</span>
+        </div>
+
+        <!-- Input -->
+        <div class="ai-input-wrap">
+          <input class="ai-input" id="ai-input" placeholder="Sorunu yaz...">
+          <button class="btn btn-primary btn-sm" onclick="askAIFromInput()">Sor →</button>
+        </div>
+
+        <!-- Loading -->
+        <div id="ai-loading" style="display:none">
+          <div class="spinner"></div>
+          <p class="text-muted" style="text-align:center; font-size:13px; margin-top:8px">
+            Düşünüyor...
+          </p>
+        </div>
+
+        <!-- Cevap alani -->
+        <div id="ai-result" style="display:none">
+          <div class="ai-answer" id="ai-answer"></div>
+
+          <!-- Grounding skoru -->
+          <div id="ai-grounding-wrap" style="margin-top:8px; display:none">
+            <span id="ai-grounding-score"
+                  style="font-size:11px; color:var(--text-muted)"></span>
+          </div>
+
+          <!-- Kanit verileri -->
+          <details style="margin-top:8px">
+            <summary style="cursor:pointer; font-size:12px; color:var(--text-muted)">
+              Kanıt verileri →
+            </summary>
+            <div class="ai-evidence" id="ai-evidence"></div>
+          </details>
+
+          <!-- LLM badge -->
+          <div id="ai-llm-badge" style="display:none; margin-top:8px">
+            <span class="badge-chip badge-GOLD" style="font-size:11px">
+              ✨ GPT-4o ile zenginleştirildi
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Kisisel oneriler (Recommendation Feed) -->
+      <section class="card mt-48 anim-fade">
+        <div class="section-title" style="font-size:16px; margin-bottom:16px">
+          🎯 Kişisel Öneriler
+        </div>
+        <div id="recommendation-feed"></div>
+      </section>
+
+      <!-- BOLUM 5: Puan gecmisi -->
+      <section class="mt-48 anim-fade">
+        <h2>Puan Geçmişi</h2>
+        <div class="card mt-16" style="padding:0; overflow:hidden">
+          <table class="lb-table" id="history-table">
+            <thead>
+              <tr><th>Tarih</th><th>Sebep</th><th style="text-align:right">Puan</th></tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+          <p id="history-empty" class="text-muted text-center hidden" style="padding:24px; font-size:13px">
+            Henüz puan geçmişi yok — video izlemeye başla!
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/gsap-init.js"></script>
+  <script src="/js/global.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/smart-features.js"></script>
+  <script src="/js/animations.js"></script>
+  <script>
+    const BADGE_ORDER = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'];
+
+    function renderUser(me) {
+      document.getElementById('user-avatar').textContent =
+        (me.username || '?')[0].toUpperCase();
+      document.getElementById('user-name').textContent = me.username;
+
+      animateCountUp(document.getElementById('stat-points'), me.total_points);
+      animateCountUp(document.getElementById('stat-rank'), me.rank || 0);
+      animateCountUp(document.getElementById('stat-streak'), me.streak_days);
+
+      const el = document.getElementById('user-badges');
+      el.innerHTML = (me.badges && me.badges.length)
+        ? me.badges.map(b => `<span class="badge-chip ${getBadgeClass(b)}">${esc(b)}</span>`).join('')
+        : '<span class="badge-chip badge-none">Henüz rozet yok</span>';
+    }
+
+    function renderChallenges(challenges) {
+      document.getElementById('challenge-list').innerHTML = challenges.map(c => `
+        <div class="challenge-card ${c.passed ? 'passed' : ''}">
+          <div class="flex-between">
+            <div>
+              <div class="challenge-name">${esc(c.name)}
+                ${c.is_ai_generated ? '<span class="badge-chip badge-none">🤖 AI</span>' : ''}
+              </div>
+              <div class="challenge-condition">${esc(c.condition)}</div>
+            </div>
+            <span class="challenge-pts">+${c.reward_points}p</span>
+          </div>
+          <div class="progress-wrap mt-8">
+            <div class="progress-fill" style="width:${c.percentage || 0}%"></div>
+          </div>
+          <div class="challenge-footer">
+            <span class="text-muted" style="font-size:12px">%${c.percentage || 0}</span>
+            ${c.rewarded_today ? '<span class="text-accent" style="font-size:12px">✓ Ödüllendi</span>' : ''}
+          </div>
+        </div>`).join('');
+    }
+
+    function renderBadgeProgress(prog) {
+      const earned = new Set((prog.tiers || []).filter(t => t.achieved).map(t => t.tier));
+      document.getElementById('badge-progress').innerHTML =
+        (prog.tiers || []).map(t => {
+          const isEarned = earned.has(t.tier);
+          const pct = isEarned ? 100
+            : Math.min(100, Math.round(prog.current_points / t.threshold * 100));
+          return `
+          <div class="badge-box ${isEarned ? 'earned' : 'locked'} anim-fade">
+            <span class="badge-chip ${getBadgeClass(t.tier)}">${esc(t.tier)}</span>
+            <p class="text-muted mt-8" style="font-size:12px">${formatPoints(t.threshold)} puan</p>
+            <div class="progress-wrap progress-sm mt-8">
+              <div class="progress-fill ${isEarned ? '' : 'cyan'}" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+        }).join('');
+    }
+
+    function renderHistory(history) {
+      const body = document.getElementById('history-body');
+      if (!history.length) {
+        document.getElementById('history-empty').classList.remove('hidden');
+        return;
+      }
+      body.innerHTML = history.map(h => `
+        <tr>
+          <td class="mono" style="font-size:12px">${esc(h.activity_date || (h.created_at || '').slice(0, 10))}</td>
+          <td>${esc(h.reason)}${h.challenge_name ? ` <span class="video-tag">${esc(h.challenge_name)}</span>` : ''}</td>
+          <td class="lb-pts">+${h.points}</td>
+        </tr>`).join('');
+    }
+
+    // ── AI STREAMING ANA FONKSIYONU ──────────
+    // Inline EventSource (spec 3F). askAIStream (smart-features.js) genel amacli
+    // alternatif olarak durur; bu sayfa tum eventleri acikca handle eder.
+    async function askAI(question) {
+      const answerEl    = document.getElementById('ai-answer');
+      const resultEl    = document.getElementById('ai-result');
+      const loadingEl   = document.getElementById('ai-loading');
+      const evidenceEl  = document.getElementById('ai-evidence');
+      const llmBadge    = document.getElementById('ai-llm-badge');
+      const intentBadge = document.getElementById('ai-intent-badge');
+      const intentText  = document.getElementById('ai-intent-text');
+      const reasoningEl = document.getElementById('ai-reasoning');
+      const groundWrap  = document.getElementById('ai-grounding-wrap');
+      const groundEl    = document.getElementById('ai-grounding-score');
+
+      // Sifirla
+      answerEl.textContent      = '';
+      resultEl.style.display    = 'none';
+      loadingEl.style.display   = '';
+      llmBadge.style.display    = 'none';
+      intentBadge.style.display = 'none';
+      groundWrap.style.display  = 'none';
+
+      // Token al
+      const token = Auth.getToken();
+      if (!token) {
+        window.location.href = '/index.html';
+        return;
+      }
+
+      // EventSource URL
+      const url = `/api/ai/stream` +
+        `?question=${encodeURIComponent(question)}` +
+        `&token=${encodeURIComponent(token)}`;
+
+      const es = new EventSource(url);
+      let fullAnswer = '';
+      let hasStarted = false;
+
+      es.onmessage = (e) => {
+        if (!e.data || e.data.trim() === '') return;
+
+        let payload;
+        try {
+          payload = JSON.parse(e.data);
+        } catch (err) {
+          return;
+        }
+
+        const { event, data } = payload;
+
+        // ── INTENT EVENTI ──────────────────────
+        if (event === 'intent') {
+          intentText.textContent = data;
+          intentBadge.style.display = '';
+
+          // Reasoning adim 1
+          if (typeof showLiveReasoning === 'function' && !hasStarted) {
+            const reasoning = showLiveReasoning(reasoningEl);
+            reasoning.activate(0);
+            window._currentReasoning = reasoning;
+          }
+        }
+
+        // ── EVIDENCE EVENTI ────────────────────
+        else if (event === 'evidence') {
+          if (evidenceEl) {
+            evidenceEl.textContent = JSON.stringify(data, null, 2);
+          }
+          if (window._currentReasoning) {
+            window._currentReasoning.activate(1);
+          }
+        }
+
+        // ── CHUNK EVENTI (asil streaming) ──────
+        else if (event === 'chunk') {
+          // Ilk chunk gelince loading'i kapat
+          if (!hasStarted) {
+            hasStarted = true;
+            loadingEl.style.display = 'none';
+            resultEl.style.display  = '';
+            if (window._currentReasoning) {
+              window._currentReasoning.activate(2);
+            }
+          }
+
+          // Chunk'i dogrudan ekle — yapay gecikme YOK
+          fullAnswer += data;
+          answerEl.textContent += data;
+        }
+
+        // ── GROUNDING EVENTI ───────────────────
+        else if (event === 'grounding') {
+          if (window._currentReasoning) {
+            window._currentReasoning.activate(3);
+          }
+
+          const score = data.score || 0;
+          const pct   = (score * 100).toFixed(0);
+
+          groundEl.textContent =
+            `Grounding: %${pct}` +
+            (data.hallucination
+              ? ' ⚠ Hallucination tespit edildi'
+              : ' ✓');
+          groundWrap.style.display = '';
+
+          // Grounding dusukse uyar
+          groundEl.style.color = score < 0.7
+            ? 'var(--danger)'
+            : 'var(--text-muted)';
+
+          // LLM badge goster
+          if (score >= 0.7) {
+            llmBadge.style.display = '';
+          }
+        }
+
+        // ── DONE EVENTI ────────────────────────
+        else if (event === 'done') {
+          es.close();
+
+          loadingEl.style.display = 'none';
+          resultEl.style.display  = '';
+
+          if (window._currentReasoning) {
+            window._currentReasoning.complete();
+            window._currentReasoning = null;
+          }
+
+          // GSAP ile cevabi vurgula
+          if (typeof gsap !== 'undefined') {
+            gsap.from(answerEl, {
+              opacity: 0.3,
+              duration: 0.5,
+              ease: 'power2.out'
+            });
+          }
+
+          // Memory guncellemesini tazele (arka planda; kendi kullanicisi)
+          apiFetch('/api/ai/memory/' + Auth.getUserId(), { method: 'GET' })
+            .catch(() => {});
+        }
+
+        // ── ERROR EVENTI ───────────────────────
+        else if (event === 'error') {
+          es.close();
+          loadingEl.style.display = 'none';
+          answerEl.textContent = 'Hata oluştu: ' + (data || 'Bilinmeyen');
+          resultEl.style.display = '';
+          if (window._currentReasoning) {
+            window._currentReasoning.complete();
+            window._currentReasoning = null;
+          }
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        loadingEl.style.display = 'none';
+
+        // Fallback: normal /api/ai/explain dene
+        apiFetch('/api/ai/explain', {
+          method: 'POST',
+          body: JSON.stringify({ question })
+        }).then(res => {
+          answerEl.textContent = res.answer || '';
+          resultEl.style.display = '';
+          if (res.llm_enhanced) {
+            llmBadge.style.display = '';
+          }
+          if (evidenceEl && res.evidence) {
+            evidenceEl.textContent = JSON.stringify(res.evidence, null, 2);
+          }
+        }).catch(() => {
+          answerEl.textContent = 'Bağlantı hatası. Lütfen tekrar deneyin.';
+          resultEl.style.display = '';
+        });
+      };
+    }
+
+    // ── INPUT'TAN SOR ─────────────────────────
+    function askAIFromInput() {
+      const input = document.getElementById('ai-input');
+      const q = input.value.trim();
+      if (!q) return;
+      askAI(q);
+    }
+
+    function goWatch(id) {
+      window.location.href = '/watch.html?id=' + encodeURIComponent(id);
+    }
+
+    document.getElementById('ai-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') askAIFromInput();
+    });
+
+    // ── SAYFA YUKLEME ───────────────────────
+    (async () => {
+      const me = await initGlobalElements();
+      if (!me) return;
+
+      const [meData, challenges, badgeProg, history] = await Promise.all([
+        API.getMe(),
+        API.getChallenges(),
+        API.getBadgeProgress(),
+        API.getHistory(),
+      ]);
+
+      renderUser(meData);
+      renderChallenges(challenges);
+      renderBadgeProgress(badgeProg);
+      renderHistory(history);
+
+      // Kisisel oneriler (AI recommendation feed)
+      renderRecommendationFeed(
+        document.getElementById('recommendation-feed')
+      );
+
+      // Animasyon kurallari
+      initAnimations();
+      animateChallengeCards();
+      animateBadgeTiers();
+
+      ScrollTrigger.refresh();
+    })();
+  </script>
+</body>
+</html>

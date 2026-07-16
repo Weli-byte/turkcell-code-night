@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DGE — İzle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous"></script>
+  <style>
+    .player-wrap {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+      transition: border-color 0.4s;
+    }
+    .player-wrap.playing {
+      border-color: var(--accent-1);
+      animation: playPulse 2s ease-in-out infinite;
+    }
+    @keyframes playPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,135,0.15); }
+      50%       { box-shadow: 0 0 30px 4px rgba(0,255,135,0.12); }
+    }
+    #player { width: 100%; display: block; max-height: 62vh; }
+    #reward-popup {
+      position: fixed; top: 80px; right: 30px; z-index: 9999;
+      display: none; min-width: 260px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+
+      <div class="flex-between mt-24">
+        <div>
+          <a href="/catalog.html" class="text-2" style="font-size:13px">← Katalog</a>
+          <h2 id="video-title" class="mt-8">Yükleniyor…</h2>
+          <p id="video-meta" class="text-muted mt-4" style="font-size:13px"></p>
+        </div>
+      </div>
+
+      <div class="player-wrap mt-16" id="player-wrap">
+        <video id="player" controls preload="metadata"></video>
+      </div>
+
+      <div class="grid-2 mt-24">
+        <!-- Izleme durumu -->
+        <div class="card">
+          <h3>İzleme Durumu</h3>
+          <div class="flex-between mt-16">
+            <span class="text-2" style="font-size:13px">Session ID</span>
+            <span id="watch-session" class="mono text-cyan" style="font-size:12px">–</span>
+          </div>
+          <div class="flex-between mt-12">
+            <span class="text-2" style="font-size:13px">Geçen Süre</span>
+            <span id="watch-timer" class="mono text-accent">00:00</span>
+          </div>
+          <div class="flex-between mt-12">
+            <span class="text-2" style="font-size:13px">Durum</span>
+            <span id="watch-status" class="mono" style="font-size:12px">bekliyor</span>
+          </div>
+        </div>
+
+        <!-- Puan karti -->
+        <div class="card card-accent text-center">
+          <div id="watch-pts" class="stat-num">–</div>
+          <div class="stat-label">toplam puan</div>
+          <p id="watch-rank" class="text-2 mt-12" style="font-size:13px"></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Kazanim popup -->
+  <div id="reward-popup" class="card-glass" style="padding:20px">
+    <div style="font-size:15px; font-weight:600">🎉 İzleme Kaydedildi!</div>
+    <p id="reward-detail" class="text-2 mt-8" style="font-size:13px"></p>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/gsap-init.js"></script>
+  <script src="/js/global.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/smart-features.js"></script>
+  <script src="/js/animations.js"></script>
+  <script>
+    const contentId = new URLSearchParams(location.search).get('id');
+    if (!contentId) window.location.href = '/catalog.html';
+
+    let sessionId = null;
+    let ended = false;
+    let timerInterval = null;     // gorsel sayac — gercek sure backend'de hesaplanir
+    let heartbeatInterval = null;
+    let elapsedSec = 0;
+
+    function fmtTimer(s) {
+      const m = String(Math.floor(s / 60)).padStart(2, '0');
+      const r = String(s % 60).padStart(2, '0');
+      return `${m}:${r}`;
+    }
+
+    async function refreshPoints() {
+      try {
+        const me = await API.getMe();
+        document.getElementById('watch-pts').textContent = formatPoints(me.total_points);
+        document.getElementById('watch-rank').textContent =
+          `${me.rank}. sıra / ${me.total_users} kullanıcı`;
+      } catch (e) { console.error(e); }
+    }
+
+    async function startWatch() {
+      if (sessionId || ended) return;
+      try {
+        const res = await API.startSession(contentId);
+        sessionId = res.session_id;
+        document.getElementById('watch-session').textContent =
+          sessionId.slice(0, 14) + '…';
+        document.getElementById('watch-status').textContent = 'izleniyor';
+        document.getElementById('player-wrap').classList.add('playing');
+
+        // Gorsel sayac (gercek sure sunucuda started_at/ended_at farkiyla olculur)
+        timerInterval = setInterval(() => {
+          elapsedSec += 1;
+          document.getElementById('watch-timer').textContent = fmtTimer(elapsedSec);
+        }, 1000);
+
+        // Heartbeat: her 30 sn
+        heartbeatInterval = setInterval(() => {
+          if (sessionId && !ended) API.heartbeat(sessionId).catch(() => {});
+        }, 30000);
+      } catch (e) {
+        showToast('Oturum başlatılamadı: ' + e.message, 'error');
+      }
+    }
+
+    async function endWatch() {
+      if (!sessionId || ended) return;
+      ended = true;
+      clearInterval(timerInterval);
+      clearInterval(heartbeatInterval);
+      document.getElementById('player-wrap').classList.remove('playing');
+      document.getElementById('watch-status').textContent = 'kaydediliyor…';
+
+      try {
+        const res = await API.endSession(sessionId);
+        document.getElementById('watch-status').textContent =
+          res.capped ? 'günlük limit doldu' : 'kaydedildi';
+
+        // Kazanim popup
+        const popup = document.getElementById('reward-popup');
+        document.getElementById('reward-detail').textContent = res.capped
+          ? res.message
+          : `${res.watch_minutes} dk izlendi · ${res.completed ? 'tamamlandı ✓' : 'devam edebilirsin'}`;
+        popup.style.display = 'block';
+        gsap.from(popup, { x: 60, opacity: 0, duration: 0.5, ease: 'expo.out' });
+        gsap.delayedCall(5, () => {
+          gsap.to(popup, {
+            x: 60, opacity: 0, duration: 0.4, ease: 'power2.in',
+            onComplete: () => { popup.style.display = 'none'; popup.style.opacity = ''; popup.style.transform = ''; }
+          });
+        });
+
+        // Pipeline arka planda kosuyor — 2.5 sn sonra GERCEK puani backend'den al
+        if (res.watch_minutes > 0) {
+          gsap.delayedCall(2.5, async () => {
+            const me = await API.getMe();
+            const navPts = document.getElementById('nav-pts');
+            const oldPts = parseInt(
+              (navPts ? navPts.textContent : '0').replace(/\D/g, '')
+            ) || 0;
+
+            if (navPts) navPts.textContent = formatPoints(me.total_points);
+            document.getElementById('watch-pts').textContent =
+              formatPoints(me.total_points);
+            document.getElementById('watch-rank').textContent =
+              `${me.rank}. sıra / ${me.total_users} kullanıcı`;
+
+            if (me.total_points > oldPts) {
+              notifyReward(me.total_points - oldPts, 'Video izleme');
+              pulsePoints();
+            }
+
+            if (me.badges && me.badges.length > 0) {
+              const latestBadge = me.badges[me.badges.length - 1];
+              notifyBadge(latestBadge);
+            }
+          });
+        }
+      } catch (e) {
+        document.getElementById('watch-status').textContent = 'hata';
+        showToast(e.message, 'error');
+      }
+    }
+
+    (async () => {
+      const me = await initGlobalElements();
+      if (!me) return;
+
+      // Video bilgisi
+      try {
+        const video = await API.getContent(contentId);
+        document.getElementById('video-title').textContent = video.title;
+        document.getElementById('video-meta').textContent =
+          `${video.genre || '-'} · ${video.duration_minutes} dk`;
+        const player = document.getElementById('player');
+        player.src = video.stream_url;
+
+        player.addEventListener('play',  startWatch);
+        player.addEventListener('pause', endWatch);
+        player.addEventListener('ended', endWatch);
+      } catch (e) {
+        showToast('Video bulunamadı', 'error');
+        gsap.delayedCall(1.5, () => window.location.href = '/catalog.html');
+      }
+
+      refreshPoints();
+
+      // Animasyon kurallari
+      initAnimations({
+        entrance: { heroSel: '.player-wrap', contentSel: '.watch-info' }
+      });
+    })();
+
+    // Sayfa kapanirken acik oturumu kapat (best-effort)
+    window.addEventListener('beforeunload', () => {
+      if (sessionId && !ended) {
+        ended = true;
+        const token = Auth.getToken();
+        // keepalive fetch: sayfa kapanirken istegin tamamlanma sansi
+        fetch('/api/watch/session/end', {
+          method: 'POST',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+      }
+    });
+  </script>
+</body>
+</html>

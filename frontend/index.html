@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DGE — Giriş</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous"></script>
+  <style>
+    /* Arka plan efekti */
+    .bg-fx {
+      position: fixed; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 50%,
+          rgba(108,0,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 30%,
+          rgba(0,255,135,0.06) 0%, transparent 50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-fx"></div>
+
+  <div class="form-wrap">
+    <div class="form-box">
+      <div class="form-title">DGE</div>
+      <p class="text-2 mt-4">AI-Native Gamification Platform</p>
+
+      <div class="tab-btns mt-24">
+        <button id="tab-login" class="btn btn-primary btn-sm" onclick="showTab('login')">Giriş Yap</button>
+        <button id="tab-register" class="btn btn-ghost btn-sm" onclick="showTab('register')">Kayıt Ol</button>
+      </div>
+
+      <div id="form-error" class="form-error"></div>
+
+      <div id="panel-login">
+        <input id="login-user" class="form-input" placeholder="Kullanıcı adı" autocomplete="username">
+        <input id="login-pass" class="form-input" type="password" placeholder="Şifre" autocomplete="current-password">
+        <button class="btn btn-primary w-full" onclick="doLogin()">Giriş Yap →</button>
+      </div>
+
+      <div id="panel-register" class="hidden">
+        <input id="reg-user" class="form-input" placeholder="Kullanıcı adı" autocomplete="username">
+        <input id="reg-pass" class="form-input" type="password" placeholder="Şifre" autocomplete="new-password">
+        <button class="btn btn-primary w-full" onclick="doRegister()">Kayıt Ol →</button>
+      </div>
+
+      <p class="text-muted mt-24" style="font-size:12px">Demo: admin / admin123</p>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/animations.js"></script>
+  <script>
+    // Zaten giris yapildiysa kataloga yonlendir
+    if (Auth.isLoggedIn()) {
+      window.location.href = '/catalog.html';
+    }
+
+    function showTab(tab) {
+      const login = document.getElementById('panel-login');
+      const reg   = document.getElementById('panel-register');
+      const tbl   = document.getElementById('tab-login');
+      const tbr   = document.getElementById('tab-register');
+      const isLogin = tab === 'login';
+      login.classList.toggle('hidden', !isLogin);
+      reg.classList.toggle('hidden', isLogin);
+      tbl.className = 'btn btn-sm ' + (isLogin ? 'btn-primary' : 'btn-ghost');
+      tbr.className = 'btn btn-sm ' + (isLogin ? 'btn-ghost' : 'btn-primary');
+      hideError();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('form-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function hideError() {
+      document.getElementById('form-error').style.display = 'none';
+    }
+
+    async function doLogin() {
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value;
+      if (!u || !p) return showError('Kullanıcı adı ve şifre gerekli');
+      try {
+        const data = await API.login(u, p);
+        Auth.setSession(data);
+        window.location.href = '/catalog.html';
+      } catch (e) {
+        showError(e.message);
+      }
+    }
+
+    async function doRegister() {
+      const u = document.getElementById('reg-user').value.trim();
+      const p = document.getElementById('reg-pass').value;
+      if (!u || !p) return showError('Kullanıcı adı ve şifre gerekli');
+      try {
+        const data = await API.register(u, p);
+        Auth.setSession(data);
+        window.location.href = '/catalog.html';
+      } catch (e) {
+        showError(e.message);
+      }
+    }
+
+    // Enter ile aktif formu gonder
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const loginVisible = !document.getElementById('panel-login')
+        .classList.contains('hidden');
+      if (loginVisible) doLogin(); else doRegister();
+    });
+
+    // Acilis animasyonu: form kutusu asagidan yukari fadeIn (animations.js kurallari)
+    initAnimations({ entrance: { heroSel: '.form-box' } });
+  </script>
+</body>
+</html>
