@@ -500,11 +500,16 @@ async function renderRecommendationFeed(containerEl) {
                 </div>
               </div>
               ${rec.type === 'video' ? `
-                <button class="btn btn-ghost btn-sm"
-                        onclick="goWatch('${esc(rec.id)}')">İzle</button>` : ''}
+                <button class="btn btn-ghost btn-sm js-watch"
+                        data-id="${esc(rec.id)}">İzle</button>` : ''}
             </div>
           </div>`).join('')}
       </div>`;
+
+    // Inline onclick yerine programatik listener (XSS yuzeyini kucultur)
+    containerEl.querySelectorAll('.js-watch').forEach(b => {
+      b.addEventListener('click', () => goWatch(b.dataset.id));
+    });
 
     if (typeof gsap !== 'undefined') {
       const cards = containerEl.querySelectorAll('.card');
