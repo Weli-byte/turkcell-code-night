@@ -82,6 +82,11 @@
       document.getElementById('challenge-mini').innerHTML = mini;
     }
 
+    // Sadece gecerli hex renk kabul et (CSS injection onlemi)
+    function safeColor(c) {
+      return /^#[0-9a-fA-F]{3,8}$/.test(c || '') ? c : '#222222';
+    }
+
     function renderVideos(videos) {
       const groups = {};
       videos.forEach(v => {
@@ -94,8 +99,8 @@
           <h2 class="anim-fade">${esc(TYPE_LABELS[type] || type)}</h2>
           <div class="video-grid anim-stagger mt-16">
             ${vids.map(v => `
-              <div class="video-card" data-content-id="${esc(v.id)}" onclick="goWatch('${esc(v.id)}')">
-                <div class="video-thumb" style="background:linear-gradient(135deg, ${esc(v.thumbnail_color || '#222')}33, ${esc(v.thumbnail_color || '#222')}11)">
+              <div class="video-card" data-content-id="${esc(v.id)}">
+                <div class="video-thumb" style="background:linear-gradient(135deg, ${safeColor(v.thumbnail_color)}33, ${safeColor(v.thumbnail_color)}11)">
                   ${playIcon()}
                 </div>
                 <div class="video-info">
@@ -108,6 +113,11 @@
               </div>`).join('')}
           </div>
         </section>`).join('');
+
+      // Inline onclick yerine programatik listener
+      wrap.querySelectorAll('.video-card[data-content-id]').forEach(card => {
+        card.addEventListener('click', () => goWatch(card.dataset.contentId));
+      });
     }
 
     (async () => {
