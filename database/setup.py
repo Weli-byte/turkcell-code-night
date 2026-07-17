@@ -128,6 +128,17 @@ CREATE TABLE IF NOT EXISTS ai_memory (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS ai_feedback (
+    id            INTEGER PRIMARY KEY,
+    user_id       TEXT NOT NULL,
+    decision_id   TEXT NOT NULL,
+    decision_type TEXT NOT NULL,
+    feedback_type TEXT NOT NULL
+        CHECK(feedback_type IN ('accepted','rejected','ignored')),
+    context       TEXT,
+    created_at    TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS ai_calls_log (
     id              INTEGER PRIMARY KEY,
     model           TEXT NOT NULL,
