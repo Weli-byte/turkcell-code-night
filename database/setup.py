@@ -139,6 +139,18 @@ CREATE TABLE IF NOT EXISTS ai_feedback (
     created_at    TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS prompt_analytics (
+    id          INTEGER PRIMARY KEY,
+    prompt_name TEXT NOT NULL,
+    variant     TEXT NOT NULL,
+    user_id     TEXT,
+    model       TEXT,
+    tokens_used INTEGER DEFAULT 0,
+    latency_ms  INTEGER DEFAULT 0,
+    success     INTEGER DEFAULT 1,
+    created_at  TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS ai_calls_log (
     id              INTEGER PRIMARY KEY,
     model           TEXT NOT NULL,
