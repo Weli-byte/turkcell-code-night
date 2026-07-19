@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS ai_memory (
 );
 
 CREATE TABLE IF NOT EXISTS ai_feedback (
-    id            INTEGER PRIMARY KEY,
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id       TEXT NOT NULL,
     decision_id   TEXT NOT NULL,
     decision_type TEXT NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS ai_feedback (
 );
 
 CREATE TABLE IF NOT EXISTS prompt_analytics (
-    id          INTEGER PRIMARY KEY,
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
     prompt_name TEXT NOT NULL,
     variant     TEXT NOT NULL,
     user_id     TEXT,

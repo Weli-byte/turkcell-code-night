@@ -229,6 +229,12 @@ def recommend_friends(user_id: str, n: int = 3) -> list:
         finally:
             db.close()
 
+        if not others:
+            # Edge case: sistemde baska kullanici yok.
+            # "Ilk kullanicisin" mesaji frontend'de handle edilir; burada bos liste.
+            print(f'[recommend_friends] {user_id} icin baska kullanici yok — edge case')
+            return []
+
         items = []
         for u in others:
             vec = encode_user_profile(u["id"])
