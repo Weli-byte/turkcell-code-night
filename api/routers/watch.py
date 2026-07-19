@@ -114,14 +114,14 @@ def end_session(body: SessionBody, token: dict = Depends(verify_token)):
             db.commit()
             return {
                 "session_id": body.session_id,
-                "watch_minutes": round(watch_min, 1),
+                "watch_minutes": round(watch_min, 2),
                 "completed": bool(completed),
                 "activity_date": today,
                 "capped": True,
-                "message": "Bu video bugun tam izlendi, puan eklenmedi",
+                "message": f"{session['title']} bugün zaten tam izlendi. Puan eklenmedi.",
             }
 
-        effective_minutes = min(watch_min, max_allowed - already_min)
+        effective_minutes = round(min(watch_min, max_allowed - already_min), 2)
 
         # ADIM 4 — DB'ye yaz
         db.execute(
@@ -156,7 +156,7 @@ def end_session(body: SessionBody, token: dict = Depends(verify_token)):
     # ADIM 6 — Cevap
     return {
         "session_id": body.session_id,
-        "watch_minutes": round(effective_minutes, 1),
+        "watch_minutes": effective_minutes,
         "completed": bool(completed),
         "activity_date": today,
         "capped": False,
